@@ -31,7 +31,7 @@ export function RoutinesClient({ initial }: { initial: Routine[] }) {
 
   if (routines.length === 0) {
     return (
-      <div className="panel p-8 text-center text-sw-muted">
+      <div className="panel p-8 text-center text-moon-400">
         <p className="mb-2">No routines installed.</p>
         <p className="text-xs font-mono">Run ./install.sh from the repo root.</p>
       </div>
@@ -58,8 +58,8 @@ export function RoutinesClient({ initial }: { initial: Routine[] }) {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-sw-muted">{r.description}</p>
-                <div className="text-xs text-sw-muted mt-2 font-mono">
+                <p className="text-sm text-moon-400">{r.description}</p>
+                <div className="text-xs text-moon-400 mt-2 font-mono">
                   budget: {r.defaultBudget.toLocaleString()} tokens
                 </div>
               </div>
@@ -72,7 +72,7 @@ export function RoutinesClient({ initial }: { initial: Routine[] }) {
             </div>
 
             {!r.installed && (
-              <div className="mt-3 text-xs text-sw-muted border-t border-sw-border pt-3">
+              <div className="mt-3 text-xs text-moon-400 border-t border-ink-600 pt-3">
                 Run <code className="font-mono">./install.sh</code> from the repo root to install this routine.
               </div>
             )}
@@ -99,7 +99,7 @@ function Toggle({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
-        checked ? "bg-sw-accent" : "bg-sw-border"
+        checked ? "bg-dawn-400" : "bg-ink-600"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       <span

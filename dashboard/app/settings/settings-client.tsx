@@ -107,10 +107,10 @@ export function SettingsClient({
               max={23}
               value={settings.sleep_window.start_hour}
               onChange={(e) => setSettings((s) => ({ ...s, sleep_window: { ...s.sleep_window, start_hour: Number(e.target.value) } }))}
-              className="bg-sw-bg border border-sw-border rounded-md px-3 py-1.5 text-sm w-20"
+              className="bg-ink-900 border border-ink-600 rounded-md px-3 py-1.5 text-sm w-20"
             />
           </Field>
-          <span className="text-sw-muted">→</span>
+          <span className="text-moon-400">→</span>
           <Field label="End hour (24h)">
             <input
               type="number"
@@ -118,7 +118,7 @@ export function SettingsClient({
               max={23}
               value={settings.sleep_window.end_hour}
               onChange={(e) => setSettings((s) => ({ ...s, sleep_window: { ...s.sleep_window, end_hour: Number(e.target.value) } }))}
-              className="bg-sw-bg border border-sw-border rounded-md px-3 py-1.5 text-sm w-20"
+              className="bg-ink-900 border border-ink-600 rounded-md px-3 py-1.5 text-sm w-20"
             />
           </Field>
         </div>
@@ -128,13 +128,13 @@ export function SettingsClient({
         {tokenPresent ? (
           <div className="flex items-center gap-3 flex-wrap">
             <span className="pill-green">token configured</span>
-            <button className="btn-ghost border border-sw-border" onClick={pingGithub} disabled={busy}>
+            <button className="btn-ghost border border-ink-600" onClick={pingGithub} disabled={busy}>
               Test connection
             </button>
             <button className="btn-danger" onClick={clearToken} disabled={busy}>
               <Trash2 className="w-4 h-4 inline mr-1" /> Clear token
             </button>
-            {pingResult && <span className="text-xs text-sw-muted ml-2">{pingResult}</span>}
+            {pingResult && <span className="text-xs text-moon-400 ml-2">{pingResult}</span>}
           </div>
         ) : (
           <div className="flex items-center gap-3 flex-wrap">
@@ -143,23 +143,23 @@ export function SettingsClient({
               placeholder="ghp_..."
               value={tokenInput}
               onChange={(e) => setTokenInput(e.target.value)}
-              className="bg-sw-bg border border-sw-border rounded-md px-3 py-1.5 text-sm font-mono flex-1 max-w-md"
+              className="bg-ink-900 border border-ink-600 rounded-md px-3 py-1.5 text-sm font-mono flex-1 max-w-md"
             />
             <button className="btn-primary" onClick={saveToken} disabled={busy || !tokenInput.trim()}>
               <KeyRound className="w-4 h-4 inline mr-1" /> Save token
             </button>
           </div>
         )}
-        <p className="text-xs text-sw-muted mt-3">
+        <p className="text-xs text-moon-400 mt-3">
           Needs <code>repo</code> scope for private repos, <code>public_repo</code> only for public. Generate at{" "}
-          <a className="text-sw-accent underline" href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer">github.com/settings/tokens/new</a>.
+          <a className="text-dawn-400 underline" href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer">github.com/settings/tokens/new</a>.
         </p>
       </Section>
 
       <Section title="Tracked repos" desc="Cloud-fleet PR polling targets. Format: owner/repo">
         <div className="space-y-2">
           {settings.tracked_repos.length === 0 && (
-            <p className="text-sm text-sw-muted">No repos tracked yet.</p>
+            <p className="text-sm text-moon-400">No repos tracked yet.</p>
           )}
           {settings.tracked_repos.map((r) => (
             <div key={r} className="flex items-center justify-between panel p-2">
@@ -176,9 +176,9 @@ export function SettingsClient({
               value={newRepo}
               onChange={(e) => setNewRepo(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addRepo()}
-              className="bg-sw-bg border border-sw-border rounded-md px-3 py-1.5 text-sm font-mono flex-1 max-w-md"
+              className="bg-ink-900 border border-ink-600 rounded-md px-3 py-1.5 text-sm font-mono flex-1 max-w-md"
             />
-            <button className="btn-ghost border border-sw-border" onClick={addRepo}>
+            <button className="btn-ghost border border-ink-600" onClick={addRepo}>
               <Plus className="w-4 h-4 inline mr-1" /> Add
             </button>
           </div>
@@ -197,7 +197,7 @@ export function SettingsClient({
                 <select
                   value={policy}
                   onChange={(e) => setSettings((s) => ({ ...s, policies: { ...s.policies, [fleet]: e.target.value as Policy } }))}
-                  className="bg-sw-bg border border-sw-border rounded-md px-2 py-1 text-xs"
+                  className="bg-ink-900 border border-ink-600 rounded-md px-2 py-1 text-xs"
                 >
                   {POLICIES.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
@@ -207,16 +207,16 @@ export function SettingsClient({
                   step={1000}
                   value={budget}
                   onChange={(e) => setSettings((s) => ({ ...s, budgets: { ...s.budgets, [fleet]: Number(e.target.value) } }))}
-                  className="bg-sw-bg border border-sw-border rounded-md px-2 py-1 text-xs w-28 font-mono"
+                  className="bg-ink-900 border border-ink-600 rounded-md px-2 py-1 text-xs w-28 font-mono"
                 />
-                <span className="text-xs text-sw-muted">tok</span>
+                <span className="text-xs text-moon-400">tok</span>
               </div>
             );
           })}
         </div>
       </Section>
 
-      <div className="border-t border-sw-border pt-6">
+      <div className="border-t border-ink-600 pt-6">
         <button className="btn-primary" onClick={save} disabled={busy}>
           <Save className="w-4 h-4 inline mr-1" /> Save changes
         </button>
@@ -229,7 +229,7 @@ function Section({ title, desc, children }: { title: string; desc: string; child
   return (
     <section>
       <h2 className="text-sm font-semibold mb-1">{title}</h2>
-      <p className="text-xs text-sw-muted mb-3">{desc}</p>
+      <p className="text-xs text-moon-400 mb-3">{desc}</p>
       <div>{children}</div>
     </section>
   );
@@ -238,7 +238,7 @@ function Section({ title, desc, children }: { title: string; desc: string; child
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs text-sw-muted">{label}</span>
+      <span className="text-xs text-moon-400">{label}</span>
       {children}
     </label>
   );

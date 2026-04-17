@@ -1,39 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,30..100&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: dark;
+  --noise-opacity: 0.025;
 }
 
 html, body {
-  background: #0a0a0f;
-  color: #e5e5ec;
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: #06070d;
+  color: #d8dde8;
+  font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-variation-settings: "opsz" 14;
+  font-feature-settings: "ss01" on, "cv11" on;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(122, 158, 255, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(243, 194, 130, 0.06), transparent 50%),
+    radial-gradient(ellipse 70% 70% at 0% 100%, rgba(122, 158, 255, 0.04), transparent 60%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Subtle film-grain over the entire viewport */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+
+/* Star field — fixed, very subtle */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(216, 221, 232, 0.5), transparent),
+    radial-gradient(1px 1px at 70% 80%, rgba(216, 221, 232, 0.4), transparent),
+    radial-gradient(1px 1px at 40% 90%, rgba(216, 221, 232, 0.3), transparent),
+    radial-gradient(1px 1px at 90% 10%, rgba(243, 194, 130, 0.4), transparent),
+    radial-gradient(1px 1px at 10% 60%, rgba(122, 158, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 55% 5%, rgba(216, 221, 232, 0.4), transparent),
+    radial-gradient(1px 1px at 85% 50%, rgba(216, 221, 232, 0.35), transparent);
 }
 
 @layer components {
   .panel {
-    @apply bg-sw-panel border border-sw-border rounded-xl;
+    @apply bg-ink-800/70 border border-ink-600 rounded-xl backdrop-blur-sm;
+    background-image: linear-gradient(180deg, rgba(255,255,255,0.018), transparent 40%);
+    box-shadow: 0 1px 0 0 rgba(255,255,255,0.03) inset, 0 0 0 1px rgba(255,255,255,0.02);
+  }
+  .panel-raised {
+    @apply panel;
+    background-color: rgb(17 20 31 / 0.85);
   }
   .pill {
-    @apply px-2 py-0.5 rounded-md text-xs font-medium;
+    @apply px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wider uppercase font-mono;
   }
-  .pill-green  { @apply pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20; }
-  .pill-yellow { @apply pill bg-amber-500/10  text-amber-400  border border-amber-500/20; }
-  .pill-red    { @apply pill bg-red-500/10    text-red-400    border border-red-500/20; }
-  .pill-muted  { @apply pill bg-sw-border text-sw-muted border border-sw-border; }
+  .pill-green  { @apply pill bg-signal-green/10 text-signal-green border border-signal-green/20; }
+  .pill-amber  { @apply pill bg-signal-amber/10 text-signal-amber border border-signal-amber/20; }
+  .pill-red    { @apply pill bg-signal-red/10   text-signal-red   border border-signal-red/20; }
+  .pill-aurora { @apply pill bg-aurora-400/10   text-aurora-400   border border-aurora-400/20; }
+  .pill-muted  { @apply pill bg-ink-600/50      text-moon-400     border border-ink-600; }
+  .pill-yellow { @apply pill-amber; }
+  .pill-stone  { @apply pill-muted; }
+  .pill-blue   { @apply pill-aurora; }
+  .pill-rose   { @apply pill-red; }
+
   .btn {
-    @apply px-3 py-1.5 rounded-md text-sm font-medium transition-colors;
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center;
   }
   .btn-primary {
-    @apply btn bg-sw-accent hover:bg-indigo-500 text-white;
+    @apply btn bg-dawn-400 hover:bg-dawn-500 text-ink-900;
+    box-shadow: 0 0 0 1px rgba(243, 194, 130, 0.25), 0 8px 24px -8px rgba(243, 194, 130, 0.45);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 0 1px rgba(243, 194, 130, 0.35), 0 12px 32px -10px rgba(243, 194, 130, 0.6);
   }
   .btn-ghost {
-    @apply btn text-sw-muted hover:text-sw-text hover:bg-sw-border;
+    @apply btn text-moon-400 hover:text-moon-50 hover:bg-ink-600/40;
   }
   .btn-danger {
-    @apply btn bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20;
+    @apply btn bg-signal-red/10 text-signal-red hover:bg-signal-red/20 border border-signal-red/20;
   }
+
+  .display {
+    font-family: 'Fraunces', ui-serif, Georgia, serif;
+    font-variation-settings: "opsz" 144, "SOFT" 80, "wght" 380;
+    letter-spacing: -0.025em;
+  }
+  .display-bold {
+    font-family: 'Fraunces', ui-serif, Georgia, serif;
+    font-variation-settings: "opsz" 144, "SOFT" 60, "wght" 600;
+    letter-spacing: -0.03em;
+  }
+  .label {
+    @apply uppercase tracking-[0.18em] text-[11px] font-medium text-moon-400 font-mono;
+  }
+  .hairline {
+    @apply border-t border-ink-600;
+  }
+  .data {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-feature-settings: "ss01" on, "ss02" on, "calt" off;
+  }
+}
+
+/* Selection */
+::selection {
+  background: rgba(243, 194, 130, 0.3);
+  color: #fff;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+
+/* Focus rings */
+:focus-visible {
+  outline: 2px solid rgba(243, 194, 130, 0.6);
+  outline-offset: 2px;
+  border-radius: 6px;
 }

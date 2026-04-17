@@ -1,5 +1,6 @@
 import { listRoutines } from "@/lib/routines";
 import { RoutinesClient } from "./routines-client";
+import { PageHeader } from "../_components/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -8,16 +9,17 @@ export default function RoutinesPage() {
   const installed = routines.filter((r) => r.installed).length;
 
   return (
-    <div>
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold mb-1">Local Routines</h1>
-        <p className="text-sw-muted text-sm">
-          {routines.length} fleet member{routines.length === 1 ? "" : "s"} ({installed} installed in <code className="font-mono">~/.claude/scheduled-tasks/</code>).
-          Toggle to enable scheduled runs.
-        </p>
-      </header>
-
+    <>
+      <PageHeader
+        eyebrow="Tier B / Desktop"
+        title="Local Routines"
+        subtitle={
+          <>
+            {routines.length} fleet member{routines.length === 1 ? "" : "s"} — {installed} installed in <code className="data text-moon-200">~/.claude/scheduled-tasks/</code>. Toggle a routine to enable it for scheduled runs.
+          </>
+        }
+      />
       <RoutinesClient initial={routines} />
-    </div>
+    </>
   );
 }

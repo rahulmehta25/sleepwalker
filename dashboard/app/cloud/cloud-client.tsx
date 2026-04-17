@@ -15,7 +15,7 @@ export function CloudClient({
 
   if (routines.length === 0) {
     return (
-      <div className="panel p-8 text-center text-sw-muted">
+      <div className="panel p-8 text-center text-moon-400">
         <p>No cloud routine bundles found.</p>
         <p className="text-xs font-mono mt-2">Expected at ../routines-cloud/*/config.json</p>
       </div>
@@ -29,7 +29,7 @@ export function CloudClient({
         return (
           <div key={r.id} className="panel">
             <button
-              className="w-full text-left p-4 flex items-start justify-between gap-4 hover:bg-sw-border/30 transition-colors rounded-lg"
+              className="w-full text-left p-4 flex items-start justify-between gap-4 hover:bg-ink-600/30 transition-colors rounded-lg"
               onClick={() => setExpanded(isExpanded ? null : r.id)}
               aria-expanded={isExpanded}
             >
@@ -38,20 +38,20 @@ export function CloudClient({
                   <span className="font-medium">{r.name}</span>
                   <TriggerPills triggers={r.triggers} />
                 </div>
-                <p className="text-sm text-sw-muted">{firstParagraph(r.prompt)}</p>
-                <div className="text-xs text-sw-muted mt-2 flex gap-2 flex-wrap">
+                <p className="text-sm text-moon-400">{firstParagraph(r.prompt)}</p>
+                <div className="text-xs text-moon-400 mt-2 flex gap-2 flex-wrap">
                   {r.connectors.map((c) => <span key={c} className="pill-muted">{c}</span>)}
                   {r.env_vars.length > 0 && <span className="pill-muted">{r.env_vars.length} env vars</span>}
                   <span className="pill-muted">~{r.approx_runs_per_week}/week</span>
                 </div>
               </div>
-              <div className="flex-shrink-0 text-sw-muted">
+              <div className="flex-shrink-0 text-moon-400">
                 {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
               </div>
             </button>
 
             {isExpanded && (
-              <div className="border-t border-sw-border p-4 space-y-4">
+              <div className="border-t border-ink-600 p-4 space-y-4">
                 {!githubConfigured && (
                   <div className="text-xs panel-amber p-2 rounded">
                     <span className="pill-amber">heads up</span> Configure GitHub in Settings before setting up cloud routines.
@@ -59,7 +59,7 @@ export function CloudClient({
                 )}
 
                 <Section title="Setup">
-                  <pre className="text-xs whitespace-pre-wrap font-mono bg-sw-bg border border-sw-border rounded-md p-3 overflow-x-auto max-h-80 overflow-y-auto">{r.setup}</pre>
+                  <pre className="text-xs whitespace-pre-wrap font-mono bg-ink-900 border border-ink-600 rounded-md p-3 overflow-x-auto max-h-80 overflow-y-auto">{r.setup}</pre>
                 </Section>
 
                 <Section title="Prompt">
@@ -102,7 +102,7 @@ function TriggerPills({ triggers }: { triggers: CloudRoutine["triggers"] }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-xs font-semibold text-sw-muted uppercase tracking-wide mb-2">{title}</div>
+      <div className="text-xs font-semibold text-moon-400 uppercase tracking-wide mb-2">{title}</div>
       {children}
     </div>
   );
@@ -117,10 +117,10 @@ function PromptCopy({ prompt }: { prompt: string }) {
   }
   return (
     <div className="relative">
-      <button onClick={copy} className="absolute top-2 right-2 btn-ghost text-xs flex items-center gap-1 bg-sw-bg border border-sw-border z-10">
+      <button onClick={copy} className="absolute top-2 right-2 btn-ghost text-xs flex items-center gap-1 bg-ink-900 border border-ink-600 z-10">
         {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
       </button>
-      <pre className="text-xs font-mono whitespace-pre-wrap bg-sw-bg border border-sw-border rounded-md p-3 overflow-x-auto max-h-80 overflow-y-auto pr-20">{prompt}</pre>
+      <pre className="text-xs font-mono whitespace-pre-wrap bg-ink-900 border border-ink-600 rounded-md p-3 overflow-x-auto max-h-80 overflow-y-auto pr-20">{prompt}</pre>
     </div>
   );
 }
