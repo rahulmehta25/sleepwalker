@@ -9,7 +9,7 @@ A curated fleet of Claude Code agents that handle your overnight busywork — in
 Sleepwalker is the first overnight-agent product built on **both** of Anthropic's autonomous-execution surfaces:
 
 - **Local fleet** runs on your Mac via [Claude Code Desktop Scheduled Tasks](https://code.claude.com/docs/en/desktop-scheduled-tasks). It can touch Mail.app, Calendar, Photos, your Downloads, your local repos.
-- **Cloud fleet** runs on [Claude Code Routines](https://code.claude.com/docs/en/routines). It opens PRs from `claude/`-prefixed branches, listens for GitHub events, and exposes per-routine HTTPS endpoints you can wire to Sentry, deploy pipelines, iOS Shortcuts.
+- **Cloud fleet** runs on [Claude Code Routines](https://code.claude.com/docs/en/routines). It opens PRs from `claude/`-prefixed branches, listens for GitHub events, and exposes per-routine HTTPS endpoints you can fire from the dashboard's "Run now" button, Sentry/PagerDuty webhooks, deploy pipelines, or an iOS Shortcut.
 
 The dashboard at `localhost:4001` unifies both into one surface: one queue, one audit log, one place to approve.
 
@@ -135,10 +135,10 @@ For the **cloud fleet**: open the **Cloud Routines** page → click "Set up" on 
 ## Tests
 
 ```bash
-# Lib tests (28 tests)
+# Lib tests (43 tests)
 cd dashboard && pnpm test
 
-# Hook script tests (21 tests)
+# Hook script tests (26 tests)
 hooks/tests/run-tests.sh
 
 # install.sh idempotency
@@ -161,7 +161,8 @@ All four test suites pass clean on a fresh install.
 - [x] Per-fleet token budgets enforced via PostToolUse hook
 - [x] Reversibility-color-coded defer policies (green/yellow/red)
 - [x] Re-execution: approve writes to inbox, `bin/sleepwalker-execute` drains via fresh `claude -p`
-- [x] Tests: vitest libs (32) + bash hook harness (26) + install idempotency + synthetic E2E
+- [x] **API trigger**: per-routine bearer-token credentials (mode 0600, never returned by GET), dashboard **Run now** button with optional context payload, real Anthropic API round-trip verified
+- [x] Tests: vitest libs (43) + bash hook harness (26) + install idempotency + synthetic E2E
 - [x] **Verified via real `claude -p` invocations**: hooks fire, fleet detected from `[sleepwalker:fleet]` marker, defer queues real WebFetch, audit captures all activity, no interference with non-sleepwalker sessions
 - [x] **Verified end-to-end re-execution**: deferred WebFetch approved → queued to inbox → executed via fresh claude -p → real GitHub Zen wisdom returned ("Accessible for all.")
 
@@ -175,6 +176,7 @@ All four test suites pass clean on a fresh install.
 - Dashboard reads/writes all state files correctly
 - Approve → re-execute loop with `SLEEPWALKER_REEXECUTING=1` env-var bypass to prevent re-defer loop
 - Cloud queue bridge: GitHub PR polling, mock-tested + token round-trip verified
+- Cloud routine API trigger: real Anthropic API round-trip verified — fired with a fake token and got back an Anthropic `request_id` with `authentication_error`, proving the bearer + beta + version headers all reached real infra correctly
 
 🟡 Designed but requires user to verify on their setup:
 - Whether Desktop's Schedule tab actually surfaces and runs SKILL.md files (format matches docs but I can't open Desktop for you)
