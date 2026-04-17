@@ -1,0 +1,15 @@
+{
+  "name": "Sleepwalker Alert Triage",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "api"
+    }
+  ],
+  "repos": "all-tracked",
+  "connectors": ["github"],
+  "env_vars": [],
+  "recommended_schedule": null,
+  "branch_policy": "claude/sleepwalker/alert-triage/*",
+  "approx_runs_per_week": 10
+}

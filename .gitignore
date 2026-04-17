@@ -1,0 +1,28 @@
+node_modules/
+.next/
+.vercel/
+.DS_Store
+.env
+.env.local
+.env.*.local
+*.log
+dist/
+build/
+out/
+.turbo/
+coverage/
+.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Dashboard
+dashboard/node_modules/
+dashboard/.next/
+dashboard/.vercel/
+dashboard/tsconfig.tsbuildinfo
+
+# Test artifacts
+/tmp/sleepwalker-test-*
+
+# Editor
+.idea/
+.vscode/

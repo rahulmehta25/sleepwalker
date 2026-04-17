@@ -1,0 +1,17 @@
+{
+  "name": "Sleepwalker Dead Code Pruner",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "schedule",
+      "cron": "0 1 1 * *",
+      "description": "First of every month at 01:00 local"
+    }
+  ],
+  "repos": "all-tracked",
+  "connectors": ["github"],
+  "env_vars": [],
+  "recommended_schedule": "0 1 1 * *",
+  "branch_policy": "claude/sleepwalker/dead-code/*",
+  "approx_runs_per_week": 0.25
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Sleepwalker Dependency Upgrader",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "schedule",
+      "cron": "0 4 * * 1-5",
+      "description": "Weekdays at 04:00 local"
+    }
+  ],
+  "repos": "all-tracked",
+  "connectors": ["github"],
+  "env_vars": [],
+  "recommended_schedule": "0 4 * * 1-5",
+  "branch_policy": "claude/sleepwalker/deps/*",
+  "approx_runs_per_week": 5
+}

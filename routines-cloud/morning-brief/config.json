@@ -1,0 +1,17 @@
+{
+  "name": "Sleepwalker Morning Brief",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "schedule",
+      "cron": "0 6 * * 1-5",
+      "description": "Weekdays at 06:00 local"
+    }
+  ],
+  "repos": "all-tracked",
+  "connectors": ["github", "slack", "linear"],
+  "env_vars": ["MORNING_BRIEF_SLACK_CHANNEL"],
+  "recommended_schedule": "0 6 * * 1-5",
+  "branch_policy": null,
+  "approx_runs_per_week": 5
+}

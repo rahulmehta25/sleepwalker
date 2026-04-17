@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background: #0a0a0f;
+  color: #e5e5ec;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .panel {
+    @apply bg-sw-panel border border-sw-border rounded-xl;
+  }
+  .pill {
+    @apply px-2 py-0.5 rounded-md text-xs font-medium;
+  }
+  .pill-green  { @apply pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20; }
+  .pill-yellow { @apply pill bg-amber-500/10  text-amber-400  border border-amber-500/20; }
+  .pill-red    { @apply pill bg-red-500/10    text-red-400    border border-red-500/20; }
+  .pill-muted  { @apply pill bg-sw-border text-sw-muted border border-sw-border; }
+  .btn {
+    @apply px-3 py-1.5 rounded-md text-sm font-medium transition-colors;
+  }
+  .btn-primary {
+    @apply btn bg-sw-accent hover:bg-indigo-500 text-white;
+  }
+  .btn-ghost {
+    @apply btn text-sw-muted hover:text-sw-text hover:bg-sw-border;
+  }
+  .btn-danger {
+    @apply btn bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20;
+  }
+}

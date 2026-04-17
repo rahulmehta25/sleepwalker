@@ -1,0 +1,17 @@
+{
+  "name": "Sleepwalker Test Coverage Filler",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "schedule",
+      "cron": "0 2 * * 6",
+      "description": "Saturdays at 02:00 local"
+    }
+  ],
+  "repos": "all-tracked",
+  "connectors": ["github"],
+  "env_vars": [],
+  "recommended_schedule": "0 2 * * 6",
+  "branch_policy": "claude/sleepwalker/test-coverage/*",
+  "approx_runs_per_week": 1
+}

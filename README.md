@@ -1,0 +1,168 @@
+# Sleepwalker
+
+> **The Mac that runs while you sleep — and the cloud that picks up where it can't reach.**
+
+A curated fleet of Claude Code agents that handle your overnight busywork — inbox triage, PR reviews, dependency upgrades, file organization, doc-drift fixes — and present a single swipe-through Morning Queue at wake.
+
+![Morning Queue](docs/screenshots/queue.png)
+
+Sleepwalker is the first overnight-agent product built on **both** of Anthropic's autonomous-execution surfaces:
+
+- **Local fleet** runs on your Mac via [Claude Code Desktop Scheduled Tasks](https://code.claude.com/docs/en/desktop-scheduled-tasks). It can touch Mail.app, Calendar, Photos, your Downloads, your local repos.
+- **Cloud fleet** runs on [Claude Code Routines](https://code.claude.com/docs/en/routines). It opens PRs from `claude/`-prefixed branches, listens for GitHub events, and exposes per-routine HTTPS endpoints you can wire to Sentry, deploy pipelines, iOS Shortcuts.
+
+The dashboard at `localhost:4001` unifies both into one surface: one queue, one audit log, one place to approve.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        Sleepwalker — overnight                   │
+├─────────────────────────┬────────────────────────────────────────┤
+│  Local fleet (Mac)      │  Cloud fleet (Routines)                │
+├─────────────────────────┼────────────────────────────────────────┤
+│  02:00  Downloads filed │  on PR opened: review drafted          │
+│  03:00  Receipts sorted │  weekdays 04:00: deps upgraded         │
+│  05:00  Inbox triaged   │  on prod alert: triage PR opened       │
+│  06:00  Brief assembled │  weekly: docs drift swept              │
+└─────────────────────────┴────────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              Morning Queue (07:00, localhost:4001)               │
+│                                                                  │
+│   ┌─ 8 actions awaiting review (4 local, 4 cloud) ─────────┐    │
+│   │ [▶ swipe to review]                                     │    │
+│   └─────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+## Why this exists
+
+Every overnight-AI-agent product (Devin, Cursor BG agents, Replit Agent, Lindy, OpenAI Operator) has the same three complaints:
+
+1. **Surprise cost bills** — runaway loops, no per-task budget caps.
+2. **False "done" claims** — claims success when failed.
+3. **No good answer to "what did it do?"** — scattered notifications, no audit trail.
+
+Sleepwalker fixes all three by being native to Claude Code's own primitives:
+
+| Problem | Local fleet (Tier B) | Cloud fleet (Tier C / Routines) |
+|---------|---------------------|--------------------------------|
+| Surprise bills | `PostToolUse` hook caps tokens per fleet member | Per-routine subscription + daily run cap, visible at claude.ai/code/routines |
+| False "done" | `defer` decision parks every irreversible action; you approve at wake | Output is always a `claude/sleepwalker/*` branch — review the PR, merge or close |
+| No audit | Single Morning Queue UI with timestamped log + reversibility colors | GitHub PR list = audit trail, polled into the same Morning Queue |
+
+## How it works
+
+**Each local fleet member is a Tier-B Desktop Scheduled Task** at `~/.claude/scheduled-tasks/sleepwalker-<name>/SKILL.md` with its own permission scope and "Always allowed" allowlist.
+
+**Each cloud fleet member is a Tier-C Routine** at claude.ai/code/routines with its own prompt, repo set, connectors, and triggers (schedule / API / GitHub event).
+
+**Three local hooks enforce safety on the Mac:**
+- `sleepwalker-defer-irreversible.sh` (PreToolUse) parks `WebFetch`, `Bash(git push)`, `Bash(curl POST)`, `Bash(gh pr create)` etc. into the Morning Queue
+- `sleepwalker-budget-cap.sh` (PostToolUse) counts tokens, halts at the per-fleet limit
+- `sleepwalker-audit-log.sh` (PostToolUse) appends every action to `~/.sleepwalker/audit.jsonl`
+
+**One queue across both tiers:**
+- Local routines write to `~/.sleepwalker/queue.jsonl` directly via the defer hook
+- Cloud routines push `claude/sleepwalker/*` branches to your repos; the dashboard polls GitHub for them
+- The Morning Queue UI shows both, swipe-through
+
+## The fleet (15 routines)
+
+### Local (6 — runs on your Mac)
+
+These need direct access to local apps. Run via Desktop Scheduled Tasks.
+
+| Routine | Schedule | What it does |
+|---------|----------|--------------|
+| `sleepwalker-inbox-triage` | weekdays 5:00 | Mail.app: classify, draft top 5 replies (queued, not sent) |
+| `sleepwalker-downloads-organizer` | daily 2:00 | File `~/Downloads` by type; queue 30+ day stale for deletion review |
+| `sleepwalker-calendar-prep` | weekdays 6:30 | Brief packets for tomorrow's meetings |
+| `sleepwalker-standup-writer` | weekdays 8:30 | Daily standup from local git + calendar |
+| `sleepwalker-screenshot-reviewer` | daily 1:30 | Vision OCR + classify Desktop screenshots |
+| `sleepwalker-disk-cleanup` | weekly Sun 3:00 | Find homebrew old versions, npm cache, Xcode DerivedData |
+
+### Cloud (8 — runs on Anthropic infra via Routines)
+
+These operate on GitHub repos, can use MCP connectors, run while your laptop is closed.
+
+| Routine | Trigger | What it does |
+|---------|---------|--------------|
+| `pr-reviewer` | GitHub `pull_request.opened` | Inline review with security/perf/style checks, summary comment |
+| `dependency-upgrader` | weekdays 04:00 | Bump npm/pip/cargo deps, run tests on `claude/sleepwalker/deps` branch |
+| `doc-drift-fixer` | weekly Sun 03:00 | Find drifted READMEs/docstrings, open PR per repo |
+| `test-coverage-filler` | weekly Sat 02:00 | Find uncovered functions, write tests, open PR |
+| `dead-code-pruner` | monthly | Find unused exports, propose removal |
+| `morning-brief` | weekdays 06:00 | Pull from Slack/Linear connectors, post digest to a channel |
+| `library-port` | GitHub `pull_request.closed` (merged) on SDK A | Port to SDK B in another language, open matching PR |
+| `alert-triage` | API trigger from Sentry/PagerDuty | Pull stack trace, correlate with recent commits, draft fix PR |
+
+All routines are **disabled by default**. Enable from the dashboard.
+
+## Quickstart
+
+```bash
+git clone https://github.com/rahulmehta25/sleepwalker.git
+cd sleepwalker
+./install.sh                                        # local fleet + hooks
+cd dashboard && pnpm install && pnpm dev --port 4001
+```
+
+For the **local fleet**: open http://localhost:4001 → Routines → toggle to enable.
+For the **cloud fleet**: open the **Cloud Routines** page → click "Set up" on each → it generates the `/schedule create` command + opens claude.ai/code/routines pre-filled.
+
+[Full quickstart guide →](docs/QUICKSTART.md) · [Routine catalog →](docs/ROUTINES.md) · [Architecture →](docs/ARCHITECTURE.md)
+
+## Screenshots
+
+| Local Routines | Cloud Routines |
+|:---:|:---:|
+| ![Local Routines](docs/screenshots/routines.png) | ![Cloud Routines](docs/screenshots/cloud.png) |
+
+| Audit Log | Settings |
+|:---:|:---:|
+| ![Audit Log](docs/screenshots/audit.png) | ![Settings](docs/screenshots/settings.png) |
+
+## Architecture
+
+[See docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the deep dive on:
+- The two-tier execution model (local + cloud)
+- Reversibility classification & defer policies
+- Token budget enforcement
+- The unified Morning Queue (local jsonl + GitHub PR polling)
+- Why we chose this over OpenClaw / custom orchestration
+
+## Tests
+
+```bash
+# Lib tests (28 tests)
+cd dashboard && pnpm test
+
+# Hook script tests (21 tests)
+hooks/tests/run-tests.sh
+
+# install.sh idempotency
+hooks/tests/install-idempotency.sh
+
+# Full E2E demonstration
+hooks/tests/e2e.sh
+```
+
+All four test suites pass clean on a fresh install.
+
+## Status
+
+**v0.1 alpha** — built in a single overnight session on 2026-04-17.
+
+- [x] Local fleet: 6 routines + 3 hooks + install.sh
+- [x] Cloud fleet: 8 routine bundles with prompts + setup instructions
+- [x] Dashboard: Morning Queue, Local Routines, Cloud Routines, Audit, Settings
+- [x] Unified queue across both tiers (local JSONL + GitHub PR polling)
+- [x] Per-fleet token budgets enforced via PostToolUse hook
+- [x] Reversibility-color-coded defer policies (green/yellow/red)
+- [x] Tests: vitest libs (28) + bash hook harness (21) + install idempotency + E2E
+- [x] Documented end-to-end
+
+## License
+
+MIT

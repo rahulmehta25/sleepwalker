@@ -1,0 +1,20 @@
+{
+  "name": "Sleepwalker Library Port",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "github",
+      "event": "pull_request.closed",
+      "filters": {
+        "is_merged": true,
+        "base_branch": "main"
+      }
+    }
+  ],
+  "repos": "two-required",
+  "connectors": ["github"],
+  "env_vars": ["LIBRARY_PORT_SOURCE_REPO", "LIBRARY_PORT_TARGET_REPO", "LIBRARY_PORT_SOURCE_LANG", "LIBRARY_PORT_TARGET_LANG"],
+  "recommended_schedule": null,
+  "branch_policy": "claude/sleepwalker/library-port/*",
+  "approx_runs_per_week": 3
+}

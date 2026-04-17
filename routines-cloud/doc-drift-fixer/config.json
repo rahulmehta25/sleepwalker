@@ -1,0 +1,17 @@
+{
+  "name": "Sleepwalker Doc-Drift Fixer",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "schedule",
+      "cron": "0 3 * * 0",
+      "description": "Sundays at 03:00 local"
+    }
+  ],
+  "repos": "all-tracked",
+  "connectors": ["github"],
+  "env_vars": [],
+  "recommended_schedule": "0 3 * * 0",
+  "branch_policy": "claude/sleepwalker/doc-drift/*",
+  "approx_runs_per_week": 1
+}
