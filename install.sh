@@ -119,12 +119,17 @@ jq \
     .hooks //= {} |
     .hooks.PreToolUse  //= [] |
     .hooks.PostToolUse //= [] |
-    (.hooks.PreToolUse  | map(.command) | index($defer))  as $haveDefer |
-    (.hooks.PostToolUse | map(.command) | index($budget)) as $haveBudget |
-    (.hooks.PostToolUse | map(.command) | index($audit))  as $haveAudit |
-    (if $haveDefer == null then .hooks.PreToolUse += [{"type":"command","command":$defer,"matcher":"sleepwalker-*"}] else . end) |
-    (if $haveBudget == null then .hooks.PostToolUse += [{"type":"command","command":$budget,"matcher":"sleepwalker-*"}] else . end) |
-    (if $haveAudit  == null then .hooks.PostToolUse += [{"type":"command","command":$audit,"matcher":"sleepwalker-*"}] else . end)
+    # Hook is "present" if any entry in the array contains it inside its nested hooks list
+    def hasCmd(arr; path):
+      arr | map((.hooks // []) | map(.command) | index(path)) | map(. != null) | any;
+
+    (hasCmd(.hooks.PreToolUse;  $defer))  as $haveDefer  |
+    (hasCmd(.hooks.PostToolUse; $budget)) as $haveBudget |
+    (hasCmd(.hooks.PostToolUse; $audit))  as $haveAudit  |
+
+    (if $haveDefer  then . else .hooks.PreToolUse  += [{"matcher":"*","hooks":[{"type":"command","command":$defer}]}]  end) |
+    (if $haveBudget then . else .hooks.PostToolUse += [{"matcher":"*","hooks":[{"type":"command","command":$budget}]}] end) |
+    (if $haveAudit  then . else .hooks.PostToolUse += [{"matcher":"*","hooks":[{"type":"command","command":$audit}]}]  end)
   ' "$SETTINGS" > "$TMP"
 mv "$TMP" "$SETTINGS"
 

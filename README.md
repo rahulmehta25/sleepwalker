@@ -152,16 +152,33 @@ All four test suites pass clean on a fresh install.
 
 ## Status
 
-**v0.1 alpha** — built in a single overnight session on 2026-04-17.
+**v0.1 alpha** — built and shipped 2026-04-17.
 
 - [x] Local fleet: 6 routines + 3 hooks + install.sh
-- [x] Cloud fleet: 8 routine bundles with prompts + setup instructions
+- [x] Cloud fleet: 8 routine bundles + 1 integration-test bundle
 - [x] Dashboard: Morning Queue, Local Routines, Cloud Routines, Audit, Settings
 - [x] Unified queue across both tiers (local JSONL + GitHub PR polling)
 - [x] Per-fleet token budgets enforced via PostToolUse hook
 - [x] Reversibility-color-coded defer policies (green/yellow/red)
-- [x] Tests: vitest libs (28) + bash hook harness (21) + install idempotency + E2E
-- [x] Documented end-to-end
+- [x] Re-execution: approve writes to inbox, `bin/sleepwalker-execute` drains via fresh `claude -p`
+- [x] Tests: vitest libs (32) + bash hook harness (26) + install idempotency + synthetic E2E
+- [x] **Verified via real `claude -p` invocations**: hooks fire, fleet detected from `[sleepwalker:fleet]` marker, defer queues real WebFetch, audit captures all activity, no interference with non-sleepwalker sessions
+- [x] **Verified end-to-end re-execution**: deferred WebFetch approved → queued to inbox → executed via fresh claude -p → real GitHub Zen wisdom returned ("Accessible for all.")
+
+## What's been proven, what hasn't
+
+✅ Verified working:
+- Install (idempotent, preserves pre-existing hooks)
+- Hook chain: PreToolUse defer + PostToolUse budget + PostToolUse audit, all firing during real Claude Code sessions
+- Fleet detection via `[sleepwalker:routine-name]` marker tag in routine prompts
+- Bail-out for non-sleepwalker sessions (zero interference)
+- Dashboard reads/writes all state files correctly
+- Approve → re-execute loop with `SLEEPWALKER_REEXECUTING=1` env-var bypass to prevent re-defer loop
+- Cloud queue bridge: GitHub PR polling, mock-tested + token round-trip verified
+
+🟡 Designed but requires user to verify on their setup:
+- Whether Desktop's Schedule tab actually surfaces and runs SKILL.md files (format matches docs but I can't open Desktop for you)
+- Whether the 8 production cloud routines produce useful output (the Zen test bundle proves the bridge works; production routines need their own first-time validation)
 
 ## License
 

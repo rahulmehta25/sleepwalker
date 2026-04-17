@@ -1,0 +1,17 @@
+{
+  "name": "Sleepwalker Test (Zen)",
+  "tier": "C",
+  "triggers": [
+    {
+      "type": "schedule",
+      "cron": "0 9 1 1 *",
+      "description": "Manual / annual — set up via /schedule or web, then trigger via Run now"
+    }
+  ],
+  "repos": "one-required",
+  "connectors": ["github"],
+  "env_vars": [],
+  "recommended_schedule": null,
+  "branch_policy": "claude/sleepwalker/test-zen/*",
+  "approx_runs_per_week": 0
+}

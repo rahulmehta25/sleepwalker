@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { aggregateQueue } from "@/lib/queue-aggregator";
-import { updateLocalStatus, appendQueueEntry, type QueueEntry } from "@/lib/queue";
+import { readLocalQueue, updateLocalStatus, appendQueueEntry, type QueueEntry } from "@/lib/queue";
 import { hasGithubConfig } from "@/lib/settings";
+import { enqueueForExecution } from "@/lib/approval";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,20 @@ export async function POST(req: Request) {
 
   if (source === "local") {
     const status = body.action === "approve" ? "approved" : "rejected";
+
+    // Look up the entry first so we can enqueue it for re-execution on approve.
+    const entry = readLocalQueue().find((e) => e.id === body.id);
+    if (!entry) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     const ok = updateLocalStatus(body.id, status);
     if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json({ ok: true });
+
+    let queuedForExecution: string | null = null;
+    if (status === "approved") {
+      queuedForExecution = enqueueForExecution(entry);
+    }
+
+    return NextResponse.json({ ok: true, queuedForExecution });
   }
 
   // Cloud entries: log the dismiss/approve as a recorded decision in the local queue.

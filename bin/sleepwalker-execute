@@ -1,0 +1,82 @@
+#!/bin/bash
+# sleepwalker-execute: drain the approved queue and re-run each deferred action.
+#
+# When the user approves a deferred entry in the dashboard, the dashboard writes
+# the action payload to ~/.sleepwalker/approved/<entry-id>.task as JSON.
+#
+# This script reads each task file, dispatches the original action via a fresh
+# `claude -p` invocation (so the proper hooks/permissions apply), records the
+# result in the audit log, and removes the task file.
+#
+# Run it manually:
+#   sleepwalker-execute
+#
+# Or schedule it via Claude Code Desktop as a SKILL.md that runs every 15 min.
+
+set -euo pipefail
+
+INBOX="${HOME}/.sleepwalker/approved"
+DONE_DIR="${HOME}/.sleepwalker/executed"
+AUDIT="${HOME}/.sleepwalker/audit.jsonl"
+mkdir -p "$INBOX" "$DONE_DIR"
+
+shopt -s nullglob
+TASKS=("$INBOX"/*.task)
+if [ "${#TASKS[@]}" -eq 0 ]; then
+  echo "No approved tasks to execute."
+  exit 0
+fi
+
+echo "Found ${#TASKS[@]} approved task(s) to execute."
+
+for TASK_FILE in "${TASKS[@]}"; do
+  ID=$(basename "$TASK_FILE" .task)
+  echo
+  echo "==> Executing $ID"
+
+  TASK=$(cat "$TASK_FILE")
+  FLEET=$(echo "$TASK" | jq -r '.fleet // "unknown"')
+  TOOL=$(echo "$TASK" | jq -r '.tool // ""')
+  ARGS=$(echo "$TASK" | jq -c '.args // {}')
+
+  # Build a prompt that asks Claude to re-run the deferred tool call exactly as
+  # it was originally attempted.
+  RERUN_PROMPT="[sleepwalker:$FLEET]
+
+# Sleepwalker re-execution
+
+A previously-deferred tool call has been approved by the user via the Morning Queue. Re-execute exactly the call described below and report the result. Do NOT do anything else.
+
+Tool: $TOOL
+Arguments (JSON):
+\`\`\`json
+$ARGS
+\`\`\`
+"
+
+  TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  RESULT_FILE="$DONE_DIR/${ID}.result"
+
+  # Run claude -p with SLEEPWALKER_REEXECUTING=1 in env. The defer hook
+  # respects this and allows the re-run to proceed without re-deferring.
+  # We can't use --bare because that skips OAuth keychain reads too.
+  if SLEEPWALKER_REEXECUTING=1 claude -p --permission-mode bypassPermissions "$RERUN_PROMPT" < /dev/null > "$RESULT_FILE" 2>&1; then
+    STATUS="executed"
+    echo "  ✓ executed (result in $RESULT_FILE)"
+  else
+    STATUS="failed"
+    echo "  ✗ failed (see $RESULT_FILE)"
+  fi
+
+  # Audit
+  jq -nc --arg ts "$TS" --arg fleet "$FLEET" --arg tool "$TOOL" --argjson args "$ARGS" \
+    --arg id "$ID" --arg status "$STATUS" --arg result "$(head -c 500 "$RESULT_FILE" 2>/dev/null)" \
+    '{ts:$ts,fleet:$fleet,event:"reexecuted",tool:$tool,args:$args,entry_id:$id,status:$status,output_preview:$result}' \
+    >> "$AUDIT"
+
+  # Move task to executed dir so we don't re-run
+  mv "$TASK_FILE" "$DONE_DIR/${ID}.task"
+done
+
+echo
+echo "Done. ${#TASKS[@]} task(s) processed."

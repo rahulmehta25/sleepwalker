@@ -63,14 +63,15 @@ DEFER="$TEST_HOME/.claude/hooks/sleepwalker-defer-irreversible.sh"
 BUDGET="$TEST_HOME/.claude/hooks/sleepwalker-budget-cap.sh"
 AUDIT="$TEST_HOME/.claude/hooks/sleepwalker-audit-log.sh"
 
-# Helper: run a tool call through defer + budget + audit
+# Helper: run a tool call through defer + budget + audit.
+# SLEEPWALKER_FLEET env var is set so the hooks don't need to read a transcript.
 run_tool() {
   local fleet="$1" tool_input="$2"
   local out
 
   # PreToolUse: defer
   out=$(echo "$tool_input" | SLEEPWALKER_FLEET="$fleet" SLEEPWALKER_MODE=overnight "$DEFER")
-  local decision=$(echo "$out" | jq -r '.permissionDecision')
+  local decision=$(echo "$out" | jq -r '.hookSpecificOutput.permissionDecision')
 
   # If allowed, simulate the tool running and the PostToolUse hooks firing
   if [ "$decision" = "allow" ]; then

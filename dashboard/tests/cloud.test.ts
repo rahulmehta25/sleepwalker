@@ -10,12 +10,13 @@ describe("cloud routine bundles", () => {
   beforeAll(() => process.chdir(DASHBOARD_DIR));
   afterAll(() => process.chdir(ORIG_CWD));
 
-  it("listCloudRoutines finds all 8 bundles", async () => {
+  it("listCloudRoutines finds all 9 bundles (8 production + 1 integration test)", async () => {
     const { listCloudRoutines } = await import("@/lib/cloud");
     const routines = listCloudRoutines();
-    expect(routines.length).toBe(8);
+    expect(routines.length).toBe(9);
     const ids = routines.map((r) => r.id).sort();
     expect(ids).toEqual([
+      "_test-zen",
       "alert-triage",
       "dead-code-pruner",
       "dependency-upgrader",
