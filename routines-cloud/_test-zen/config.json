@@ -6,6 +6,9 @@
       "type": "schedule",
       "cron": "0 9 1 1 *",
       "description": "Manual / annual — set up via /schedule or web, then trigger via Run now"
+    },
+    {
+      "type": "api"
     }
   ],
   "repos": "one-required",

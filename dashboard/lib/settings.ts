@@ -14,6 +14,9 @@ function trackedFile(): string {
 function tokenFile(): string {
   return path.join(home(), ".sleepwalker", "github-token");
 }
+function cloudCredsFile(): string {
+  return path.join(home(), ".sleepwalker", "cloud-credentials.json");
+}
 
 export type Policy = "strict" | "balanced" | "yolo";
 
@@ -102,6 +105,73 @@ export function writeGithubToken(token: string): void {
 export function clearGithubToken(): void {
   const f = tokenFile();
   if (fs.existsSync(f)) fs.unlinkSync(f);
+}
+
+// ----------------------------------------------------------------------------
+// Cloud routine credentials (per-routine API trigger url + bearer token)
+// ----------------------------------------------------------------------------
+
+export interface CloudCredential {
+  /** Full /fire endpoint URL from claude.ai/code/routines */
+  url: string;
+  /** Bearer token (sk-ant-oat01-...) — shown once, store securely */
+  token: string;
+  /** ISO timestamp when configured */
+  configuredAt: string;
+}
+
+type CloudCredsMap = Record<string, CloudCredential>;
+
+function readAllCloudCreds(): CloudCredsMap {
+  const f = cloudCredsFile();
+  if (!fs.existsSync(f)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(f, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function writeAllCloudCreds(creds: CloudCredsMap): void {
+  const f = cloudCredsFile();
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, JSON.stringify(creds, null, 2));
+  fs.chmodSync(f, 0o600);
+}
+
+export function getCloudCredential(routineId: string): CloudCredential | null {
+  const all = readAllCloudCreds();
+  return all[routineId] ?? null;
+}
+
+/** Whether a routine has API-trigger credentials configured. */
+export function hasCloudCredential(routineId: string): boolean {
+  return getCloudCredential(routineId) !== null;
+}
+
+export function setCloudCredential(routineId: string, url: string, token: string): void {
+  const all = readAllCloudCreds();
+  all[routineId] = { url, token, configuredAt: new Date().toISOString() };
+  writeAllCloudCreds(all);
+}
+
+export function clearCloudCredential(routineId: string): void {
+  const all = readAllCloudCreds();
+  if (all[routineId]) {
+    delete all[routineId];
+    writeAllCloudCreds(all);
+  }
+}
+
+/**
+ * Public-safe view: never expose tokens, only configured/not + URL host + timestamp.
+ */
+export function getCloudCredentialPublic(routineId: string): { configured: boolean; host?: string; configuredAt?: string } {
+  const c = getCloudCredential(routineId);
+  if (!c) return { configured: false };
+  let host = "";
+  try { host = new URL(c.url).host; } catch { host = "(invalid url)"; }
+  return { configured: true, host, configuredAt: c.configuredAt };
 }
 
 /**
