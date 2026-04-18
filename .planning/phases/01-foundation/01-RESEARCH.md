@@ -715,17 +715,17 @@ This test file uses the `@/*` path alias (mapped to `./*` in `dashboard/tsconfig
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should ADPT-02 (naming convention) ship as a runtime validator, or as types + documentation only?**
+   - **RESOLVED:** Ship `slug.ts` in Phase 1 as a standalone validator module. Locked into Plan 01-03 with `validateSlug`, `isRuntime`, five builders (`toFleetKey`, `toLaunchdLabel`, `toMarkerTag`, `toBranchPrefix`, `toPlistPath`, `toBundleDir`), and `parseFleetKey` round-trip utility.
    - **What we know:** The regex and identifier formats are fully specified. TypeScript alone can enforce `Runtime` values. A validator adds ~30 lines of code + one test file.
-   - **What's unclear:** Whether a standalone validator module is justified in Phase 1 or if it should be rolled into `bundles.ts` (Phase 2) or `editor.ts` (Phase 3).
-   - **Recommendation:** Ship `slug.ts` in Phase 1. Reasons: (a) Phase 2 adapters will construct launchd labels and marker tags — they need the builders; (b) deferring means Phase 2 plan either defines the builders ad hoc (drift risk) or imports from Phase 3 (temporal backward dep); (c) a self-contained validator module with 8 unit tests is ~15 min of work and locks behavior. Classification: **discretionary but strongly recommended**.
+   - **Rationale:** (a) Phase 2 adapters will construct launchd labels and marker tags — they need the builders; (b) deferring means Phase 2 plan either defines the builders ad hoc (drift risk) or imports from Phase 3 (temporal backward dep); (c) a self-contained validator module with unit tests is ~15 min of work and locks behavior.
 
 2. **Does Phase 1 touch any v0.1 code to honor the new naming convention?**
+   - **RESOLVED:** Phase 1 touches zero v0.1 files. Plan 01-04 enforces this with an automated `git diff HEAD~1 HEAD` frozen-surface gate over the enumerated v0.1 file list.
    - **What we know:** v0.1 code uses bare slugs (`inbox-triage`, `pr-reviewer`) in `QueueEntry.fleet`, audit JSONL `fleet` field, marker tags in routine prompts, and `branch_policy` in `routines-cloud/*/config.json`. All 14 routines and `hooks/_detect_fleet.sh` match on the bare slug form.
-   - **What's unclear:** Nothing — the ROADMAP and upstream research explicitly say "NO v0.1 changes in Phase 1."
-   - **Recommendation:** Phase 1 touches zero v0.1 files. Specifically:
+   - **Rationale:** The ROADMAP and upstream research explicitly say "NO v0.1 changes in Phase 1." Specifically untouched:
      - `dashboard/lib/queue.ts` — untouched (QueueSource widening is Phase 5)
      - `dashboard/lib/routines.ts` — untouched (unified reader is Phase 2/3)
      - `hooks/*.sh` — untouched (forever frozen)
@@ -734,19 +734,19 @@ This test file uses the `@/*` path alias (mapped to `./*` in `dashboard/tsconfig
    - **Only additive changes in Phase 1.** Backward-compat verification is Phase 6's integration test job, not Phase 1's concern.
 
 3. **How do existing v0.1 routines get a `runtime` field?**
-   - **What we know:** v0.1 SKILL.md and prompt.md files do NOT contain a `runtime:` frontmatter field. The roadmap says the unified bundle reader infers `runtime` from the parent directory.
-   - **What's unclear:** Whether the inference happens at read time (Phase 2 `bundles.ts`) or if a Phase 1 data-migration is needed.
-   - **Recommendation:** **Defer to Phase 2/3.** Phase 1 does not touch v0.1 bundle files. The unified reader (`bundles.ts`, Phase 2) is where directory → runtime inference lives:
+   - **RESOLVED:** Deferred to Phase 2/3 via the unified bundle reader (`bundles.ts`). Phase 1 ships zero data migrations.
+   - **What we know:** v0.1 SKILL.md and prompt.md files do NOT contain a `runtime:` frontmatter field. The unified bundle reader infers `runtime` from the parent directory.
+   - **Rationale:** Phase 1 does not touch v0.1 bundle files. The unified reader (`bundles.ts`, Phase 2) is where directory → runtime inference lives:
      - `routines-local/sleepwalker-*/SKILL.md` → `runtime: "claude-desktop"`
      - `routines-cloud/<id>/config.json` → `runtime: "claude-routines"`
      - `routines-codex/<id>/config.json` → `runtime: "codex"`
      - `routines-gemini/<id>/config.json` → `runtime: "gemini"`
-   - This keeps Phase 1 pure (zero data touch) and puts the inference alongside the reading logic, where it's easiest to test.
+   - Keeps Phase 1 pure (zero data touch) and puts the inference alongside the reading logic, where it's easiest to test.
 
 4. **Should `types.ts` and `index.ts` be in the same file, given how small Phase 1 is?**
+   - **RESOLVED:** Keep the three-file split under `dashboard/lib/runtime-adapters/`. Plan 01-01 ships `types.ts` + `index.ts` as distinct files; Plan 01-03 adds `slug.ts` alongside them.
    - **What we know:** `types.ts` is ~70 lines; `index.ts` is ~40 lines; `slug.ts` is ~50 lines. Combined: ~160 lines in one file.
-   - **What's unclear:** Whether the three-file split is overkill for Phase 1 when one `dashboard/lib/runtime-adapters.ts` could hold everything.
-   - **Recommendation:** Keep the three-file split under `dashboard/lib/runtime-adapters/`. Reasons: (a) Phase 2 adds four more adapter files to the same directory — single-file approach would require a later refactor; (b) `index.ts` naturally becomes the registry entry point for external imports; (c) `types.ts` is the frozen-contract file that other phases treat as the source of truth — distinct-file naming signals its stability intent; (d) Phase 6 OSS-readability goal benefits from "open `types.ts`, see the whole interface."
+   - **Rationale:** (a) Phase 2 adds four more adapter files to the same directory — single-file approach would require a later refactor; (b) `index.ts` naturally becomes the registry entry point for external imports; (c) `types.ts` is the frozen-contract file that other phases treat as the source of truth — distinct-file naming signals its stability intent; (d) Phase 6 OSS-readability goal benefits from "open `types.ts`, see the whole interface."
 
 ---
 

@@ -40,19 +40,23 @@ created: 2026-04-18
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 1-01-01 | 01 | 1 | ADPT-01 | — | `RuntimeAdapter` interface compiles; stub satisfies it | typecheck | `cd dashboard && pnpm typecheck` | ❌ W0 — `types.ts` | ⬜ pending |
 | 1-01-02 | 01 | 1 | ADPT-01 | — | `ADAPTERS: Record<Runtime, RuntimeAdapter>` compile-time exhaustive for all 4 runtimes | typecheck | `cd dashboard && pnpm typecheck` | ❌ W0 — `index.ts` | ⬜ pending |
-| 1-02-01 | 02 | 1 | ADPT-02 | V5 input validation | `validateSlug()` accepts valid, rejects invalid (leading digit, uppercase, path-traversal, overflow) | unit | `cd dashboard && pnpm test -- slug.test.ts` | ❌ W0 — `slug.ts`, `slug.test.ts` | ⬜ pending |
-| 1-02-02 | 02 | 1 | ADPT-02 | — | Identifier builders produce exact strings per CLAUDE.md for all 4 runtimes | unit | `cd dashboard && pnpm test -- slug.test.ts` | ❌ W0 — same file | ⬜ pending |
-| 1-02-03 | 02 | 1 | ADPT-02 | — | `parseFleetKey("codex/morning-brief")` round-trips; rejects bad runtime and bad slug | unit | `cd dashboard && pnpm test -- slug.test.ts` | ❌ W0 — same file | ⬜ pending |
-| 1-03-01 | 03 | 1 | ADPT-02 | V12 file resources | `routines-codex/`, `routines-gemini/`, `templates/` exist with `.gitkeep` | smoke | `test -d routines-codex && test -d routines-gemini && test -d templates && ls routines-codex/.gitkeep routines-gemini/.gitkeep templates/.gitkeep` | ❌ W0 — directories | ⬜ pending |
+| 1-02-01 | 02 | 1 | ADPT-02 | V12 file resources | `routines-codex/`, `routines-gemini/`, `templates/` exist with `.gitkeep` | smoke | `test -d routines-codex && test -d routines-gemini && test -d templates && ls routines-codex/.gitkeep routines-gemini/.gitkeep templates/.gitkeep` | ❌ W0 — directories | ⬜ pending |
+| 1-03-01 | 03 | 1 | ADPT-02 | V5 input validation | `validateSlug()` accepts valid, rejects invalid (leading digit, uppercase, path-traversal, overflow) | unit | `cd dashboard && pnpm test -- slug.test.ts` | ❌ W0 — `slug.ts`, `slug.test.ts` | ⬜ pending |
+| 1-03-02 | 03 | 1 | ADPT-02 | — | Identifier builders produce exact strings per CLAUDE.md for all 4 runtimes | unit | `cd dashboard && pnpm test -- slug.test.ts` | ❌ W0 — same file | ⬜ pending |
+| 1-03-03 | 03 | 1 | ADPT-02 | — | `parseFleetKey("codex/morning-brief")` round-trips; rejects bad runtime and bad slug | unit | `cd dashboard && pnpm test -- slug.test.ts` | ❌ W0 — same file | ⬜ pending |
 | 1-04-01 | 04 | 1 | ADPT-01 + ADPT-02 | — | All 43 v0.1 tests still pass | regression | `cd dashboard && pnpm test` | ✅ v0.1 tests exist | ⬜ pending |
-| 1-04-02 | 04 | 1 | COMP-01 + COMP-02 (adjacent) | — | v0.1 frozen-surface files are byte-identical to main | smoke | See "Frozen-surface gate" below | ✅ git available | ⬜ pending |
+| 1-04-02 | 04 | 1 | COMP-01 + COMP-02 (adjacent) | — | v0.1 frozen-surface files are byte-identical to pre-Phase-1 SHA | smoke | See "Frozen-surface gate" below | ✅ git available | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
 **Frozen-surface gate command (Task 1-04-02):**
 
 ```bash
-git diff HEAD~1 HEAD -- \
+# Dynamically pin the pre-Phase-1 SHA (parent of the commit that first created types.ts).
+# This works correctly in yolo mode where Phase 1 commits land directly on main —
+# `git diff main --` would vacuously pass because working-tree == HEAD after commit.
+PHASE1_BASE=$(git log --reverse --format=%H --diff-filter=A -- dashboard/lib/runtime-adapters/types.ts | head -1)~1
+git diff "$PHASE1_BASE" HEAD -- \
   install.sh \
   hooks/ \
   routines-local/ routines-cloud/ \
