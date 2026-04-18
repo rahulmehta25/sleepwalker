@@ -101,48 +101,56 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Filled during roadmap creation. Each v1 requirement maps to exactly one phase.
+Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2026-04-18).
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ADPT-01 | TBD | Pending |
-| ADPT-02 | TBD | Pending |
-| ADPT-03 | TBD | Pending |
-| ADPT-04 | TBD | Pending |
-| ADPT-05 | TBD | Pending |
-| ADPT-06 | TBD | Pending |
-| ADPT-07 | TBD | Pending |
-| ADPT-08 | TBD | Pending |
-| ADPT-09 | TBD | Pending |
-| EDIT-01 | TBD | Pending |
-| EDIT-02 | TBD | Pending |
-| EDIT-03 | TBD | Pending |
-| EDIT-04 | TBD | Pending |
-| EDIT-05 | TBD | Pending |
-| DEPL-01 | TBD | Pending |
-| DEPL-02 | TBD | Pending |
-| DEPL-03 | TBD | Pending |
-| DEPL-04 | TBD | Pending |
-| DEPL-05 | TBD | Pending |
-| QUEU-01 | TBD | Pending |
-| QUEU-02 | TBD | Pending |
-| QUEU-03 | TBD | Pending |
-| QUEU-04 | TBD | Pending |
-| SAFE-01 | TBD | Pending |
-| SAFE-02 | TBD | Pending |
-| REPO-01 | TBD | Pending |
-| HLTH-01 | TBD | Pending |
-| DOCS-01 | TBD | Pending |
-| DOCS-02 | TBD | Pending |
-| DOCS-03 | TBD | Pending |
-| COMP-01 | TBD | Pending |
-| COMP-02 | TBD | Pending |
+| ADPT-01 | Phase 1 | Pending |
+| ADPT-02 | Phase 1 | Pending |
+| ADPT-03 | Phase 2 | Pending |
+| ADPT-04 | Phase 2 | Pending |
+| ADPT-05 | Phase 2 | Pending |
+| ADPT-06 | Phase 2 | Pending |
+| ADPT-07 | Phase 2 | Pending |
+| ADPT-08 | Phase 2 | Pending |
+| ADPT-09 | Phase 2 | Pending |
+| EDIT-01 | Phase 3 | Pending |
+| EDIT-02 | Phase 3 | Pending |
+| EDIT-03 | Phase 3 | Pending |
+| EDIT-04 | Phase 3 | Pending |
+| EDIT-05 | Phase 3 | Pending |
+| DEPL-01 | Phase 4 | Pending |
+| DEPL-02 | Phase 4 | Pending |
+| DEPL-03 | Phase 4 | Pending |
+| DEPL-04 | Phase 4 | Pending |
+| DEPL-05 | Phase 4 | Pending |
+| QUEU-01 | Phase 5 | Pending |
+| QUEU-02 | Phase 5 | Pending |
+| QUEU-03 | Phase 5 | Pending |
+| QUEU-04 | Phase 5 | Pending |
+| SAFE-01 | Phase 5 | Pending |
+| SAFE-02 | Phase 2 | Pending |
+| REPO-01 | Phase 4 | Pending |
+| HLTH-01 | Phase 4 | Pending |
+| DOCS-01 | Phase 6 | Pending |
+| DOCS-02 | Phase 6 | Pending |
+| DOCS-03 | Phase 6 | Pending |
+| COMP-01 | Phase 6 | Pending |
+| COMP-02 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 32 total
-- Mapped to phases: 0 (filled during roadmap creation)
-- Unmapped: 32 ⚠️ — roadmap phase will resolve
+- Mapped to phases: 32 (100%)
+- Unmapped: 0
+
+**Per-phase counts:**
+- Phase 1 (Foundation): 2 requirements
+- Phase 2 (Adapters): 8 requirements
+- Phase 3 (Editor): 5 requirements
+- Phase 4 (Deploy): 7 requirements
+- Phase 5 (Queue): 5 requirements
+- Phase 6 (Polish): 5 requirements
 
 ---
 *Requirements defined: 2026-04-18*
-*Last updated: 2026-04-18 after initial definition*
+*Last updated: 2026-04-18 after roadmap creation (traceability filled)*
