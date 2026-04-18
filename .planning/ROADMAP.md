@@ -24,7 +24,13 @@
   1. A TypeScript consumer can `import { RuntimeAdapter, RoutineBundle, DeployResult, HealthStatus } from "dashboard/lib/runtime-adapters/types"` and the interface contract compiles without modification through the rest of v0.2.
   2. Every new identifier in the system (launchd label, marker tag, branch name, internal key) resolves to `<runtime>/<slug>` form; a Codex `daily-brief` and Gemini `daily-brief` never collide anywhere in state, logs, or git.
   3. `routines-codex/` and `routines-gemini/` directories exist as additive siblings; all four v0.1 routine paths (`routines-local/`, `routines-cloud/`, hooks, install.sh) remain byte-identical.
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md -- types.ts interface freeze + index.ts registry skeleton (ADPT-01)
+- [ ] 01-02-PLAN.md -- routines-codex/, routines-gemini/, templates/ .gitkeep scaffolding (ADPT-02)
+- [ ] 01-03-PLAN.md -- slug.ts validator + 7 builders + slug.test.ts ~25 assertions (ADPT-02)
+- [ ] 01-04-PLAN.md -- frozen-surface gate + full-suite verification (ADPT-01 + ADPT-02)
 
 ### Phase 2: Adapters
 **Goal**: Ship a working, health-checkable, safely-invoked implementation of `RuntimeAdapter` for all four runtimes, plus the shared launchd writer and `bin/sleepwalker-run-cli` supervisor that the Codex and Gemini adapters depend on.
@@ -91,7 +97,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/4 | In progress | - |
 | 2. Adapters | 0/TBD | Not started | - |
 | 3. Editor | 0/TBD | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
