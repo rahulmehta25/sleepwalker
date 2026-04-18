@@ -10,7 +10,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 ### Adapter Foundation (Phase 0/1 territory)
 
 - [x] **ADPT-01**: `RuntimeAdapter` TypeScript interface is frozen and exported from `dashboard/lib/runtime-adapters/types.ts` with `deploy`, `undeploy`, `runNow`, `listRuns`, `healthCheck` methods and typed `RoutineBundle`, `DeployResult`, `HealthStatus` shapes — **completed 2026-04-18 (01-01, commit c146acf)**
-- [ ] **ADPT-02**: Slug namespacing convention is enforced everywhere: internal key `<runtime>/<slug>`, launchd label `com.sleepwalker.<runtime>.<slug>`, audit marker `[sleepwalker:<runtime>/<slug>]`, branch prefix `claude/sleepwalker/<runtime>/<slug>/*`
+- [x] **ADPT-02**: Slug namespacing convention is enforced everywhere: internal key `<runtime>/<slug>`, launchd label `com.sleepwalker.<runtime>.<slug>`, audit marker `[sleepwalker:<runtime>/<slug>]`, branch prefix `claude/sleepwalker/<runtime>/<slug>/*` — **partially completed 2026-04-18 (01-02 directory scaffolding, commit b38416c); slug.ts validator + builders arrive in 01-03**
 - [ ] **ADPT-03**: `launchd-writer.ts` produces a valid plist, installs via `launchctl bootstrap gui/$UID`, uninstalls via `launchctl bootout`, and validates with `plutil -lint` before bootstrap
 - [ ] **ADPT-04**: `bin/sleepwalker-run-cli` supervisor resolves absolute CLI path via login shell, enforces sleep-window + reversibility + char-budget gates, strips ANSI, and emits normalized `audit.jsonl` entries
 - [ ] **ADPT-05**: Runtime adapter **Claude Code Routines** (`claude-routines.ts`) — `deploy()` returns `{handoffUrl}` for `/schedule create` + pre-filled browser; `runNow()` wraps existing `fire-routine.ts`; `healthCheck()` probes beta-header + `claude` CLI availability
@@ -106,7 +106,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | ADPT-01 | Phase 1 | Complete (01-01, c146acf, 2026-04-18) |
-| ADPT-02 | Phase 1 | Pending |
+| ADPT-02 | Phase 1 | Partial (01-02 directory scaffolding complete, b38416c; slug.ts + validators in 01-03) |
 | ADPT-03 | Phase 2 | Pending |
 | ADPT-04 | Phase 2 | Pending |
 | ADPT-05 | Phase 2 | Pending |
