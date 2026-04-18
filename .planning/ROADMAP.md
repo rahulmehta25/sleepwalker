@@ -27,7 +27,7 @@
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- types.ts interface freeze + index.ts registry skeleton (ADPT-01)
+- [x] 01-01-PLAN.md -- types.ts interface freeze + index.ts registry skeleton (ADPT-01) — **completed 2026-04-18** (commit c146acf)
 - [ ] 01-02-PLAN.md -- routines-codex/, routines-gemini/, templates/ .gitkeep scaffolding (ADPT-02)
 - [ ] 01-03-PLAN.md -- slug.ts validator + 7 builders + slug.test.ts ~25 assertions (ADPT-02)
 - [ ] 01-04-PLAN.md -- frozen-surface gate + full-suite verification (ADPT-01 + ADPT-02)
@@ -97,7 +97,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/4 | In progress | - |
+| 1. Foundation | 1/4 | In progress | - |
 | 2. Adapters | 0/TBD | Not started | - |
 | 3. Editor | 0/TBD | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
@@ -106,4 +106,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-18 after initial creation*
+*Last updated: 2026-04-18 after Plan 01-01 execution*

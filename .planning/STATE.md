@@ -1,7 +1,7 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-18 after Phase 1 planning
+**Last updated:** 2026-04-18 after Phase 1 Plan 01 execution
 
 ## Project Reference
 
@@ -12,9 +12,9 @@
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
-**Phase:** 1 — Foundation (planned, ready to execute)
-**Plan:** 4 plans authored (01-01 types + index, 01-02 .gitkeep scaffolding, 01-03 slug.ts + tests, 01-04 frozen-surface gate)
-**Status:** Ready to execute via `/gsd-execute-phase 1`
+**Phase:** 1 — Foundation (in progress)
+**Plan:** 01-01 complete (types.ts + index.ts freeze); next = 01-02 (.gitkeep scaffolding)
+**Status:** In progress — continue via `/gsd-execute-phase 1` or `/gsd-execute-plan 01-02`
 
 **Milestone progress:**
 ```
@@ -23,7 +23,7 @@
 
 **Phase 1 progress:**
 ```
-[OOOO--] 0/4 plans complete (all authored, none executed)
+[#OOO--] 1/4 plans complete (01-01 done; 01-02, 01-03, 01-04 pending)
 ```
 
 ## Performance Metrics
@@ -33,8 +33,13 @@
 | Requirements mapped | 32/32 (100%) |
 | Phases defined | 6 |
 | Plans authored | 4 (Phase 1) |
-| Plans complete | 0 |
+| Plans complete | 1 (01-01) |
+| Requirements complete | 1/32 (ADPT-01) |
 | v0.1 surface frozen | Yes (enforced in Phase 6) |
+
+| Plan | Duration | Tasks | Files | Commit |
+|------|----------|-------|-------|--------|
+| 01-01 | ~2 min | 3 | 3 | c146acf |
 
 ## Accumulated Context
 
@@ -49,10 +54,14 @@
 - **2026-04-18** — User prompts NEVER touch a shell-expanded string. Prompt is always written to `prompt.md`; supervisor reads via stdin/file flag; plist `ProgramArguments` points to supervisor by absolute path only. Rationale: Pitfall #4 shell injection defeated by convention.
 - **2026-04-18** — Deploy is a 4-phase state machine (`planning -> writing -> loading -> verified`) tracked in `~/.sleepwalker/deploys/<slug>.state.json`; auto-rollback on any step failure. Rationale: Pitfall #5 partial-success deploys leave orphaned artifacts.
 - **2026-04-18** — Backward compatibility is non-negotiable. v0.1 hook names/paths, `~/.sleepwalker/*.jsonl` schemas, `~/.claude/settings.json` wiring, `QueueEntry` field names, reversibility colors, policy names — all frozen. v0.2 additions are strictly additive. Verified in Phase 6 via integration test.
+- **2026-04-18** — Plan 01-01 shipped the frozen `RuntimeAdapter` contract in `dashboard/lib/runtime-adapters/types.ts` (8 exports) and the `ADAPTERS` registry skeleton in `index.ts` (4 stubs). Runtime is a string-literal union (not enum); Reversibility is declared in types.ts (not imported from queue.ts) to respect the v0.2 dep graph. ADPT-01 locked.
 
 ### Open Todos
 
-- [ ] Execute Phase 1 (Foundation) — `/gsd-execute-phase 1`
+- [x] Execute Phase 1 Plan 01 (types.ts + index.ts freeze) — completed 2026-04-18 as commit `c146acf`
+- [ ] Execute Phase 1 Plan 02 (.gitkeep scaffolding) — `/gsd-execute-plan 01-02`
+- [ ] Execute Phase 1 Plan 03 (slug.ts + slug.test.ts) — `/gsd-execute-plan 01-03`
+- [ ] Execute Phase 1 Plan 04 (frozen-surface gate) — `/gsd-execute-plan 01-04`
 - [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work)
 - [ ] Spike Monaco SSR pattern in isolation before committing to it for the editor (flagged in research/SUMMARY.md Phase 3 research flag, but defaulting to `<textarea>` per ARCHITECTURE.md Layer 5)
 
@@ -62,12 +71,14 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session:** Phase 1 planning (2026-04-18)
+**Last session:** Phase 1 Plan 01 execution (2026-04-18)
 
 **Resumption context:**
-- All 32 v1 requirements are mapped to exactly one of six phases.
-- Phase 1 has 4 plans authored, verified, and committed. Plan-checker PASSED on iteration 2.
-- Next action: Run `/gsd-execute-phase 1` to build `types.ts`, `slug.ts`, `index.ts`, `slug.test.ts`, and the three `.gitkeep` directory markers.
+- Plan 01-01 complete: `dashboard/lib/runtime-adapters/types.ts` (8 exports) + `dashboard/lib/runtime-adapters/index.ts` (ADAPTERS registry with 4 stubs, getAdapter, healthCheckAll) shipped as commit `c146acf`. `pnpm typecheck` exits 0; all 43 v0.1 tests still pass; frozen-surface gate returns 0 lines diff.
+- Plan 02 (`.gitkeep` scaffolding) has zero dependencies on Plan 01 beyond directory coexistence — safe to execute next.
+- Plan 03 (`slug.ts` + `slug.test.ts`) imports `Runtime` from `./types` — types.ts is ready and frozen.
+- Plan 04 (frozen-surface gate) can only run after Plans 02 + 03 land.
+- Next action: `/gsd-execute-plan 01-02` or continue `/gsd-execute-phase 1` in auto mode.
 
 **Files in play:**
 - `.planning/PROJECT.md` — v0.1 Validated + v0.2 Active requirements + Out of Scope
