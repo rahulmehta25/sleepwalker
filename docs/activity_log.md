@@ -17,3 +17,12 @@
 
 ### Actions Taken
 - Created `.planning/phases/01-foundation/01-RESEARCH.md` with locked interface signatures for ADPT-01 (Runtime, RoutineBundle, DeployResult, RunNowResult, RunRecord, HealthStatus, RuntimeAdapter), naming-convention builders for ADPT-02 (validateSlug, toLaunchdLabel, toMarkerTag, toBranchPrefix, toPlistPath, toBundleDir, parseFleetKey), registry skeleton, Wave 0 test plan (slug.test.ts), and explicit anti-requirements list (15+ v0.1 files Phase 1 must not touch)
+
+## 2026-04-18 12:59 EST
+
+### User Prompt
+"gsd-plan-phase 1 — ship Phase 1 Foundation plan (ADPT-01 + ADPT-02 interface freeze + slug convention)"
+
+### Actions Taken
+- Created dashboard/lib/runtime-adapters/types.ts (RuntimeAdapter interface freeze, ADPT-01)
+- Created dashboard/lib/runtime-adapters/index.ts (registry skeleton with 4 stub adapters, ADPT-01 compile-time exhaustiveness)
