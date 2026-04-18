@@ -26,3 +26,13 @@
 ### Actions Taken
 - Created dashboard/lib/runtime-adapters/types.ts (RuntimeAdapter interface freeze, ADPT-01)
 - Created dashboard/lib/runtime-adapters/index.ts (registry skeleton with 4 stub adapters, ADPT-01 compile-time exhaustiveness)
+
+## 2026-04-18 13:04 EST
+
+### User Prompt
+"gsd-plan-phase 1 -- ship Phase 1 Foundation plan (ADPT-02 directory scaffolding)"
+
+### Actions Taken
+- Created routines-codex/.gitkeep (ADPT-02 sibling directory)
+- Created routines-gemini/.gitkeep (ADPT-02 sibling directory)
+- Created templates/.gitkeep (DOCS-02 placeholder for Phase 6)
