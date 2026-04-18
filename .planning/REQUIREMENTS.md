@@ -105,8 +105,8 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ADPT-01 | Phase 1 | Complete (01-01, c146acf, 2026-04-18) |
-| ADPT-02 | Phase 1 | Complete (01-02 scaffolding b38416c; 01-03 slug.ts + tests 313bf62/fbe8adc/8b73e0f, 2026-04-18) |
+| ADPT-01 | Phase 1 | Complete (01-01 c146acf; 01-04 exit gate verified b924c9a, 2026-04-18) |
+| ADPT-02 | Phase 1 | Complete (01-02 scaffolding b38416c; 01-03 slug.ts + tests 313bf62/fbe8adc/8b73e0f; 01-04 exit gate verified b924c9a, 2026-04-18) |
 | ADPT-03 | Phase 2 | Pending |
 | ADPT-04 | Phase 2 | Pending |
 | ADPT-05 | Phase 2 | Pending |
@@ -153,4 +153,4 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 
 ---
 *Requirements defined: 2026-04-18*
-*Last updated: 2026-04-18 after Plan 01-03 execution (ADPT-02 fully complete)*
+*Last updated: 2026-04-18 after Plan 01-04 execution (Phase 1 exit gate passed; ADPT-01 + ADPT-02 sealed)*

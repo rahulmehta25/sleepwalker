@@ -7,7 +7,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Foundation** - Freeze the adapter interface and slug-namespacing conventions that unblock all parallel work
+- [x] **Phase 1: Foundation** - Freeze the adapter interface and slug-namespacing conventions that unblock all parallel work
 - [ ] **Phase 2: Adapters** - Ship four runtime adapters + supervisor + launchd writer so every target runtime can be deployed and probed
 - [ ] **Phase 3: Editor** - `/editor` form writes validated, secret-scanned routine bundles to disk with autosave and collision protection
 - [ ] **Phase 4: Deploy** - One-click deploy state machine + Run-now + Save-to-repo + health badges wire adapters through the dashboard UI
@@ -30,7 +30,7 @@ Plans:
 - [x] 01-01-PLAN.md -- types.ts interface freeze + index.ts registry skeleton (ADPT-01) — **completed 2026-04-18** (commit c146acf)
 - [x] 01-02-PLAN.md -- routines-codex/, routines-gemini/, templates/ .gitkeep scaffolding (ADPT-02) — **completed 2026-04-18** (commit b38416c)
 - [x] 01-03-PLAN.md -- slug.ts validator + 7 builders + slug.test.ts 28 assertions (ADPT-02) — **completed 2026-04-18** (commits 313bf62 / fbe8adc / 8b73e0f)
-- [ ] 01-04-PLAN.md -- frozen-surface gate + full-suite verification (ADPT-01 + ADPT-02)
+- [x] 01-04-PLAN.md -- frozen-surface gate + full-suite verification (ADPT-01 + ADPT-02) — **completed 2026-04-18** (commit b924c9a)
 
 ### Phase 2: Adapters
 **Goal**: Ship a working, health-checkable, safely-invoked implementation of `RuntimeAdapter` for all four runtimes, plus the shared launchd writer and `bin/sleepwalker-run-cli` supervisor that the Codex and Gemini adapters depend on.
@@ -97,7 +97,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 3/4 | In progress | - |
+| 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 0/TBD | Not started | - |
 | 3. Editor | 0/TBD | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
@@ -106,4 +106,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-18 after Plan 01-03 execution*
+*Last updated: 2026-04-18 after Plan 01-04 execution (Phase 1 complete)*

@@ -1,7 +1,7 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-18 after Phase 1 Plan 03 execution
+**Last updated:** 2026-04-18 after Phase 1 Plan 04 execution (Phase 1 complete)
 
 ## Project Reference
 
@@ -12,18 +12,18 @@
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
-**Phase:** 1 — Foundation (in progress)
-**Plan:** 01-03 complete (slug.ts + slug.test.ts); next = 01-04 (frozen-surface gate)
-**Status:** In progress — continue via `/gsd-execute-phase 1` or `/gsd-execute-plan 01-04`
+**Phase:** 1 — Foundation (complete); next = Phase 2 Adapters planning
+**Plan:** 01-04 complete (frozen-surface exit gate passed, Phase 1 sealed)
+**Status:** Phase 1 complete — advance via `/gsd-plan-phase 2`
 
 **Milestone progress:**
 ```
-[------] 0/6 phases complete
+[#-----] 1/6 phases complete
 ```
 
 **Phase 1 progress:**
 ```
-[###O] 3/4 plans complete (01-01, 01-02, 01-03 done; 01-04 pending)
+[####] 4/4 plans complete (01-01, 01-02, 01-03, 01-04 all done)
 ```
 
 ## Performance Metrics
@@ -32,16 +32,19 @@
 |--------|-------|
 | Requirements mapped | 32/32 (100%) |
 | Phases defined | 6 |
+| Phases complete | 1/6 (Phase 1 Foundation sealed) |
 | Plans authored | 4 (Phase 1) |
-| Plans complete | 3 (01-01, 01-02, 01-03) |
-| Requirements complete | 2/32 (ADPT-01 complete; ADPT-02 complete — directory scaffolding + slug.ts builders live) |
-| v0.1 surface frozen | Yes (enforced in Phase 6) |
+| Plans complete | 4 (01-01, 01-02, 01-03, 01-04) |
+| Requirements complete | 2/32 (ADPT-01, ADPT-02 both sealed by exit gate) |
+| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18 |
+| Dashboard test suite | 56/56 green (43 v0.1 + 13 new slug) |
 
 | Plan | Duration | Tasks | Files | Commit |
 |------|----------|-------|-------|--------|
 | 01-01 | ~2 min | 3 | 3 | c146acf |
 | 01-02 | ~1 min | 4 | 4 | b38416c |
 | 01-03 | ~3 min | 3 | 3 | 313bf62 / fbe8adc / 8b73e0f |
+| 01-04 | ~2 min | 5 | 1 | b924c9a |
 
 ## Accumulated Context
 
@@ -59,13 +62,15 @@
 - **2026-04-18** — Plan 01-01 shipped the frozen `RuntimeAdapter` contract in `dashboard/lib/runtime-adapters/types.ts` (8 exports) and the `ADAPTERS` registry skeleton in `index.ts` (4 stubs). Runtime is a string-literal union (not enum); Reversibility is declared in types.ts (not imported from queue.ts) to respect the v0.2 dep graph. ADPT-01 locked.
 - **2026-04-18** — Plan 01-02 shipped the filesystem half of ADPT-02: three root-level sibling directories (`routines-codex/`, `routines-gemini/`, `templates/`) with `.gitkeep` placeholders each carrying a Pitfall-2 protective comment naming the future consumer (codex.ts, gemini.ts, Phase 6 templates). v0.1 directories byte-identical (0 lines of diff). Commit b38416c.
 - **2026-04-18** — Plan 01-03 completed the code half of ADPT-02: `dashboard/lib/runtime-adapters/slug.ts` exports 10 public symbols (RUNTIMES tuple + validateSlug + isRuntime type guard + toFleetKey + parseFleetKey + 5 identifier builders) enforcing the `<runtime>/<slug>` namespacing convention by code reuse. Backed by `dashboard/tests/slug.test.ts` (13 it() blocks, 28 expect() assertions, 100% pass). Full dashboard suite grows from 43 to 56 green tests; zero v0.1 regressions; frozen-surface gate returns 0 lines. Commits 313bf62 (slug.ts) + fbe8adc (slug.test.ts) + 8b73e0f (activity log).
+- **2026-04-18** — Plan 01-04 exit gate passed: dynamic PHASE1_BASE (parent of `c146acf` = `03d063d`) confirms 0-line diff across all 14 enumerated v0.1 paths; `pnpm typecheck` exit 0; `pnpm test` 56/56 green; all 7 Phase 1 artifacts present (4049+2332+3149+3173+3×gitkeep = 13,230 bytes); ROADMAP Phase 1 row flipped to `4/4 Complete 2026-04-18`. ADPT-01 and ADPT-02 sealed. Commit b924c9a. Phase 1 Foundation complete; Phase 2 Adapters is now the critical path.
 
 ### Open Todos
 
 - [x] Execute Phase 1 Plan 01 (types.ts + index.ts freeze) — completed 2026-04-18 as commit `c146acf`
 - [x] Execute Phase 1 Plan 02 (.gitkeep scaffolding) — completed 2026-04-18 as commit `b38416c`
 - [x] Execute Phase 1 Plan 03 (slug.ts + slug.test.ts) — completed 2026-04-18 as commits `313bf62` / `fbe8adc` / `8b73e0f`
-- [ ] Execute Phase 1 Plan 04 (frozen-surface gate) — `/gsd-execute-plan 01-04`
+- [x] Execute Phase 1 Plan 04 (frozen-surface gate) — completed 2026-04-18 as commit `b924c9a`
+- [ ] Plan Phase 2 (Adapters): ADPT-03 through ADPT-09 + SAFE-02 — `/gsd-plan-phase 2`
 - [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work)
 - [ ] Spike Monaco SSR pattern in isolation before committing to it for the editor (flagged in research/SUMMARY.md Phase 3 research flag, but defaulting to `<textarea>` per ARCHITECTURE.md Layer 5)
 
@@ -75,14 +80,17 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session:** Phase 1 Plan 03 execution (2026-04-18)
+**Last session:** Phase 1 Plan 04 execution (2026-04-18) — Phase 1 sealed
 
 **Resumption context:**
-- Plan 01-01 complete: `dashboard/lib/runtime-adapters/types.ts` (8 exports) + `dashboard/lib/runtime-adapters/index.ts` (ADAPTERS registry with 4 stubs, getAdapter, healthCheckAll) shipped as commit `c146acf`. `pnpm typecheck` exits 0; frozen-surface gate returns 0 lines diff.
-- Plan 01-02 complete: three new sibling directories at repo root (`routines-codex/`, `routines-gemini/`, `templates/`) each containing a single-line `.gitkeep` with the RESEARCH.md Pitfall-2 protective comment naming the future consumer. Shipped as commit `b38416c`. `routines-local/` + `routines-cloud/` byte-identical.
-- Plan 01-03 complete: `dashboard/lib/runtime-adapters/slug.ts` (91 lines, 10 public symbols) + `dashboard/tests/slug.test.ts` (82 lines, 4 describe / 13 it / 28 expect) ship ADPT-02 as enforceable-by-code-reuse convention. `toBundleDir()` resolves against live on-disk sibling directories. Commits `313bf62` + `fbe8adc` + `8b73e0f`. Dashboard suite 56/56 green; `pnpm typecheck` exit 0; frozen-surface gate 0 lines.
-- Plan 04 (frozen-surface gate) is now unblocked: it verifies the `git status --porcelain` invariant across all v0.1 paths after Plans 01-01/02/03 have landed.
-- Next action: `/gsd-execute-plan 01-04` or continue `/gsd-execute-phase 1` in auto mode.
+- Phase 1 complete. All four plans landed with atomic commits:
+  - 01-01: `c146acf` — `dashboard/lib/runtime-adapters/types.ts` (RuntimeAdapter + 7 supporting types, 8 exports) + `index.ts` (ADAPTERS registry skeleton + getAdapter + healthCheckAll).
+  - 01-02: `b38416c` — `routines-codex/`, `routines-gemini/`, `templates/` sibling directories each carrying `.gitkeep` with Pitfall-2 protective comment.
+  - 01-03: `313bf62` + `fbe8adc` + `8b73e0f` — `dashboard/lib/runtime-adapters/slug.ts` (validateSlug + 5 builders + RUNTIMES + parseFleetKey, 10 exports) + `dashboard/tests/slug.test.ts` (13 it blocks / 28 expect assertions).
+  - 01-04: `b924c9a` — frozen-surface exit gate verified (PHASE1_BASE=`03d063d`, 0-line diff across 14 paths); `pnpm typecheck` + `pnpm test` both exit 0 with 56/56 green; all 7 artifacts inventoried; ROADMAP finalized to 4/4 Complete; closeout activity-log entry appended.
+- ADPT-01 and ADPT-02 both sealed and verified. 56-test dashboard suite is the v0.1+Phase 1 baseline Phase 2 must preserve.
+- Phase 2 Adapters is now unblocked. Phase 2 imports `RuntimeAdapter` and identifier builders from the frozen Phase 1 surface; no Phase 2 plan may modify `types.ts` or `slug.ts` without a Phase 1 amendment.
+- Next action: `/gsd-plan-phase 2` to author Phase 2 (ADPT-03..09, SAFE-02).
 
 **Files in play:**
 - `.planning/PROJECT.md` — v0.1 Validated + v0.2 Active requirements + Out of Scope
