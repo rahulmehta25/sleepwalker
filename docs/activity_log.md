@@ -36,3 +36,12 @@
 - Created routines-codex/.gitkeep (ADPT-02 sibling directory)
 - Created routines-gemini/.gitkeep (ADPT-02 sibling directory)
 - Created templates/.gitkeep (DOCS-02 placeholder for Phase 6)
+
+## 2026-04-18 13:10 EST
+
+### User Prompt
+"gsd-plan-phase 1 -- ship Phase 1 Foundation plan (ADPT-02 slug validator + tests)"
+
+### Actions Taken
+- Created dashboard/lib/runtime-adapters/slug.ts (validateSlug + 7 identifier builders + RUNTIMES + parseFleetKey, ADPT-02)
+- Created dashboard/tests/slug.test.ts (~28 assertions across 13 it() blocks covering ADPT-02 behavior)
