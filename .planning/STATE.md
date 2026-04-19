@@ -1,7 +1,7 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-18 after Phase 1 Plan 04 execution (Phase 1 complete)
+**Last updated:** 2026-04-19 after Phase 3 UI-SPEC approved (gsd-ui-checker APPROVED 6/6 dimensions)
 
 ## Project Reference
 
@@ -63,6 +63,7 @@
 - **2026-04-18** — Plan 01-02 shipped the filesystem half of ADPT-02: three root-level sibling directories (`routines-codex/`, `routines-gemini/`, `templates/`) with `.gitkeep` placeholders each carrying a Pitfall-2 protective comment naming the future consumer (codex.ts, gemini.ts, Phase 6 templates). v0.1 directories byte-identical (0 lines of diff). Commit b38416c.
 - **2026-04-18** — Plan 01-03 completed the code half of ADPT-02: `dashboard/lib/runtime-adapters/slug.ts` exports 10 public symbols (RUNTIMES tuple + validateSlug + isRuntime type guard + toFleetKey + parseFleetKey + 5 identifier builders) enforcing the `<runtime>/<slug>` namespacing convention by code reuse. Backed by `dashboard/tests/slug.test.ts` (13 it() blocks, 28 expect() assertions, 100% pass). Full dashboard suite grows from 43 to 56 green tests; zero v0.1 regressions; frozen-surface gate returns 0 lines. Commits 313bf62 (slug.ts) + fbe8adc (slug.test.ts) + 8b73e0f (activity log).
 - **2026-04-18** — Plan 01-04 exit gate passed: dynamic PHASE1_BASE (parent of `c146acf` = `03d063d`) confirms 0-line diff across all 14 enumerated v0.1 paths; `pnpm typecheck` exit 0; `pnpm test` 56/56 green; all 7 Phase 1 artifacts present (4049+2332+3149+3173+3×gitkeep = 13,230 bytes); ROADMAP Phase 1 row flipped to `4/4 Complete 2026-04-18`. ADPT-01 and ADPT-02 sealed. Commit b924c9a. Phase 1 Foundation complete; Phase 2 Adapters is now the critical path.
+- **2026-04-19** — Phase 3 UI-SPEC approved. `03-UI-SPEC.md` (440 lines, commits 1152375 + 961c4d3) locks the Editor route visual/interaction contract against the existing bespoke "lunar/celestial" Tailwind 3.4 palette (ink/moon/dawn/aurora/signal). Two-column layout at ≥1024px (form + sticky preview), 2×2 radio-card runtime picker with live health pills, inline red secret-scan panel, auto-derived slug with manual override, cronstrue-pill live preview, explicit draft-recovery banner (no silent restore). gsd-ui-checker APPROVED 6/6 (Copywriting, Visuals, Color, Typography, Spacing, Registry Safety); 1 non-blocking FLAG on Typography header cleared in follow-up commit. Bespoke design system — no shadcn, no third-party registries, `ui_safety_gate` not applicable. Planner for Phase 3 now has a prescriptive design source-of-truth before `/gsd-plan-phase 3`.
 
 ### Open Todos
 
@@ -72,7 +73,8 @@
 - [x] Execute Phase 1 Plan 04 (frozen-surface gate) — completed 2026-04-18 as commit `b924c9a`
 - [ ] Plan Phase 2 (Adapters): ADPT-03 through ADPT-09 + SAFE-02 — `/gsd-plan-phase 2`
 - [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work)
-- [ ] Spike Monaco SSR pattern in isolation before committing to it for the editor (flagged in research/SUMMARY.md Phase 3 research flag, but defaulting to `<textarea>` per ARCHITECTURE.md Layer 5)
+- [x] UI-SPEC for Phase 3 Editor — approved 2026-04-19 (commits 1152375 + 961c4d3); textarea locked in, Monaco spike no longer needed per research/SUMMARY.md Phase 3 flag
+- [ ] Plan Phase 3 (Editor) with approved UI-SPEC as design context — `/gsd-plan-phase 3`
 
 ### Blockers
 
