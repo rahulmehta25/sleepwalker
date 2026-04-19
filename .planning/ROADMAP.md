@@ -51,7 +51,7 @@ Plans:
 - [x] 02-04-PLAN.md -- supervisor-tests.sh harness 6 scenarios (ADPT-04 verification) — **completed 2026-04-19** (commit 5bdb19c)
 - [x] 02-05-PLAN.md -- claude-routines.ts adapter + 7 tests (ADPT-05) — **completed 2026-04-19** (commits 62bdaa7 + d7223a8)
 - [x] 02-06-PLAN.md -- claude-desktop.ts adapter + 6 tests (ADPT-06) — **completed 2026-04-19** (commit 81f68ca)
-- [ ] 02-07-PLAN.md -- codex.ts adapter + 6 tests (ADPT-07)
+- [x] 02-07-PLAN.md -- codex.ts adapter + 6 tests (ADPT-07) — **completed 2026-04-19** (commit fbda124)
 - [ ] 02-08-PLAN.md -- gemini.ts adapter + 7 tests (ADPT-08)
 - [ ] 02-09-PLAN.md -- registry swap + HealthStatus.warning amendment + adapter-registry.test.ts (ADPT-09)
 - [ ] 02-10-PLAN.md -- exit gate + manual smoke tests + ROADMAP/STATE updates (all ADPT + SAFE-02 sealed)
@@ -120,7 +120,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
-| 2. Adapters | 6/10 | In Progress | - |
+| 2. Adapters | 7/10 | In Progress | - |
 | 3. Editor | 0/8 | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
@@ -128,4 +128,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 2 Plan 06 execution (02-06 claude-desktop.ts adapter + 6 Vitest blocks, commit 81f68ca; ADPT-06 sealed; dashboard suite 79 -> 85 green; VALIDATION.md rows 2-05-01..03 green, 2-05-04 deferred to Plan 10; Wave 2 second of four adapters complete)*
+*Last updated: 2026-04-19 after Phase 2 Plan 07 execution (02-07 codex.ts adapter + 6 Vitest blocks, commit fbda124; ADPT-07 sealed; dashboard suite 85 -> 91 green; VALIDATION.md rows 2-06-01..02 green, 2-06-03 deferred to Plan 10; Wave 2 third of four adapters complete)*
