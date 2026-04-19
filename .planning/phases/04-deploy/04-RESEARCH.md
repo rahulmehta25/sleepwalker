@@ -1310,7 +1310,7 @@ Performed during this research session on 2026-04-19:
 
 **Validation pathway:** Assumptions A1, A2, A3 MUST be verified in the Phase 4 manual smoke pass (planner should include `test/manual/phase-4-smoke.md` contract file). A4–A7 are low-risk and can ride along.
 
-## Open Questions (not blocking — for executor clarity during plans)
+## Open Questions (RESOLVED — recommendations applied in plans)
 
 1. **Should `deployRoutine` acquire a per-slug lock to prevent double-click spawning two state machines?**
    - What we know: UI-SPEC has an 800ms anti-double-click busy window on the Deploy button, but server-side nothing prevents a second `deployRoutine` invocation
