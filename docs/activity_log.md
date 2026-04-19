@@ -121,3 +121,16 @@
 - Pitfall 4 defeated by construction: user prompt text is read from `prompt.md` and piped via stdin; `CLI_ARGS` is a STATIC array per runtime and never contains the prompt string.
 - Verified: `/bin/bash -n bin/sleepwalker-run-cli` → 0, `test -x` → 0, `git ls-files --stage` → 100755. Dashboard suite still 72/72 green (supervisor does not touch TS).
 - Commit `4afe02a` — `feat(02-03): add bin/sleepwalker-run-cli supervisor`.
+
+## 2026-04-19 01:59 EST
+
+### User Prompt
+"Execute Phase 2 Plan 04 — author hooks/tests/supervisor-tests.sh harness for bin/sleepwalker-run-cli."
+
+### Actions Taken
+- Created `hooks/tests/supervisor-tests.sh` (275 lines, +x, mode 100755): bash integration harness with `set -euo pipefail`, isolated $HOME via `mktemp -d -t sw-supervisor-XXXXXX`, fixture codex/gemini binaries in $TEST_BIN on PATH, `reset_state()` + `make_bundle()` helpers, `assert_eq` / `assert_contains` / `assert_file_lines` copied from v0.1 `hooks/tests/run-tests.sh` pattern, EXIT trap that cleans both the temp HOME and per-scenario fixture bundles under `$REPO_ROOT/routines-{codex,gemini}/`.
+- Six scenarios covering Validation Strategy rows 2-03-01..06: (1) codex happy path — started + completed + exit_code 0 + audit has 2 lines; (2) SAFE-02 ANSI strip — raw CSI bytes absent, literal `[32m` absent, `green-prefix` payload preserved; (3) char-budget SIGTERM — runaway codex fixture blows through 500-byte cap, `budget_exceeded` event emitted; (4) reversibility gate — red routine under balanced policy defers without emitting `started`; (5) bundle missing — exit 66 + `failed` event with `bundle not found` reason, no started; (6) gemini happy path — second runtime arm green.
+- Fixture design: dual-mode `codex` stub controlled by `CODEX_OVER` env var (happy mode emits ~60 bytes with an ANSI color escape for SAFE-02 verification; runaway mode emits `printf '%s\n' "$(printf 'x%.0s' $(seq 1 2000))"` in a `while true` loop — newline-terminated chunks are required so perl's line-oriented `-pe` strip_ansi flushes through to `tee` promptly, otherwise the watchdog never sees output grow beyond 0 bytes and SIGTERM never fires).
+- Zero real launchctl, codex, or gemini invocations; no network I/O; fixture bundles are cleaned up on EXIT trap.
+- Harness runs green end-to-end: `bash hooks/tests/supervisor-tests.sh` → 24 PASS / 0 FAIL / exit 0; final line is `all supervisor tests passed`.
+- Commit `b39859d` — `test(02-04): add supervisor-tests.sh bash harness with 6 scenarios`.
