@@ -12,7 +12,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 - [x] **ADPT-01**: `RuntimeAdapter` TypeScript interface is frozen and exported from `dashboard/lib/runtime-adapters/types.ts` with `deploy`, `undeploy`, `runNow`, `listRuns`, `healthCheck` methods and typed `RoutineBundle`, `DeployResult`, `HealthStatus` shapes — **completed 2026-04-18 (01-01, commit c146acf)**
 - [x] **ADPT-02**: Slug namespacing convention is enforced everywhere: internal key `<runtime>/<slug>`, launchd label `com.sleepwalker.<runtime>.<slug>`, audit marker `[sleepwalker:<runtime>/<slug>]`, branch prefix `claude/sleepwalker/<runtime>/<slug>/*` — **completed 2026-04-18 (01-02 directory scaffolding, commit b38416c; 01-03 slug.ts validator + 7 identifier builders + 13 it() / 28 expect() unit coverage, commits 313bf62 + fbe8adc + 8b73e0f)**
 - [ ] **ADPT-03**: `launchd-writer.ts` produces a valid plist, installs via `launchctl bootstrap gui/$UID`, uninstalls via `launchctl bootout`, and validates with `plutil -lint` before bootstrap
-- [ ] **ADPT-04**: `bin/sleepwalker-run-cli` supervisor resolves absolute CLI path via login shell, enforces sleep-window + reversibility + char-budget gates, strips ANSI, and emits normalized `audit.jsonl` entries
+- [x] **ADPT-04**: `bin/sleepwalker-run-cli` supervisor resolves absolute CLI path via login shell, enforces sleep-window + reversibility + char-budget gates, strips ANSI, and emits normalized `audit.jsonl` entries — **completed 2026-04-19 (02-03, commit 39f7eb3)**
 - [ ] **ADPT-05**: Runtime adapter **Claude Code Routines** (`claude-routines.ts`) — `deploy()` returns `{handoffUrl}` for `/schedule create` + pre-filled browser; `runNow()` wraps existing `fire-routine.ts`; `healthCheck()` probes beta-header + `claude` CLI availability
 - [ ] **ADPT-06**: Runtime adapter **Claude Code Desktop Scheduled Tasks** (`claude-desktop.ts`) — `deploy()` copies SKILL.md to `~/.claude/scheduled-tasks/<slug>/` and returns a handoff URL for Desktop's Schedule page; `healthCheck()` probes for `~/.claude/` and Desktop binary
 - [ ] **ADPT-07**: Runtime adapter **Codex Pro** (`codex.ts`) — `deploy()` writes `~/Library/LaunchAgents/com.sleepwalker.codex.<slug>.plist` invoking the supervisor; `healthCheck()` probes `codex --version`, active auth mode, and absolute binary path
@@ -45,7 +45,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 ### Safety & Budget (Phase 4 territory)
 
 - [ ] **SAFE-01**: Approximate character-based budget cap for CLI runtimes (Codex/Gemini) — supervisor SIGTERMs the subprocess when cap is exceeded; documented as ±40% approximate, labeled "approximate" in UI, never as "tokens"
-- [ ] **SAFE-02**: Supervisor sets `NO_COLOR=1 TERM=dumb CI=true` and pipes stdout/stderr through `stripVTControlCharacters()` (Node 20 built-in) before any audit write
+- [x] **SAFE-02**: Supervisor sets `NO_COLOR=1 TERM=dumb CI=true` and pipes stdout/stderr through a 3-class perl ANSI-strip (CSI + OSC + DCS/PM/APC) before any audit write — **completed 2026-04-19 (02-03, commit 39f7eb3; perl chosen over Node stripVTControlCharacters to keep supervisor bash-only — no Node runtime dependency)**
 
 ### Save to Repo (Phase 3 territory)
 
@@ -108,7 +108,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | ADPT-01 | Phase 1 | Complete (01-01 c146acf; 01-04 exit gate verified b924c9a, 2026-04-18) |
 | ADPT-02 | Phase 1 | Complete (01-02 scaffolding b38416c; 01-03 slug.ts + tests 313bf62/fbe8adc/8b73e0f; 01-04 exit gate verified b924c9a, 2026-04-18) |
 | ADPT-03 | Phase 2 | Pending |
-| ADPT-04 | Phase 2 | Pending |
+| ADPT-04 | Phase 2 | Complete (02-03 bin/sleepwalker-run-cli supervisor, commit 39f7eb3, 2026-04-19) |
 | ADPT-05 | Phase 2 | Pending |
 | ADPT-06 | Phase 2 | Pending |
 | ADPT-07 | Phase 2 | Pending |
@@ -129,7 +129,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | QUEU-03 | Phase 5 | Pending |
 | QUEU-04 | Phase 5 | Pending |
 | SAFE-01 | Phase 5 | Pending |
-| SAFE-02 | Phase 2 | Pending |
+| SAFE-02 | Phase 2 | Complete (02-03 bin/sleepwalker-run-cli supervisor, commit 39f7eb3, 2026-04-19) |
 | REPO-01 | Phase 4 | Pending |
 | HLTH-01 | Phase 4 | Pending |
 | DOCS-01 | Phase 6 | Pending |
