@@ -1,20 +1,20 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-18 after Phase 2 planning (10 plans authored + checker PASSED)
+**Last updated:** 2026-04-19 after Phase 2 Plan 01 execution (slug assertValidSlug guard shipped)
 
 ## Project Reference
 
 **Core value:** Write a prompt + pick a schedule + pick a runtime -> click once -> a live agent exists on that runtime, scheduled, audited, and reviewed from one place. No copy-paste, no terminal, no multi-step wiring.
 
-**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; ready to execute.
+**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 1 complete (02-01 slug guard), 9 remaining.
 
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
-**Phase:** 2 — Adapters (planned, ready to execute)
-**Plan:** 10 plans authored (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor, 02-04 supervisor harness, 02-05 claude-routines, 02-06 claude-desktop, 02-07 codex, 02-08 gemini, 02-09 registry swap + warning field, 02-10 exit gate + manual smokes)
-**Status:** Plan-checker PASSED — advance via `/gsd-execute-phase 2`
+**Phase:** 2 — Adapters (in progress)
+**Plan:** 1/10 complete — 02-01 shipped assertValidSlug guard into all 6 identifier builders; next is 02-02 launchd-writer
+**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-02
 
 **Milestone progress:**
 ```
@@ -28,7 +28,7 @@
 
 **Phase 2 progress:**
 ```
-[OOOOOOOOOO] 0/10 plans complete (all authored, none executed)
+[#---------] 1/10 plans complete (02-01 shipped; 02-02..02-10 pending)
 ```
 
 ## Performance Metrics
@@ -39,10 +39,10 @@
 | Phases defined | 6 |
 | Phases complete | 1/6 (Phase 1 Foundation sealed) |
 | Plans authored | 14 (Phase 1: 4, Phase 2: 10) |
-| Plans complete | 4 (01-01, 01-02, 01-03, 01-04) |
-| Requirements complete | 2/32 (ADPT-01, ADPT-02 both sealed by exit gate) |
+| Plans complete | 5 (01-01, 01-02, 01-03, 01-04, 02-01) |
+| Requirements complete | 2/32 (ADPT-01, ADPT-02 both sealed; 02-01 is an ADPT-02 enforcement amendment) |
 | v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18 |
-| Dashboard test suite | 56/56 green (43 v0.1 + 13 new slug) |
+| Dashboard test suite | 63/63 green (56 v0.1+Phase 1 + 7 new slug throw assertions) |
 
 | Plan | Duration | Tasks | Files | Commit |
 |------|----------|-------|-------|--------|
@@ -50,6 +50,7 @@
 | 01-02 | ~1 min | 4 | 4 | b38416c |
 | 01-03 | ~3 min | 3 | 3 | 313bf62 / fbe8adc / 8b73e0f |
 | 01-04 | ~2 min | 5 | 1 | b924c9a |
+| 02-01 | 3 min | 3 | 3 | c5922de |
 
 ## Accumulated Context
 
@@ -69,6 +70,7 @@
 - **2026-04-18** — Plan 01-03 completed the code half of ADPT-02: `dashboard/lib/runtime-adapters/slug.ts` exports 10 public symbols (RUNTIMES tuple + validateSlug + isRuntime type guard + toFleetKey + parseFleetKey + 5 identifier builders) enforcing the `<runtime>/<slug>` namespacing convention by code reuse. Backed by `dashboard/tests/slug.test.ts` (13 it() blocks, 28 expect() assertions, 100% pass). Full dashboard suite grows from 43 to 56 green tests; zero v0.1 regressions; frozen-surface gate returns 0 lines. Commits 313bf62 (slug.ts) + fbe8adc (slug.test.ts) + 8b73e0f (activity log).
 - **2026-04-18** — Plan 01-04 exit gate passed: dynamic PHASE1_BASE (parent of `c146acf` = `03d063d`) confirms 0-line diff across all 14 enumerated v0.1 paths; `pnpm typecheck` exit 0; `pnpm test` 56/56 green; all 7 Phase 1 artifacts present (4049+2332+3149+3173+3×gitkeep = 13,230 bytes); ROADMAP Phase 1 row flipped to `4/4 Complete 2026-04-18`. ADPT-01 and ADPT-02 sealed. Commit b924c9a. Phase 1 Foundation complete; Phase 2 Adapters is now the critical path.
 - **2026-04-19** — Phase 3 UI-SPEC approved. `03-UI-SPEC.md` (440 lines, commits 1152375 + 961c4d3) locks the Editor route visual/interaction contract against the existing bespoke "lunar/celestial" Tailwind 3.4 palette (ink/moon/dawn/aurora/signal). Two-column layout at ≥1024px (form + sticky preview), 2×2 radio-card runtime picker with live health pills, inline red secret-scan panel, auto-derived slug with manual override, cronstrue-pill live preview, explicit draft-recovery banner (no silent restore). gsd-ui-checker APPROVED 6/6 (Copywriting, Visuals, Color, Typography, Spacing, Registry Safety); 1 non-blocking FLAG on Typography header cleared in follow-up commit. Bespoke design system — no shadcn, no third-party registries, `ui_safety_gate` not applicable. Planner for Phase 3 now has a prescriptive design source-of-truth before `/gsd-plan-phase 3`.
+- **2026-04-19** — Plan 02-01 resolved Phase 1 review debt item #1 by injecting a module-private `assertValidSlug()` throw guard into every identifier builder in `dashboard/lib/runtime-adapters/slug.ts` (toFleetKey, toLaunchdLabel, toMarkerTag, toBranchPrefix, toPlistPath, toBundleDir). `parseFleetKey` deliberately unguarded (construct-throws / parse-returns-null asymmetry preserved per result-object convention; NOTE comment added so future readers understand the intent). `assertValidSlug` is NOT exported → public API stays at exactly 10 surfaces. File grew 92 → 118 lines; suite grew 56 → 63 tests. Single atomic commit `c5922de` covers slug.ts + slug.test.ts + activity log per v0.1 amend-log convention. Wave 2 adapters inherit path-traversal / shell-metacharacter / git-ref-invalid rejection by construction.
 
 ### Open Todos
 
@@ -76,8 +78,10 @@
 - [x] Execute Phase 1 Plan 02 (.gitkeep scaffolding) — completed 2026-04-18 as commit `b38416c`
 - [x] Execute Phase 1 Plan 03 (slug.ts + slug.test.ts) — completed 2026-04-18 as commits `313bf62` / `fbe8adc` / `8b73e0f`
 - [x] Execute Phase 1 Plan 04 (frozen-surface gate) — completed 2026-04-18 as commit `b924c9a`
-- [ ] Plan Phase 2 (Adapters): ADPT-03 through ADPT-09 + SAFE-02 — `/gsd-plan-phase 2`
-- [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work)
+- [x] Plan Phase 2 (Adapters): ADPT-03 through ADPT-09 + SAFE-02 — planned 2026-04-19 (10 plans across 4 waves authored)
+- [x] Execute Phase 2 Plan 01 (slug.ts assertValidSlug guard + throw coverage) — completed 2026-04-19 as commit `c5922de`
+- [ ] Execute Phase 2 Plan 02 (launchd-writer.ts plist generator + tests) — `/gsd-execute-phase 2`
+- [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work in Plan 02-06)
 - [x] UI-SPEC for Phase 3 Editor — approved 2026-04-19 (commits 1152375 + 961c4d3); textarea locked in, Monaco spike no longer needed per research/SUMMARY.md Phase 3 flag
 - [ ] Plan Phase 3 (Editor) with approved UI-SPEC as design context — `/gsd-plan-phase 3`
 
@@ -87,17 +91,14 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session:** Phase 1 Plan 04 execution (2026-04-18) — Phase 1 sealed
+**Last session:** Phase 2 Plan 01 execution (2026-04-19) — assertValidSlug guard shipped
 
 **Resumption context:**
-- Phase 1 complete. All four plans landed with atomic commits:
-  - 01-01: `c146acf` — `dashboard/lib/runtime-adapters/types.ts` (RuntimeAdapter + 7 supporting types, 8 exports) + `index.ts` (ADAPTERS registry skeleton + getAdapter + healthCheckAll).
-  - 01-02: `b38416c` — `routines-codex/`, `routines-gemini/`, `templates/` sibling directories each carrying `.gitkeep` with Pitfall-2 protective comment.
-  - 01-03: `313bf62` + `fbe8adc` + `8b73e0f` — `dashboard/lib/runtime-adapters/slug.ts` (validateSlug + 5 builders + RUNTIMES + parseFleetKey, 10 exports) + `dashboard/tests/slug.test.ts` (13 it blocks / 28 expect assertions).
-  - 01-04: `b924c9a` — frozen-surface exit gate verified (PHASE1_BASE=`03d063d`, 0-line diff across 14 paths); `pnpm typecheck` + `pnpm test` both exit 0 with 56/56 green; all 7 artifacts inventoried; ROADMAP finalized to 4/4 Complete; closeout activity-log entry appended.
-- ADPT-01 and ADPT-02 both sealed and verified. 56-test dashboard suite is the v0.1+Phase 1 baseline Phase 2 must preserve.
-- Phase 2 Adapters is now unblocked. Phase 2 imports `RuntimeAdapter` and identifier builders from the frozen Phase 1 surface; no Phase 2 plan may modify `types.ts` or `slug.ts` without a Phase 1 amendment.
-- Next action: `/gsd-plan-phase 2` to author Phase 2 (ADPT-03..09, SAFE-02).
+- Phase 2 Wave 1 kicked off with Plan 02-01: `dashboard/lib/runtime-adapters/slug.ts` now enforces ADPT-02 at the code level. A new module-private `assertValidSlug()` helper throws on invalid input and is the first statement of all 6 identifier builders. `parseFleetKey` intentionally unguarded (parse-returns-null asymmetry preserved, documented inline). Public API unchanged at exactly 10 exports.
+- Commit `c5922de` (single atomic) covers `dashboard/lib/runtime-adapters/slug.ts` + `dashboard/tests/slug.test.ts` + `docs/activity_log.md` — plan Task 3 intentionally requests one commit via `git commit --amend --no-edit` to match v0.1 convention.
+- Dashboard test suite grew 56 → 63 (13 → 20 it() blocks in slug.test.ts; 28 → 35 expect assertions). Zero regressions. `pnpm typecheck` green. Frozen-surface gate still 0-line diff (only slug.ts and slug.test.ts in frozen-modify list changed, matching Phase 2 VALIDATION permissions).
+- Next action: `/gsd-execute-phase 2` → Plan 02-02 (launchd-writer.ts plist generator). 02-02 depends only on slug.ts builders, so it is the next critical-path target.
+- Wave 1 blockers: none. Waves 2-3 adapters now inherit path-traversal / uppercase / empty-string / leading-digit rejection by construction.
 
 **Files in play:**
 - `.planning/PROJECT.md` — v0.1 Validated + v0.2 Active requirements + Out of Scope
