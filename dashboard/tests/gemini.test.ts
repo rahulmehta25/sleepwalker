@@ -78,6 +78,7 @@ describe("geminiAdapter.deploy", () => {
     vi.restoreAllMocks();
     vi.doUnmock("node:child_process");
     vi.doUnmock("@/lib/runtime-adapters/supervisor-staging");
+    vi.doUnmock("@/lib/runtime-adapters/bundle-staging");
   });
 
   it("BLOCKED when runtime_config.gemini_quota_project is missing", async () => {
@@ -118,6 +119,13 @@ describe("geminiAdapter.deploy", () => {
     vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
       ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
     }));
+    // Plan 02-12: stub bundle-staging so deploy() doesn't try to read a
+    // /tmp/routines-gemini/ fixture that does not exist on disk. Real
+    // staging is exercised in bundle-staging.test.ts.
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: vi.fn(async () => undefined),
+    }));
 
     const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
     const result = await geminiAdapter.deploy(fixtureBundle("morning-summary"));
@@ -140,11 +148,21 @@ describe("geminiAdapter.deploy", () => {
     expect(xml).not.toContain("GEMINI_API_KEY");
     expect(xml).toContain("<key>NO_COLOR</key>");
     // Plan 02-11: programArguments[0] is now the staged supervisor path.
-    // Follow-up: 4th arg is bundle absolute path so staged supervisor can
-    // resolve prompt.md without $(dirname $0)/.. pointing at ~/.sleepwalker.
+    // Plan 02-12: programArguments[3] AND WorkingDirectory both point at
+    // the STAGED bundle path (not bundle.bundlePath) so launchd's sandbox
+    // never touches TCC-protected paths.
     expect(xml).toContain("/tmp/stubbed-supervisor");
     expect(xml).toContain("<string>gemini</string>");
-    expect(xml).toMatch(/<string>[^<]*\/routines-gemini\/[^<]*<\/string>/);
+    // Plan 02-12: 4th programArguments entry is the STAGED bundle path
+    expect(xml).toContain("<string>/tmp/stubbed-staged-bundle</string>");
+    // Plan 02-12: WorkingDirectory is ALSO the staged bundle path (root fix)
+    expect(xml).toContain(
+      "<key>WorkingDirectory</key><string>/tmp/stubbed-staged-bundle</string>",
+    );
+    // And it is NOT the original (potentially TCC-protected) bundle.bundlePath
+    expect(xml).not.toContain(
+      "<key>WorkingDirectory</key><string>/tmp/routines-gemini/morning-summary</string>",
+    );
   });
 
   it("emits TCC warning when bundlePath is under ~/Desktop/", async () => {
@@ -163,6 +181,11 @@ describe("geminiAdapter.deploy", () => {
     }, execCalls);
     vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
       ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
+    }));
+    // Plan 02-12: stub bundle-staging for TCC-path fixture.
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: vi.fn(async () => undefined),
     }));
 
     const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
@@ -191,6 +214,11 @@ describe("geminiAdapter.deploy", () => {
     }, execCalls);
     vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
       ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
+    }));
+    // Plan 02-12: stub bundle-staging for TCC-path fixture.
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: vi.fn(async () => undefined),
     }));
 
     const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
@@ -232,6 +260,7 @@ describe("geminiAdapter.undeploy", () => {
     env.restore();
     vi.restoreAllMocks();
     vi.doUnmock("node:child_process");
+    vi.doUnmock("@/lib/runtime-adapters/bundle-staging");
   });
 
   it("calls uninstallPlist with com.sleepwalker.gemini.<slug> label", async () => {
@@ -245,6 +274,27 @@ describe("geminiAdapter.undeploy", () => {
     const result = await geminiAdapter.undeploy(fixtureBundle("teardown"));
     expect(result.ok).toBe(true);
     expect(result.artifact).toBe("com.sleepwalker.gemini.teardown");
+  });
+
+  it("calls removeStagedBundle('gemini', <slug>) after uninstallPlist (Plan 02-12 cleanup)", async () => {
+    const execCalls: Array<{ cmd: string; args: string[] }> = [];
+    installExecFileMock((cmd, args) => {
+      if (cmd === "launchctl" && args[0] === "bootout") return { err: null };
+      return { err: null };
+    }, execCalls);
+    // Plan 02-12: spy on removeStagedBundle to verify adapter calls it with
+    // the correct (runtime, slug) pair after uninstallPlist succeeds.
+    const removeSpy = vi.fn(async () => undefined);
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: removeSpy,
+    }));
+
+    const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
+    const result = await geminiAdapter.undeploy(fixtureBundle("cleanup-test"));
+    expect(result.ok).toBe(true);
+    expect(removeSpy).toHaveBeenCalledWith("gemini", "cleanup-test");
+    expect(removeSpy).toHaveBeenCalledTimes(1);
   });
 });
 

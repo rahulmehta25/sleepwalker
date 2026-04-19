@@ -52,6 +52,7 @@ describe("codexAdapter.deploy", () => {
     vi.restoreAllMocks();
     vi.doUnmock("node:child_process");
     vi.doUnmock("@/lib/runtime-adapters/supervisor-staging");
+    vi.doUnmock("@/lib/runtime-adapters/bundle-staging");
   });
 
   it("full deploy flow: zsh path resolve → plutil lint → bootout (ignored) → bootstrap → success", async () => {
@@ -76,6 +77,13 @@ describe("codexAdapter.deploy", () => {
     vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
       ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
     }));
+    // Plan 02-12: stub bundle-staging so deploy() doesn't try to read a real
+    // bundle from /tmp/routines-codex/ fixtures. Staging behavior itself is
+    // covered by bundle-staging.test.ts with real fs.
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: vi.fn(async () => undefined),
+    }));
 
     const { codexAdapter } = await import("@/lib/runtime-adapters/codex");
     const result = await codexAdapter.deploy(fixtureBundle("morning-brief"));
@@ -89,17 +97,25 @@ describe("codexAdapter.deploy", () => {
     expect(stat.mode & 0o777).toBe(0o644);
     // Plist content excludes OPENAI_API_KEY (Pitfall #2) and points
     // programArguments[0] at the staged supervisor (Plan 02-11).
-    // Post-02-11 follow-up: programArguments has 4 elements (supervisor,
-    // runtime, slug, bundlePath) so the staged supervisor can resolve
-    // prompt.md without $(dirname $0)/.. pointing at ~/.sleepwalker.
+    // Plan 02-12: programArguments[3] AND WorkingDirectory both point at
+    // the STAGED bundle path (not bundle.bundlePath) so launchd's sandbox
+    // never touches TCC-protected paths.
     const xml = fsSync.readFileSync(result.artifact!, "utf8");
     expect(xml).not.toContain("OPENAI_API_KEY");
     expect(xml).toContain("<key>NO_COLOR</key>");
     expect(xml).toContain("/tmp/stubbed-supervisor");
     expect(xml).toContain("<string>codex</string>");
     expect(xml).toContain("<string>morning-brief</string>");
-    // 4th arg: the bundle absolute path
-    expect(xml).toMatch(/<string>[^<]*\/routines-codex\/morning-brief<\/string>/);
+    // Plan 02-12: 4th programArguments entry is the STAGED bundle path
+    expect(xml).toContain("<string>/tmp/stubbed-staged-bundle</string>");
+    // Plan 02-12: WorkingDirectory is ALSO the staged bundle path (root fix)
+    expect(xml).toContain(
+      "<key>WorkingDirectory</key><string>/tmp/stubbed-staged-bundle</string>",
+    );
+    // And it is NOT the original (potentially TCC-protected) bundle.bundlePath
+    expect(xml).not.toContain(
+      "<key>WorkingDirectory</key><string>/tmp/routines-codex/morning-brief</string>",
+    );
     // Call ordering: plutil → bootout → bootstrap
     const cmds = execCalls.map((c) => `${c.cmd} ${c.args[0] ?? ""}`);
     expect(cmds).toEqual(
@@ -126,6 +142,12 @@ describe("codexAdapter.deploy", () => {
     vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
       ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
     }));
+    // Plan 02-12: stub bundle-staging so deploy() doesn't try to read a
+    // fictitious ~/Desktop/ fixture path.
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: vi.fn(async () => undefined),
+    }));
 
     const { codexAdapter } = await import("@/lib/runtime-adapters/codex");
     const bundle = fixtureBundle("desktop-tcc");
@@ -150,6 +172,11 @@ describe("codexAdapter.deploy", () => {
     }, execCalls);
     vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
       ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
+    }));
+    // Plan 02-12: stub bundle-staging for TCC-path fixture.
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: vi.fn(async () => undefined),
     }));
 
     const { codexAdapter } = await import("@/lib/runtime-adapters/codex");
@@ -187,6 +214,7 @@ describe("codexAdapter.undeploy", () => {
     env.restore();
     vi.restoreAllMocks();
     vi.doUnmock("node:child_process");
+    vi.doUnmock("@/lib/runtime-adapters/bundle-staging");
   });
 
   it("calls uninstallPlist with com.sleepwalker.codex.<slug> label", async () => {
@@ -200,6 +228,27 @@ describe("codexAdapter.undeploy", () => {
     const result = await codexAdapter.undeploy(fixtureBundle("teardown-test"));
     expect(result.ok).toBe(true);
     expect(result.artifact).toBe("com.sleepwalker.codex.teardown-test");
+  });
+
+  it("calls removeStagedBundle('codex', <slug>) after uninstallPlist (Plan 02-12 cleanup)", async () => {
+    const execCalls: Array<{ cmd: string; args: string[] }> = [];
+    installExecFileMock((cmd, args) => {
+      if (cmd === "launchctl" && args[0] === "bootout") return { err: null };
+      return { err: null };
+    }, execCalls);
+    // Plan 02-12: spy on removeStagedBundle to verify adapter calls it with
+    // the correct (runtime, slug) pair after uninstallPlist succeeds.
+    const removeSpy = vi.fn(async () => undefined);
+    vi.doMock("@/lib/runtime-adapters/bundle-staging", () => ({
+      ensureStagedBundle: vi.fn(async () => "/tmp/stubbed-staged-bundle"),
+      removeStagedBundle: removeSpy,
+    }));
+
+    const { codexAdapter } = await import("@/lib/runtime-adapters/codex");
+    const result = await codexAdapter.undeploy(fixtureBundle("cleanup-test"));
+    expect(result.ok).toBe(true);
+    expect(removeSpy).toHaveBeenCalledWith("codex", "cleanup-test");
+    expect(removeSpy).toHaveBeenCalledTimes(1);
   });
 });
 

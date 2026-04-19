@@ -49,6 +49,7 @@ import {
 } from "./launchd-writer";
 import { parseCron } from "./cron";
 import { ensureStagedSupervisor } from "./supervisor-staging";
+import { ensureStagedBundle, removeStagedBundle } from "./bundle-staging";
 
 const execFileP = promisify(execFile);
 
@@ -160,6 +161,17 @@ export const geminiAdapter: RuntimeAdapter = {
       // precondition was actually the problem.
       const supervisor = await ensureStagedSupervisor();
 
+      // Plan 02-12: stage prompt.md + config.json out of TCC-protected paths.
+      // launchd's sandbox blocks reads from ~/Desktop/ + friends even when
+      // the supervisor is staged. Plist WorkingDirectory + supervisor $3
+      // both point at the staged copy so the launchd sandbox never touches
+      // the repo bundle path.
+      const stagedBundle = await ensureStagedBundle(
+        bundle.bundlePath,
+        "gemini",
+        bundle.slug,
+      );
+
       // toLaunchdLabel THROWS on invalid slug (Plan 02-01 assertValidSlug guard).
       // Programmer bug if upstream caller bypasses validateSlug; caught below.
       const label = toLaunchdLabel("gemini", bundle.slug);
@@ -175,14 +187,18 @@ export const geminiAdapter: RuntimeAdapter = {
 
       const job: LaunchdJob = {
         label,
-        // bundle.bundlePath is the 4th arg so the staged supervisor resolves
-        // prompt.md + config.json without relying on $(dirname $0)/.. which
-        // after Plan 02-11 staging points to ~/.sleepwalker, not the repo.
-        programArguments: [supervisor, "gemini", bundle.slug, bundle.bundlePath],
+        // Plan 02-12: 4th arg is the STAGED bundle path (not bundle.bundlePath),
+        // so the supervisor reads prompt.md + config.json from ~/.sleepwalker/
+        // instead of the TCC-protected repo path.
+        programArguments: [supervisor, "gemini", bundle.slug, stagedBundle],
         schedule: parseCron(bundle.schedule),
         stdoutPath: path.join(logsDir, `${label}.out`),
         stderrPath: path.join(logsDir, `${label}.err`),
-        workingDirectory: bundle.bundlePath,
+        // Plan 02-12: WorkingDirectory ALSO points at the staged bundle.
+        // launchd resolves WorkingDirectory before it executes the program;
+        // if it points into TCC territory, the job fails with getcwd noise
+        // before the supervisor ever runs.
+        workingDirectory: stagedBundle,
         environmentVariables: {
           PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
           HOME: home,
@@ -219,6 +235,10 @@ export const geminiAdapter: RuntimeAdapter = {
     try {
       const label = toLaunchdLabel("gemini", bundle.slug);
       const result = await uninstallPlist(label);
+      // Plan 02-12: clean up the staged bundle (idempotent — no error if
+      // absent). Runs after uninstallPlist so we never leave stale bundles
+      // pointing at a live launchd job.
+      await removeStagedBundle("gemini", bundle.slug);
       return result.ok
         ? { ok: true, artifact: label }
         : { ok: false, error: result.error };
@@ -233,10 +253,17 @@ export const geminiAdapter: RuntimeAdapter = {
       // deploy() so manual fire-now replays the exact TCC-safe path that
       // scheduled runs take.
       const supervisor = await ensureStagedSupervisor();
+      // Plan 02-12: stage the bundle for runNow() too. Matches the deploy
+      // pattern — consistent 4-arg supervisor contract regardless of caller.
+      const stagedBundle = await ensureStagedBundle(
+        bundle.bundlePath,
+        "gemini",
+        bundle.slug,
+      );
       // spawn (not execFile): non-blocking fire-and-forget via detached+unref.
       // stdio: "ignore" detaches stdin/stdout/stderr so the Next.js server
       // response is not coupled to the supervisor's lifetime. Matches codex.ts.
-      const child = spawn(supervisor, ["gemini", bundle.slug], {
+      const child = spawn(supervisor, ["gemini", bundle.slug, stagedBundle], {
         detached: true,
         stdio: "ignore",
       });

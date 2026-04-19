@@ -1,5 +1,23 @@
 # Activity Log
 
+## 2026-04-19 19:43 EST
+
+### User Prompt
+"Plan 02-11 smoke re-run after 7cc884a: Step 8 audit.jsonl shows event=failed reason='cat: .../prompt.md: Operation not permitted' + getcwd errors from the plist WorkingDirectory resolution. launchd sandbox blocks reads from ~/Desktop/ even when the supervisor is staged. Execute Plan 02-12 Tasks 1-5: stage prompt.md + config.json to ~/.sleepwalker/staged-bundles/<runtime>/<slug>/ AND change plist WorkingDirectory to the staged path. STOP at Task 6 (user re-runs codex smoke from ~/Desktop/)."
+
+### Actions Taken
+- Created `dashboard/lib/runtime-adapters/bundle-staging.ts` (124 lines) — `ensureStagedBundle(bundlePath, runtime, slug)` copies prompt.md + config.json to `~/.sleepwalker/staged-bundles/<runtime>/<slug>/`, mode 0o644, idempotent via per-file sha256 fast-path; `removeStagedBundle(runtime, slug)` is `fs.rm(dest, {recursive:true, force:true})` — no error when absent. config.json is optional in source; absent-in-source removes stale staged copy. Throws with explicit path when prompt.md is missing from source. `Runtime` imported from `./types` (not `./slug` — slug.ts only re-exports the type via `import type`).
+- Created `dashboard/tests/bundle-staging.test.ts` (157 lines, 8 `it()` blocks) — 6 blocks for ensureStagedBundle (happy-path with suffix regex for /private/var macOS realpath, mtime-stable idempotency, content-change re-copy, nested dir auto-create, missing-prompt error, stale-config cleanup) + 2 blocks for removeStagedBundle (rm recursive + idempotent-absent). Uses real fs via `fs.mkdtemp` tempHome + tempBundleDir; no mocks.
+- Modified `dashboard/lib/runtime-adapters/codex.ts` (+28/-5) — `deploy()` awaits `ensureStagedBundle(bundle.bundlePath, "codex", bundle.slug)` after supervisor staging; `programArguments[3]` AND `workingDirectory` both reference `stagedBundle` (not `bundle.bundlePath`). `undeploy()` awaits `removeStagedBundle("codex", bundle.slug)` after `uninstallPlist`. `runNow()` also stages the bundle and passes it as the 4-arg supervisor's `$3` to match the deploy-time contract.
+- Modified `dashboard/lib/runtime-adapters/gemini.ts` (+28/-5) — identical shape: ensureStagedBundle staging (after the quota + CLI preconditions), programArguments[3] = stagedBundle, workingDirectory = stagedBundle, undeploy removeStagedBundle, runNow staging. GOOGLE_CLOUD_PROJECT environment variable stays pinned to the quota project; nothing else changed in the plist.
+- Modified `dashboard/tests/codex.test.ts` (+64/-3) — `vi.doMock("@/lib/runtime-adapters/bundle-staging", ...)` on deploy happy-path + both TCC-warning tests (~/Desktop/ + iCloud); plist XML asserts `/tmp/stubbed-staged-bundle` in both `programArguments[3]` AND `WorkingDirectory`; negative assert that `WorkingDirectory` is NOT `bundle.bundlePath`. Added new `undeploy calls removeStagedBundle('codex', <slug>)` block using `removeSpy` + `toHaveBeenCalledWith("codex", "cleanup-test")` + `toHaveBeenCalledTimes(1)`. afterEach now also `vi.doUnmock("@/lib/runtime-adapters/bundle-staging")`.
+- Modified `dashboard/tests/gemini.test.ts` (+65/-3) — identical pattern. Happy-path asserts `/tmp/stubbed-staged-bundle` in programArguments[3] and WorkingDirectory; TCC-warning tests (~/Desktop/ + ~/Documents/) stub bundle-staging; new `undeploy calls removeStagedBundle('gemini', <slug>)` block with `removeSpy.toHaveBeenCalledWith("gemini", "cleanup-test")` + `toHaveBeenCalledTimes(1)`.
+- Verification: `pnpm typecheck` exit 0; `pnpm test --run` 272/272 pass across 28 files (delta +10 from 262: 8 new bundle-staging + 1 codex undeploy-cleanup + 1 gemini undeploy-cleanup); bash `hooks/tests/supervisor-tests.sh` 28/28 pass (supervisor script untouched).
+- Scope-bleed note: pre-existing uncommitted changes in `dashboard/lib/cloud-cache.ts` + `dashboard/tests/cloud-cache.test.ts` (parallel Phase 3 session) preserved untouched. Staging used explicit file paths for every Plan 02-12 artifact — zero cross-session bleed.
+
+### NOT done (awaiting human-action checkpoint — Task 6 + orchestrator Task 7)
+- User re-runs `test/manual/codex-adapter-smoke.md` from `/Users/rahulmehta/Desktop/Projects/sleepwalker/` (the original TCC-blocked environment) and verifies Step 8 audit.jsonl shows `"event":"completed"` with `preview` matching `SMOKE_OK`, timestamped AFTER the Plan 02-12 commit. Step 11 verifies `~/.sleepwalker/staged-bundles/codex/smoke-test-abc123/` is removed after undeploy. Outcome gets recorded by the orchestrator in `02-SUMMARY.md §Manual Smoke Test Results` (Task 7).
+
 ## 2026-04-19 13:42 EST
 
 ### User Prompt
