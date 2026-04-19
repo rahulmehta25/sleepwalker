@@ -9,7 +9,7 @@
 
 - [x] **Phase 1: Foundation** - Freeze the adapter interface and slug-namespacing conventions that unblock all parallel work
 - [x] **Phase 2: Adapters** - Ship four runtime adapters + supervisor + launchd writer so every target runtime can be deployed and probed — **code complete 2026-04-19** (2 manual smokes pending user execution; contracts at `test/manual/*-smoke.md`)
-- [ ] **Phase 3: Editor** - `/editor` form writes validated, secret-scanned routine bundles to disk with autosave and collision protection
+- [x] **Phase 3: Editor** - `/editor` form writes validated, secret-scanned routine bundles to disk with autosave and collision protection — **completed 2026-04-19** (9/9 plans, dashboard suite 250/250 green, frozen-surface diff 0 lines vs PHASE3_BASE `104547f`)
 - [ ] **Phase 4: Deploy** - One-click deploy state machine + Run-now + Save-to-repo + health badges wire adapters through the dashboard UI
 - [ ] **Phase 5: Queue** - Codex + Gemini runs flow into the Morning Queue with ANSI-stripped, race-free, flock-protected audit
 - [ ] **Phase 6: Polish** - OSS docs, per-runtime templates, diagnostics page, and backward-compat integration gate
@@ -77,7 +77,7 @@ Plans:
 - [x] 03-06-PLAN.md -- /editor page.tsx shell + editor-client stub + RuntimeRadioGrid + CronPreview + 10 jsdom .test.tsx blocks (EDIT-01 partial — 2/4 VALIDATION rows green) — **completed 2026-04-19** (commits f343478 + 92e8313 + f302d3d; suite 221 → 231 green; first jsdom tests in repo; vitest esbuild jsx=automatic)
 - [x] 03-07-PLAN.md -- SecretScanPanel + DraftRecoveryBanner + PreviewPanel presentational subcomponents + 6 jsdom test blocks (EDIT-03 partial — 1/4 VALIDATION rows green: banner visibility) — **completed 2026-04-19** (commits 674d86e + 9b14e09 + 9742c56 + 555e9de; suite 231 → 237 green; `/editor` route still 640 B / 141 kB; Node 25 + jsdom localStorage polyfill installed inline in test)
 - [x] 03-08-PLAN.md -- EditorClient full state machine: useActionState wiring against saveRoutine + 500ms autosave + slug auto-derive + beforeunload intercept + autofill opt-out + 13-block integration tests (EDIT-01 + EDIT-03 + EDIT-05 code-complete; only 4 manual-only verifications remain) — **completed 2026-04-19** (commit 5e7d125; suite 237 → 250 green; `/editor` route 640 B → 13.2 kB / 141 kB → 154 kB; one Rule-3 auto-fix: preview-panel.tsx dropped `@/lib/runtime-adapters/slug` import that pulled node:path + node:os into the client bundle)
-- [ ] 03-09-PLAN.md -- phase exit gate: frozen-surface diff + test suite green + 03-VALIDATION flip + ROADMAP/STATE update
+- [x] 03-09-PLAN.md -- phase exit gate: frozen-surface diff + test suite green + 03-VALIDATION flip + ROADMAP/STATE update — **completed 2026-04-19** (typecheck exit 0; 250/250 dashboard tests green; supervisor bash harness 24/24; frozen-surface 0-line diff vs PHASE3_BASE `104547f` across 20 v0.1 + Phase 2 paths)
 
 ### Phase 4: Deploy
 **Goal**: Wire adapters and editor together so Deploy, Run-now, enable/disable, Save-to-repo, and health badges are one-click actions on the dashboard, with a state-machine deploy that auto-rolls-back on partial failure.
@@ -122,11 +122,11 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
-| 3. Editor | 7/9 | In Progress (Waves 0 + 1 + 2a + 2b COMPLETE — all five presentational subcomponents live; Wave 2c (03-08 full EditorClient state machine) + Wave 3 (03-09 phase exit gate) remain) | - |
+| 3. Editor | 9/9 | Complete | 2026-04-19 |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 3 Plan 07 execution (SecretScanPanel + DraftRecoveryBanner + PreviewPanel landed — commits 674d86e + 9b14e09 + 9742c56 + 555e9de; 6 new jsdom test blocks on draft-recovery-banner; dashboard suite 231 → 237 green; typecheck exit 0; `/editor` route still compiles at 640 B / 141 kB; 03-VALIDATION row 13 flips to 3-07-02 green; EDIT-03 partial — 1/4 rows green (banner visibility); Phase 3 progress 7/9 plans complete; v0.1 frozen surface diff 0 lines; all five presentational subcomponents now import-ready for Plan 03-08 EditorClient state machine)*
+*Last updated: 2026-04-19 after Phase 3 Plan 09 execution (Phase 3 Editor SEALED — 9/9 plans complete; dashboard suite 250/250 green across 26 files; typecheck exit 0; supervisor bash harness 24/24 — no Phase 3 regression on Phase 2 bash tests; frozen-surface diff 0 lines vs dynamic PHASE3_BASE `104547f` across 20 v0.1 + Phase 2 paths (resolved via sentinel-file idiom on `dashboard/lib/bundle-schema.ts`); 03-VALIDATION.md approved (all 25 Task IDs filled, nyquist_compliant=true, wave_0_complete=true); EDIT-01 through EDIT-05 all code-complete (4 manual-only verifications deferred to user per VALIDATION.md §Manual-Only); Milestone progress 3/6 phases complete (Phase 1 Foundation + Phase 2 Adapters code-complete + Phase 3 Editor); Next critical path: Phase 4 Deploy — `/gsd-plan-phase 4`)*
