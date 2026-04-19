@@ -51,9 +51,9 @@ created: 2026-04-18
 | 2-04-01 | 04 | 2 | ADPT-05 | — | `claude-routines.runNow` wraps `fire-routine.ts` correctly | unit | `pnpm test -- claude-routines.test.ts` (mock fetch) | ✅ W2 | ✅ green (2026-04-19, commit 62bdaa7; runNow happy-path + no-cred test block) |
 | 2-04-02 | 04 | 2 | ADPT-05 | — | `claude-routines.deploy` returns `{ok: true, handoffUrl}` with `/schedule create` pre-filled | unit | same | ✅ W2 | ✅ green (2026-04-19, commit 62bdaa7; deploy URL-encoding test block) |
 | 2-04-03 | 04 | 2 | ADPT-05 | — | `claude-routines.healthCheck` probes `claude --version` + beta-header constant | unit | same (mock execFile) | ✅ W2 | ✅ green (2026-04-19, commit 62bdaa7; healthCheck happy + failure + CC_ROUTINE_BETA equality test blocks) |
-| 2-05-01 | 05 | 2 | ADPT-06 | V12 | `claude-desktop.deploy` writes SKILL.md to `~/.claude/scheduled-tasks/<slug>/` | unit | `pnpm test -- claude-desktop.test.ts` (temp HOME) | ❌ W0 | ⬜ pending |
-| 2-05-02 | 05 | 2 | ADPT-06 | — | `deploy()` returns `{handoffUrl: "claude://scheduled-tasks?slug=<slug>"}` | unit | same | ❌ W0 | ⬜ pending |
-| 2-05-03 | 05 | 2 | ADPT-06 | — | `undeploy()` removes SKILL.md directory | unit | same | ❌ W0 | ⬜ pending |
+| 2-05-01 | 05 | 2 | ADPT-06 | V12 | `claude-desktop.deploy` writes SKILL.md to `~/.claude/scheduled-tasks/<slug>/` | unit | `pnpm test -- claude-desktop.test.ts` (temp HOME) | ✅ W2 | ✅ green (2026-04-19, commit 81f68ca; deploy writes-SKILL.md-mode-0644 test block) |
+| 2-05-02 | 05 | 2 | ADPT-06 | — | `deploy()` returns `{handoffUrl: "claude://scheduled-tasks?slug=<slug>"}` | unit | same | ✅ W2 | ✅ green (2026-04-19, commit 81f68ca; deploy claude-deeplink test block) |
+| 2-05-03 | 05 | 2 | ADPT-06 | — | `undeploy()` removes SKILL.md directory | unit | same | ✅ W2 | ✅ green (2026-04-19, commit 81f68ca; undeploy removes-dir + idempotent-on-missing test blocks) |
 | 2-05-04 | 05 | 2 | ADPT-06 | — | Desktop Schedule tab picks up SKILL.md | **manual** | `test/manual/claude-desktop-smoke.md` | ❌ W4 | ⬜ pending |
 | 2-06-01 | 06 | 2 | ADPT-07 | V2/V12 | `codex.deploy` full flow: `assertValidSlug` → absolute path resolve via login shell → plist gen → `plutil -lint` → `launchctl bootstrap` | unit | `pnpm test -- codex.test.ts` (mock execFile + fs) | ❌ W0 | ⬜ pending |
 | 2-06-02 | 06 | 2 | ADPT-07 | V2 | `codex.healthCheck` detects auth conflict (subscription + env key); returns `{available: true, warning: "..."}` | unit | same (fixture `~/.codex/auth.json` + `OPENAI_API_KEY`) | ❌ W0 | ⬜ pending |

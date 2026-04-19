@@ -1,20 +1,20 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-19 after Phase 2 Plan 05 execution (claude-routines.ts adapter + 7 Vitest blocks shipped — first Wave 2 adapter green; VALIDATION.md rows 2-04-01..03 green; dashboard suite 72 -> 79 tests)
+**Last updated:** 2026-04-19 after Phase 2 Plan 06 execution (claude-desktop.ts adapter + 6 Vitest blocks shipped — second Wave 2 adapter green; VALIDATION.md rows 2-05-01..03 green, 2-05-04 deferred to Plan 10; dashboard suite 79 -> 85 tests)
 
 ## Project Reference
 
 **Core value:** Write a prompt + pick a schedule + pick a runtime -> click once -> a live agent exists on that runtime, scheduled, audited, and reviewed from one place. No copy-paste, no terminal, no multi-step wiring.
 
-**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 5 complete (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor, 02-04 supervisor-tests harness, 02-05 claude-routines adapter), 5 remaining. **Wave 1 complete. Wave 2 underway — 1 of 4 adapters green.**
+**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 6 complete (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor, 02-04 supervisor-tests harness, 02-05 claude-routines adapter, 02-06 claude-desktop adapter), 4 remaining. **Wave 1 complete. Wave 2 underway — 2 of 4 adapters green.**
 
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
 **Phase:** 2 — Adapters (in progress)
-**Plan:** 5/10 complete — 02-05 shipped `dashboard/lib/runtime-adapters/claude-routines.ts` (105 lines) + `dashboard/tests/claude-routines.test.ts` (183 lines, 7 Vitest blocks); dashboard suite 72 → 79 green; ADPT-05 sealed. Wave 2 remaining: 02-06 (claude-desktop), 02-07 (codex), 02-08 (gemini) — all three runnable in parallel.
-**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-06 (claude-desktop adapter)
+**Plan:** 6/10 complete — 02-06 shipped `dashboard/lib/runtime-adapters/claude-desktop.ts` (129 lines) + `dashboard/tests/claude-desktop.test.ts` (160 lines, 6 Vitest blocks); dashboard suite 79 → 85 green; ADPT-06 sealed. Wave 2 remaining: 02-07 (codex), 02-08 (gemini) — both runnable in parallel.
+**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-07 (codex adapter) or parallel 02-07/02-08
 
 **Milestone progress:**
 ```
@@ -28,7 +28,7 @@
 
 **Phase 2 progress:**
 ```
-[#####-----] 5/10 plans complete (02-01 + 02-02 + 02-03 + 02-04 + 02-05 shipped; Wave 1 complete; Wave 2 underway — claude-routines green, claude-desktop/codex/gemini pending; 02-06..02-10 pending)
+[######----] 6/10 plans complete (02-01 + 02-02 + 02-03 + 02-04 + 02-05 + 02-06 shipped; Wave 1 complete; Wave 2 underway — claude-routines + claude-desktop green, codex/gemini pending; 02-07..02-10 pending)
 ```
 
 ## Performance Metrics
@@ -39,10 +39,10 @@
 | Phases defined | 6 |
 | Phases complete | 1/6 (Phase 1 Foundation sealed) |
 | Plans authored | 14 (Phase 1: 4, Phase 2: 10) |
-| Plans complete | 9 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04, 02-05) |
-| Requirements complete | 6/32 (ADPT-01, ADPT-02, ADPT-03, ADPT-04, ADPT-05, SAFE-02) |
-| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18; frozen-surface gate 0-line diff after 02-05 (new additive `claude-routines.ts` + `claude-routines.test.ts`; no v0.1 files touched) |
-| Dashboard test suite | 79/79 green (+7 new from 02-05: 4 describe × 7 it() in claude-routines.test.ts) |
+| Plans complete | 10 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04, 02-05, 02-06) |
+| Requirements complete | 7/32 (ADPT-01, ADPT-02, ADPT-03, ADPT-04, ADPT-05, ADPT-06, SAFE-02) |
+| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18; frozen-surface gate 0-line diff after 02-06 (new additive `claude-desktop.ts` + `claude-desktop.test.ts`; no v0.1 files touched) |
+| Dashboard test suite | 85/85 green (+6 new from 02-06: 3 describe × 6 it() in claude-desktop.test.ts) |
 | Supervisor harness | 24 PASS / 0 FAIL / exit 0 (`bash hooks/tests/supervisor-tests.sh` → `all supervisor tests passed`) |
 
 | Plan | Duration | Tasks | Files | Commit |
@@ -56,6 +56,7 @@
 | 02-03 | 3 min | 3 | 2 | 39f7eb3 |
 | 02-04 | 6 min | 3 | 2 | 5bdb19c |
 | 02-05 | 4 min | 3 | 3 | 62bdaa7 + d7223a8 |
+| 02-06 | 3 min | 3 | 3 | 81f68ca |
 
 ## Accumulated Context
 
@@ -94,10 +95,10 @@
 - [x] Execute Phase 2 Plan 03 (bin/sleepwalker-run-cli bash supervisor) — completed 2026-04-19 as commit `39f7eb3`
 - [x] Execute Phase 2 Plan 04 (hooks/tests/supervisor-tests.sh bash harness — 6 scenarios verifying audit contract + budget SIGTERM + ANSI strip) — completed 2026-04-19 as commit `5bdb19c` (24 PASS / 0 FAIL / `all supervisor tests passed`)
 - [x] Execute Phase 2 Plan 05 (claude-routines.ts adapter + 7 Vitest blocks; ADPT-05) — completed 2026-04-19 as commits `62bdaa7` (feat) + `d7223a8` (docs); dashboard suite 72 → 79 green
-- [ ] Execute Phase 2 Plan 06 (claude-desktop.ts adapter; ADPT-06) — Wave 2 continuation — `/gsd-execute-phase 2`
+- [x] Execute Phase 2 Plan 06 (claude-desktop.ts adapter; ADPT-06) — completed 2026-04-19 as commit `81f68ca`; dashboard suite 79 → 85 green; VALIDATION.md rows 2-05-01..03 green (2-05-04 deferred to Plan 10)
 - [ ] Execute Phase 2 Plan 07 (codex.ts adapter; ADPT-07) — Wave 2, parallelizable with 02-06/08 — `/gsd-execute-phase 2`
 - [ ] Execute Phase 2 Plan 08 (gemini.ts adapter; ADPT-08) — Wave 2, parallelizable with 02-06/07 — `/gsd-execute-phase 2`
-- [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work in Plan 02-06)
+- [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — adapter shipped in 02-06; live Desktop-picks-up-SKILL.md smoke deferred to Plan 10 manual smoke per test/manual/claude-desktop-smoke.md)
 - [x] UI-SPEC for Phase 3 Editor — approved 2026-04-19 (commits 1152375 + 961c4d3); textarea locked in, Monaco spike no longer needed per research/SUMMARY.md Phase 3 flag
 - [x] Plan Phase 3 (Editor) with approved UI-SPEC as design context — completed 2026-04-19 (9 plans in 6 waves, commits `c343cb8` research / `e33d52b` validation / `2c7e190` patterns / `d64c359` plans + `7e4fbed` revision + `c8989ea` sweep; plan-checker VERIFICATION PASSED on iteration 2)
 - [ ] Execute Phase 3 Wave 0 in parallel with Phase 2 execution — Plans 03-01 (deps + bundle-schema) + 03-02 (secret-patterns + scan) depend only on net-new npm packages, not on runtime-adapters. Wave 1+ blocks on Phase 2 Plan 02-09 sealing
