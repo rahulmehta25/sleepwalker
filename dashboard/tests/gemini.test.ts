@@ -77,6 +77,7 @@ describe("geminiAdapter.deploy", () => {
     env.restore();
     vi.restoreAllMocks();
     vi.doUnmock("node:child_process");
+    vi.doUnmock("@/lib/runtime-adapters/supervisor-staging");
   });
 
   it("BLOCKED when runtime_config.gemini_quota_project is missing", async () => {
@@ -111,6 +112,12 @@ describe("geminiAdapter.deploy", () => {
       }
       return { err: null };
     }, execCalls);
+    // Plan 02-11: stub supervisor-staging so unit tests don't read a real
+    // binary out of process.cwd() + /.. — actual staging is exercised in
+    // supervisor-staging.test.ts.
+    vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
+      ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
+    }));
 
     const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
     const result = await geminiAdapter.deploy(fixtureBundle("morning-summary"));
@@ -118,6 +125,8 @@ describe("geminiAdapter.deploy", () => {
     expect(result.artifact).toMatch(
       /com\.sleepwalker\.gemini\.morning-summary\.plist$/,
     );
+    // Plan 02-11: non-TCC bundlePath (/tmp/...) must NOT carry a warning
+    expect(result.warning).toBeUndefined();
     expect(fsSync.existsSync(result.artifact!)).toBe(true);
     const stat = fsSync.statSync(result.artifact!);
     expect(stat.mode & 0o777).toBe(0o644);
@@ -130,6 +139,64 @@ describe("geminiAdapter.deploy", () => {
     );
     expect(xml).not.toContain("GEMINI_API_KEY");
     expect(xml).toContain("<key>NO_COLOR</key>");
+    // Plan 02-11: programArguments[0] is now the staged supervisor path
+    expect(xml).toContain("/tmp/stubbed-supervisor");
+  });
+
+  it("emits TCC warning when bundlePath is under ~/Desktop/", async () => {
+    writeSettings(env.home, {
+      runtime_config: { gemini_quota_project: "p" },
+    });
+    const execCalls: Array<{ cmd: string; args: string[] }> = [];
+    installExecFileMock((cmd, args) => {
+      if (cmd === "/bin/zsh" && args.join(" ").includes("command -v gemini")) {
+        return { err: null, stdout: "/opt/homebrew/bin/gemini\n" };
+      }
+      if (cmd === "plutil" && args[0] === "-lint") return { err: null, stdout: "OK" };
+      if (cmd === "launchctl" && args[0] === "bootout") return { err: new Error("Not loaded") };
+      if (cmd === "launchctl" && args[0] === "bootstrap") return { err: null };
+      return { err: null };
+    }, execCalls);
+    vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
+      ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
+    }));
+
+    const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
+    const bundle = fixtureBundle("desktop-tcc");
+    bundle.bundlePath = "/Users/someone/Desktop/Projects/myrepo/routines-gemini/desktop-tcc";
+    const result = await geminiAdapter.deploy(bundle);
+    expect(result.ok).toBe(true);
+    expect(result.warning).toBeDefined();
+    expect(result.warning).toMatch(/TCC-protected/);
+    expect(result.warning).toContain("/Desktop");
+  });
+
+  it("emits TCC warning when bundlePath is under ~/Documents/", async () => {
+    writeSettings(env.home, {
+      runtime_config: { gemini_quota_project: "p" },
+    });
+    const execCalls: Array<{ cmd: string; args: string[] }> = [];
+    installExecFileMock((cmd, args) => {
+      if (cmd === "/bin/zsh" && args.join(" ").includes("command -v gemini")) {
+        return { err: null, stdout: "/opt/homebrew/bin/gemini\n" };
+      }
+      if (cmd === "plutil" && args[0] === "-lint") return { err: null, stdout: "OK" };
+      if (cmd === "launchctl" && args[0] === "bootout") return { err: new Error("Not loaded") };
+      if (cmd === "launchctl" && args[0] === "bootstrap") return { err: null };
+      return { err: null };
+    }, execCalls);
+    vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({
+      ensureStagedSupervisor: vi.fn(async () => "/tmp/stubbed-supervisor"),
+    }));
+
+    const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
+    const bundle = fixtureBundle("documents-tcc");
+    bundle.bundlePath = "/Users/someone/Documents/routines-gemini/documents-tcc";
+    const result = await geminiAdapter.deploy(bundle);
+    expect(result.ok).toBe(true);
+    expect(result.warning).toBeDefined();
+    expect(result.warning).toMatch(/TCC-protected/);
+    expect(result.warning).toContain("/Documents");
   });
 
   it("returns error when gemini CLI not on login-shell PATH", async () => {

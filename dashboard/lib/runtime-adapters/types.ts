@@ -51,6 +51,23 @@ export interface DeployResult {
   handoffUrl?: string;
   /** User-facing error message if ok === false */
   error?: string;
+  /**
+   * Advisory non-blocking warning (e.g. "bundlePath is TCC-protected" or an
+   * auth-conflict). Dashboard renders as yellow badge. Deploy still succeeded;
+   * warning is user-facing guidance only. Added in Plan 02-11 so codex.ts +
+   * gemini.ts can flag macOS TCC-protected bundlePath at deploy time instead
+   * of letting the user discover the failure 30 minutes later via launchd.
+   */
+  warning?: string;
+  /**
+   * Bytes written to the deployed artifact, populated by the claude-desktop
+   * adapter ONLY. Exposed so Phase 3 editor UI can offer clipboard copy
+   * (pbcopy) without re-reading disk — the Claude Desktop 1.3109.0 Schedule
+   * tab does NOT watch ~/.claude/scheduled-tasks/ (research Q1 outcome (c)),
+   * so the user must manually paste SKILL.md content into Desktop's UI.
+   * undefined for all other runtimes.
+   */
+  skillMdContent?: string;
 }
 
 /** Outcome of runNow(). */

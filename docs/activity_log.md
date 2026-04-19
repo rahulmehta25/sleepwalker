@@ -1,5 +1,26 @@
 # Activity Log
 
+## 2026-04-19 13:42 EST
+
+### User Prompt
+"Execute Phase 2 Plan 02-11 Tasks 1-6 (gap-closure): stage the supervisor outside TCC-protected directories; emit TCC warning at deploy time; claude-desktop.ts returns skillMdContent for Phase 3 pbcopy. Stop at Task 6 checkpoint which requires user to re-run codex manual smoke from ~/Desktop/."
+
+### Actions Taken
+- Created `dashboard/lib/runtime-adapters/supervisor-staging.ts` (97 lines) — `ensureStagedSupervisor()` copies bin/sleepwalker-run-cli to `~/.sleepwalker/bin/sleepwalker-run-cli-<hash8>` (first 8 chars of sha256 over source bytes). Versioned filename prevents concurrent deploys from stomping an executing supervisor. `fs.copyFile` + explicit `fs.chmod(dest, 0o755)` (not `fs.cp`, whose preserve-mode behavior varies by Node version). Fast-path stat-check idempotency. Throws on missing source / non-regular-file source with an explicit path in the message.
+- Created `dashboard/tests/supervisor-staging.test.ts` (122 lines, 7 `it()` blocks) — happy-path (staged path matches regex + mode 0o755), idempotency (mtime stable across calls), content-change (new hash + old file preserved), bin-dir auto-create, missing-source error, dir-as-source error, mode-force-0o755-over-0o600. Uses real `fs.mkdtemp` tempHome + tempRepo (no mocks needed — real fs behavior is the contract).
+- Modified `dashboard/lib/runtime-adapters/types.ts` (+17 lines) — `DeployResult` gains `warning?: string` + `skillMdContent?: string` as additive optional fields (non-breaking; existing callers compile unchanged).
+- Modified `dashboard/lib/runtime-adapters/codex.ts` (+63/-8) — deploy() and runNow() now `await ensureStagedSupervisor()` and pass the staged path as `programArguments[0]`. Added `TCC_PATTERNS` regex list + `tccWarning(bundlePath)` helper. deploy() spreads `{warning}` onto both ok:true and ok:false return branches when the bundle.bundlePath resolves under ~/Desktop, ~/Documents, ~/Downloads, or ~/Library/Mobile Documents (iCloud). Left `supervisorPath()` in place as the staging-SOURCE resolver with updated JSDoc.
+- Modified `dashboard/lib/runtime-adapters/gemini.ts` (+63/-6) — same pattern as codex.ts. `ensureStagedSupervisor()` is called AFTER the existing quota + CLI preconditions, so a missing source doesn't mask the earlier failure. TCC_PATTERNS + tccWarning duplicated (not imported) — 12 LOC ×2 that change rarely, DRY-ing would force a third module.
+- Modified `dashboard/lib/runtime-adapters/claude-desktop.ts` (+9/0) — deploy() success result now includes `skillMdContent: bundle.prompt` byte-identical to the bytes written to SKILL.md. Adapter never shells to pbcopy — Phase 3 editor UI owns the UX layer (research Q1 outcome (c): Claude Desktop 1.3109.0 does NOT watch ~/.claude/scheduled-tasks/, so the user MUST paste SKILL.md content into Desktop's Schedule tab manually).
+- Modified `dashboard/tests/codex.test.ts` (+56/-7) — updated happy-path to `vi.doMock("@/lib/runtime-adapters/supervisor-staging", () => ({ ensureStagedSupervisor: async () => "/tmp/stubbed-supervisor" }))` and assert `xml` contains `/tmp/stubbed-supervisor` + `result.warning === undefined` for `/tmp/...` bundlePath. Added `emits TCC warning when bundlePath is under ~/Desktop/` and `…under iCloud (~/Library/Mobile Documents)` blocks. afterEach now also `vi.doUnmock("@/lib/runtime-adapters/supervisor-staging")`.
+- Modified `dashboard/tests/gemini.test.ts` (+64/-4) — same vi.doMock pattern; added `…under ~/Desktop/` and `…under ~/Documents/` TCC warning blocks.
+- Modified `dashboard/tests/claude-desktop.test.ts` (+19/0) — happy-path asserts `result.skillMdContent === "Hello world."` and equals `readFile(artifact, utf8)`. Added new block `skillMdContent equals the exact bytes written to SKILL.md (byte-identical with unicode + emoji)` exercising `"Daily brief\n\nEmoji: 🌙\nUnicode: naïve résumé café"` across write → read → result path.
+- Verification: `pnpm typecheck` exit 0; `pnpm test --run` 262/262 pass (supervisor-staging 7 + codex 8 + gemini 9 + claude-desktop 7 + 20 other files); bash `hooks/tests/supervisor-tests.sh` 24/24 pass (supervisor binary unchanged); frozen-surface diff against Plan 02-11 baseline (76a0dd8) = 0 lines for v0.1 surface.
+- Scope-bleed note: pre-existing uncommitted changes in `dashboard/lib/cloud-cache.ts` + `dashboard/tests/cloud-cache.test.ts` (from a parallel session) preserved untouched. Staging used explicit file paths for every Plan 02-11 artifact — zero cross-session bleed.
+
+### NOT done (awaiting human-action checkpoint — Task 6 + orchestrator Task 7)
+- User re-runs `test/manual/codex-adapter-smoke.md` from `/Users/rahulmehta/Desktop/Projects/sleepwalker/` (the original TCC-blocked environment) and verifies Step 8 audit.jsonl shows `"event":"completed"` with `preview` matching `SMOKE_OK`. Outcome gets recorded by the orchestrator in `02-SUMMARY.md §Manual Smoke Test Results` (Task 7).
+
 ## 2026-04-19 04:45 EST
 
 ### User Prompt

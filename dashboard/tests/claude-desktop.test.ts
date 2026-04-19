@@ -54,6 +54,25 @@ describe("claudeDesktopAdapter.deploy", () => {
     expect(content).toBe("Hello world.");
     const stat = fsSync.statSync(expectedPath);
     expect(stat.mode & 0o777).toBe(0o644);
+    // Plan 02-11: skillMdContent is populated on success, byte-identical to
+    // the bytes written to SKILL.md (Phase 3 UI reads this for pbcopy).
+    expect(result.skillMdContent).toBeDefined();
+    expect(result.skillMdContent).toBe("Hello world.");
+    expect(result.skillMdContent).toBe(content);
+  });
+
+  it("skillMdContent equals the exact bytes written to SKILL.md (byte-identical with unicode + emoji)", async () => {
+    const { claudeDesktopAdapter } = await import(
+      "@/lib/runtime-adapters/claude-desktop"
+    );
+    const prompt = "Daily brief\n\nEmoji: 🌙\nUnicode: naïve résumé café";
+    const result = await claudeDesktopAdapter.deploy(
+      fixtureBundle("unicode-test", prompt),
+    );
+    expect(result.ok).toBe(true);
+    expect(result.skillMdContent).toBe(prompt);
+    const fromDisk = await fs.readFile(result.artifact!, "utf8");
+    expect(result.skillMdContent).toBe(fromDisk);
   });
 
   it("returns claude:// deeplink with URL-encoded slug", async () => {

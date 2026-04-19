@@ -48,16 +48,54 @@ import {
   type LaunchdSchedule,
 } from "./launchd-writer";
 import { parseCron } from "./cron";
+import { ensureStagedSupervisor } from "./supervisor-staging";
 
 const execFileP = promisify(execFile);
 
 /**
- * Absolute path to bin/sleepwalker-run-cli (Plan 02-03 supervisor).
- * Resolved relative to this file: dashboard/lib/runtime-adapters/gemini.ts
- * → ../../.. = repo root → bin/sleepwalker-run-cli. Matches codex.ts pattern.
+ * Staging-SOURCE resolution for bin/sleepwalker-run-cli (Plan 02-03 supervisor).
+ * Uses process.cwd() (repo root in dev) with SLEEPWALKER_REPO_ROOT env
+ * override for production builds where __dirname resolves to .next/server/.
+ *
+ * NOTE (Plan 02-11): deploy() + runNow() no longer pass this path to
+ * launchd directly. They `await ensureStagedSupervisor()` which COPIES
+ * this source into ~/.sleepwalker/bin/sleepwalker-run-cli-<hash8> (outside
+ * macOS TCC-protected directories). This function remains as the named
+ * resolver that ensureStagedSupervisor() mirrors, and is kept available
+ * so tests can stub supervisor discovery in isolation.
  */
 function supervisorPath(): string {
-  return path.resolve(__dirname, "..", "..", "..", "bin", "sleepwalker-run-cli");
+  const root = process.env.SLEEPWALKER_REPO_ROOT || path.resolve(process.cwd(), "..");
+  return path.join(root, "bin", "sleepwalker-run-cli");
+}
+
+/**
+ * macOS TCC-protected directory patterns. When bundle.bundlePath matches
+ * any of these, launchd may be blocked from executing OR reading files in
+ * the bundle (Operation not permitted) unless the user grants Full Disk
+ * Access to launchd. We surface this at deploy time as a non-blocking
+ * warning so the user sees a one-line banner instead of debugging a
+ * cryptic failure 30 minutes later via Console.app. Patterns duplicated
+ * (not imported) from codex.ts — DRY-ing would force a third module for
+ * 12 LOC that change rarely.
+ */
+const TCC_PATTERNS = [
+  /\/Desktop(\/|$)/,
+  /\/Documents(\/|$)/,
+  /\/Downloads(\/|$)/,
+  /\/Library\/Mobile Documents(\/|$)/, // iCloud Drive
+];
+
+function tccWarning(bundlePath: string): string | undefined {
+  const abs = path.resolve(bundlePath);
+  if (!TCC_PATTERNS.some((rx) => rx.test(abs))) return undefined;
+  return (
+    `bundlePath is under a macOS TCC-protected directory (${abs}). ` +
+    `If scheduled runs fail with "Operation not permitted", grant Full Disk ` +
+    `Access to launchd via System Settings → Privacy & Security → Full Disk ` +
+    `Access, OR move the routine bundle outside ~/Desktop, ~/Documents, ` +
+    `~/Downloads, or iCloud.`
+  );
 }
 
 /** Login-shell PATH resolution for gemini binary (Pitfall #1). */
@@ -116,6 +154,12 @@ export const geminiAdapter: RuntimeAdapter = {
         return { ok: false, error: "gemini CLI not found on login-shell PATH" };
       }
 
+      // Plan 02-11: stage the supervisor into ~/.sleepwalker/bin/ (outside
+      // TCC-protected directories). Staging AFTER quota + CLI checks so a
+      // missing source doesn't get surfaced to the user when the earlier
+      // precondition was actually the problem.
+      const supervisor = await ensureStagedSupervisor();
+
       // toLaunchdLabel THROWS on invalid slug (Plan 02-01 assertValidSlug guard).
       // Programmer bug if upstream caller bypasses validateSlug; caught below.
       const label = toLaunchdLabel("gemini", bundle.slug);
@@ -131,7 +175,7 @@ export const geminiAdapter: RuntimeAdapter = {
 
       const job: LaunchdJob = {
         label,
-        programArguments: [supervisorPath(), "gemini", bundle.slug],
+        programArguments: [supervisor, "gemini", bundle.slug],
         schedule: parseCron(bundle.schedule),
         stdoutPath: path.join(logsDir, `${label}.out`),
         stderrPath: path.join(logsDir, `${label}.err`),
@@ -154,9 +198,15 @@ export const geminiAdapter: RuntimeAdapter = {
       };
 
       const result = await installPlist(job);
+      const warning = tccWarning(bundle.bundlePath);
       return result.ok
-        ? { ok: true, artifact: result.plistPath }
-        : { ok: false, error: result.error, artifact: result.lintOutput };
+        ? { ok: true, artifact: result.plistPath, ...(warning ? { warning } : {}) }
+        : {
+            ok: false,
+            error: result.error,
+            artifact: result.lintOutput,
+            ...(warning ? { warning } : {}),
+          };
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
@@ -176,7 +226,10 @@ export const geminiAdapter: RuntimeAdapter = {
 
   async runNow(bundle: RoutineBundle, _context?: string): Promise<RunNowResult> {
     try {
-      const supervisor = supervisorPath();
+      // Plan 02-11: runNow() fires through the same staged supervisor as
+      // deploy() so manual fire-now replays the exact TCC-safe path that
+      // scheduled runs take.
+      const supervisor = await ensureStagedSupervisor();
       // spawn (not execFile): non-blocking fire-and-forget via detached+unref.
       // stdio: "ignore" detaches stdin/stdout/stderr so the Next.js server
       // response is not coupled to the supervisor's lifetime. Matches codex.ts.

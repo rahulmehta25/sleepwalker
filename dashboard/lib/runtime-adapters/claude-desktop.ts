@@ -48,10 +48,19 @@ export const claudeDesktopAdapter: RuntimeAdapter = {
       // Mode 0644: SKILL.md is non-secret (Pitfall #2 family — secrets must
       // never be in prompt text; Phase 3 editor scans before save).
       await fs.writeFile(skillPath, bundle.prompt, { mode: 0o644 });
+      // Plan 02-11: return the exact bytes written to SKILL.md so Phase 3
+      // editor UI can offer a one-click clipboard copy without re-reading
+      // disk. Claude Desktop 1.3109.0 does NOT watch ~/.claude/scheduled-
+      // tasks/ (research Q1 outcome (c)), so the user MUST manually add
+      // the routine via Desktop's Schedule tab UI — returning the content
+      // here makes that copy step one click instead of three (open file,
+      // select all, copy). Adapter NEVER shells to pbcopy itself — keeps
+      // the library platform-neutral; Phase 3 UI owns the UX layer.
       return {
         ok: true,
         artifact: skillPath,
         handoffUrl: `claude://scheduled-tasks?slug=${encodeURIComponent(bundle.slug)}`,
+        skillMdContent: bundle.prompt,
       };
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
