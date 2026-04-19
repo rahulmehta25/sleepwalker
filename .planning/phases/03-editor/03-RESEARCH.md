@@ -644,19 +644,19 @@ export function hasBundleAnyRuntime(slug: string): { exists: boolean; runtime: R
 
 **Implementation notes:**
 
-1. **Directory convention:** `claude-desktop` → `routines-local/<slug>/`; `claude-routines` → `routines-cloud/<slug>/`; `codex` → `routines-codex/<slug>/`; `gemini` → `routines-gemini/<slug>/`. Matches the frozen `toBundleDir` output but `bundles.ts` does NOT call `toBundleDir` (per Phase 2 CONTEXT v0.1-prefix rule).
+RESOLVED: 1. **Directory convention:** `claude-desktop` → `routines-local/<slug>/`; `claude-routines` → `routines-cloud/<slug>/`; `codex` → `routines-codex/<slug>/`; `gemini` → `routines-gemini/<slug>/`. Matches the frozen `toBundleDir` output but `bundles.ts` does NOT call `toBundleDir` (per Phase 2 CONTEXT v0.1-prefix rule).
 
-2. **Parse priority:** For each runtime:
+RESOLVED: 2. **Parse priority:** For each runtime:
    - Try `config.json` for v0.2 fields (name, schedule, reversibility, budget). Fallback to hardcoded `STARTER_DEFAULTS` from `dashboard/lib/routines.ts` if absent (v0.1 routines don't have config.json).
    - For `claude-desktop`: parse `SKILL.md` frontmatter via gray-matter for name + description; prompt body is the rest.
    - For `claude-routines`: parse `prompt.md` for marker tag + body; fall back to `config.json` for name.
    - For `codex` / `gemini`: read `prompt.md` body + `config.json` fully.
 
-3. **Does `bundles.ts` REPLACE or EXTEND `dashboard/lib/routines.ts`?** **Extend.** `routines.ts` stays as-is for v0.1 backward compat (it reads only `routines-local/` + `~/.claude/scheduled-tasks/`). `bundles.ts` is the v0.2 unified reader. Phase 6 backward-compat test (COMP-01) verifies both work. Phase 4's `/routines` page is rewritten on top of `bundles.ts`, and `routines.ts` can be kept as a thin compatibility shim until Phase 6 proves everything has migrated. **Do not delete `routines.ts` in Phase 3** — it is imported by the `/routines` page today.
+RESOLVED: 3. **Does `bundles.ts` REPLACE or EXTEND `dashboard/lib/routines.ts`?** **Extend.** `routines.ts` stays as-is for v0.1 backward compat (it reads only `routines-local/` + `~/.claude/scheduled-tasks/`). `bundles.ts` is the v0.2 unified reader. Phase 6 backward-compat test (COMP-01) verifies both work. Phase 4's `/routines` page is rewritten on top of `bundles.ts`, and `routines.ts` can be kept as a thin compatibility shim until Phase 6 proves everything has migrated. **Do not delete `routines.ts` in Phase 3** — it is imported by the `/routines` page today.
 
-4. **No filesystem locks.** `listBundles` is read-only; race with a concurrent `saveRoutine` is benign (directory-swap atomic means either the new bundle appears in the next read or it doesn't).
+RESOLVED: 4. **No filesystem locks.** `listBundles` is read-only; race with a concurrent `saveRoutine` is benign (directory-swap atomic means either the new bundle appears in the next read or it doesn't).
 
-5. **`hasBundle` is the authoritative collision check used by both the debounced `checkSlugAvailability` Server Action AND the `saveRoutine` pre-flight gate.** The atomic `renameSync` in `atomic-write.ts` is the ultimate backstop (TOCTOU-safe).
+RESOLVED: 5. **`hasBundle` is the authoritative collision check used by both the debounced `checkSlugAvailability` Server Action AND the `saveRoutine` pre-flight gate.** The atomic `renameSync` in `atomic-write.ts` is the ultimate backstop (TOCTOU-safe).
 
 ---
 
@@ -1275,29 +1275,29 @@ Phase 3 is pure code + existing dashboard; no external dependencies beyond node_
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should `bundles.ts` be the sole read-path for v0.2 Phase 4 `/routines`, or should `routines.ts` stay active?**
+1. RESOLVED: **Should `bundles.ts` be the sole read-path for v0.2 Phase 4 `/routines`, or should `routines.ts` stay active?**
    - What we know: `routines.ts` exists today and reads only v0.1 `routines-local/` + `~/.claude/scheduled-tasks/`. It's consumed by `dashboard/app/routines/page.tsx`.
    - What's unclear: whether Phase 4 rewrites `/routines/page.tsx` on top of `bundles.ts` or writes a new page.
    - Recommendation: `bundles.ts` is the new unified reader (ships Phase 3). `routines.ts` stays as-is for Phase 3 (don't touch). Phase 4 Plan author decides whether `/routines/page.tsx` imports `bundles.ts` directly or both. Phase 6 backward-compat test ensures both work.
 
-2. **Does `saveRoutine` redirect to `/routines?highlight={slug}` after success, or show in-page confirmation pill?**
+2. RESOLVED: **Does `saveRoutine` redirect to `/routines?highlight={slug}` after success, or show in-page confirmation pill?**
    - What we know: UI-SPEC §Empty/zero states says: `saved {slug} at {time}` pill + form stays on-page, slug/name read-only 800ms.
    - What's unclear: whether there's ALSO a redirect option for users who want to immediately deploy.
    - Recommendation: UI-SPEC wins — in-page pill. User clicks "Routines" in sidebar to navigate. Phase 4 adds the Deploy button on the routine card (not on the editor page).
 
-3. **How should `/editor` discover existing slugs for auto-derive collision avoidance?**
+3. RESOLVED: **How should `/editor` discover existing slugs for auto-derive collision avoidance?**
    - What we know: Server Component can call `listBundles()` and pass slug list to client. Slug is derived from name until manually edited.
    - What's unclear: if user types "Morning Brief" and `codex/morning-brief` already exists, does auto-derive bump to `morning-brief-2`?
    - Recommendation: NO auto-bump. Client derives `morning-brief`, collision check returns `available: false`, user manually changes. Automatic-suffix is magic and hides the collision.
 
-4. **Should the editor preserve form data across an error-returning Server Action call?**
+4. RESOLVED: **Should the editor preserve form data across an error-returning Server Action call?**
    - What we know: `useActionState` replays the form state on error. Form inputs use `defaultValue={...}` hydrated from `state.fieldErrors` context.
    - What's unclear: whether we use uncontrolled inputs (React 19's form-data-from-FormData pattern) or controlled with React state.
    - Recommendation: Controlled inputs with React state, because we need them for autosave + debounced validation anyway. On error, form state is preserved because we never cleared it; on success, the success pill renders and form clears after 800ms.
 
-5. **Does gray-matter need a specific YAML engine option for the existing SKILL.md files?**
+5. RESOLVED: **Does gray-matter need a specific YAML engine option for the existing SKILL.md files?**
    - What we know: SKILL.md files are simple key: value YAML; gray-matter uses `js-yaml` internally.
    - What's unclear: whether our YAML is strict enough to parse identically to the current regex-based `readSkill()` in `routines.ts`.
    - Recommendation: Wave 1 smoke test reads all 6 existing SKILL.md files through gray-matter; asserts `name` + `description` match `readSkill()` output. If any differ, document and adjust before Phase 4 uses `bundles.ts`.
