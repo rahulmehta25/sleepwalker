@@ -80,3 +80,28 @@ describe("parseFleetKey", () => {
     expect(parseFleetKey("/leading-slash")).toBeNull();
   });
 });
+
+describe("builders reject invalid slugs", () => {
+  it("toFleetKey throws on path traversal", () => {
+    expect(() => toFleetKey("codex", "../etc/passwd")).toThrow(/Invalid slug/);
+  });
+  it("toLaunchdLabel throws on uppercase", () => {
+    expect(() => toLaunchdLabel("codex", "Morning-Brief")).toThrow(/Invalid slug/);
+  });
+  it("toMarkerTag throws on leading underscore", () => {
+    expect(() => toMarkerTag("claude-routines", "_test-zen")).toThrow(/Invalid slug/);
+  });
+  it("toBranchPrefix throws on empty string", () => {
+    expect(() => toBranchPrefix("gemini", "")).toThrow(/Invalid slug/);
+  });
+  it("toPlistPath throws on leading digit", () => {
+    expect(() => toPlistPath("codex", "1-bad")).toThrow(/Invalid slug/);
+  });
+  it("toBundleDir throws on path traversal", () => {
+    expect(() => toBundleDir("codex", "../x")).toThrow(/Invalid slug/);
+  });
+  it("parseFleetKey returns null (does NOT throw) for invalid input", () => {
+    expect(parseFleetKey("codex/../x")).toBeNull();
+    expect(parseFleetKey("codex/_bad")).toBeNull();
+  });
+});

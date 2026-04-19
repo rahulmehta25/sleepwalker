@@ -30,6 +30,23 @@ export function validateSlug(s: string): boolean {
   return SLUG_REGEX.test(s);
 }
 
+/**
+ * Throws if slug does not match SLUG_REGEX. Used internally by every
+ * identifier builder to guarantee that adapters can never construct
+ * invalid launchd labels, marker tags, branch prefixes, or paths.
+ *
+ * This is the Phase 2 resolution of Phase 1 review debt item #1
+ * (Gemini + Codex HIGH consensus: builders accepting raw strings makes
+ * ADPT-02 primitive only, not enforcement).
+ */
+function assertValidSlug(slug: string): asserts slug is string {
+  if (!validateSlug(slug)) {
+    throw new Error(
+      `Invalid slug: ${JSON.stringify(slug)}. Must match ^[a-z][a-z0-9-]{0,63}$`,
+    );
+  }
+}
+
 /** Type guard: narrows `r` to `Runtime` if it is one of the four authorized values. */
 export function isRuntime(r: string): r is Runtime {
   return (RUNTIMES as readonly string[]).includes(r);
@@ -37,9 +54,14 @@ export function isRuntime(r: string): r is Runtime {
 
 /** Internal fleet key: `<runtime>/<slug>`. */
 export function toFleetKey(runtime: Runtime, slug: string): string {
+  assertValidSlug(slug);
   return `${runtime}/${slug}`;
 }
 
+// NOTE: parseFleetKey() does NOT call assertValidSlug(). Construction uses
+// throw ("bad slug is a programmer bug"); parsing returns null ("bad input
+// is an expected state for legacy/partial data readers"). This asymmetry
+// is intentional and matches result-object conventions.
 /** Parse a fleet key. Returns null for bad runtime, bad slug, or missing slash. */
 export function parseFleetKey(
   key: string,
@@ -55,21 +77,25 @@ export function parseFleetKey(
 
 /** Launchd label: `com.sleepwalker.<runtime>.<slug>`. */
 export function toLaunchdLabel(runtime: Runtime, slug: string): string {
+  assertValidSlug(slug);
   return `com.sleepwalker.${runtime}.${slug}`;
 }
 
 /** Marker tag embedded in prompts: `[sleepwalker:<runtime>/<slug>]`. */
 export function toMarkerTag(runtime: Runtime, slug: string): string {
+  assertValidSlug(slug);
   return `[sleepwalker:${runtime}/${slug}]`;
 }
 
 /** Cloud branch prefix: `claude/sleepwalker/<runtime>/<slug>/` (trailing slash, no glob). */
 export function toBranchPrefix(runtime: Runtime, slug: string): string {
+  assertValidSlug(slug);
   return `claude/sleepwalker/${runtime}/${slug}/`;
 }
 
 /** Absolute plist path: `$HOME/Library/LaunchAgents/<label>.plist`. */
 export function toPlistPath(runtime: Runtime, slug: string): string {
+  assertValidSlug(slug);
   const home = process.env.HOME || os.homedir();
   return path.join(
     home,
@@ -81,6 +107,7 @@ export function toPlistPath(runtime: Runtime, slug: string): string {
 
 /** On-disk bundle directory. Preserves v0.1 paths for Claude runtimes. */
 export function toBundleDir(runtime: Runtime, slug: string): string {
+  assertValidSlug(slug);
   const dirName =
     runtime === "claude-desktop"
       ? "routines-local"

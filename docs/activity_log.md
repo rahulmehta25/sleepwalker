@@ -87,3 +87,14 @@
 - Applied checker clarification to UI-SPEC Typography section ("4 distinct sizes / 4 inherited weights" — no new sizes or weights introduced this phase)
 - Flipped frontmatter `status: draft` → `approved`, added `reviewed_at: 2026-04-19`, checked off all 6 Checker Sign-Off dimensions, committed as 961c4d3
 - Updated `.planning/STATE.md`: Last-updated timestamp, appended Phase 3 UI-SPEC approval decision, flipped UI-SPEC todo to complete, added Phase 3 planning todo
+
+## 2026-04-19 01:27 EST
+
+### User Prompt
+"Execute Phase 2 Plan 01 — amend slug.ts with assertValidSlug guard and extend slug.test.ts."
+
+### Actions Taken
+- Modified `dashboard/lib/runtime-adapters/slug.ts`: added `assertValidSlug()` helper (module-private) and inserted `assertValidSlug(slug)` at the top of 6 builders (toFleetKey, toLaunchdLabel, toMarkerTag, toBranchPrefix, toPlistPath, toBundleDir). parseFleetKey left untouched (null-on-invalid asymmetry preserved, plus NOTE comment explaining the intent).
+- Modified `dashboard/tests/slug.test.ts`: appended `describe("builders reject invalid slugs")` with 7 new it() blocks covering throw paths and parseFleetKey non-throw path.
+- Ran `pnpm typecheck` and `pnpm test` — both green; full dashboard suite grew from 56 to 63 tests (+7 new slug throw assertions).
+- Commit `cb16382` — `feat(02-01): enforce slug validation in identifier builders`.
