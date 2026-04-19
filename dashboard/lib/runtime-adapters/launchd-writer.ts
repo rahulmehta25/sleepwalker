@@ -82,18 +82,23 @@ export function generatePlist(job: LaunchdJob): string {
   }
   lines.push('  </array>');
 
-  // Schedule dispatch
+  // Schedule dispatch. isFiniteInt defends against NaN leaking into
+  // <integer>…</integer> — a bad upstream cron parser (e.g. parseInt("*/5", 10))
+  // once produced NaN that passed the old `!== undefined` check and caused
+  // plutil -lint to reject the plist.
+  const isFiniteInt = (v: unknown): v is number =>
+    typeof v === "number" && Number.isFinite(v);
   if (job.schedule.kind === "interval") {
     lines.push(`  <key>StartInterval</key><integer>${job.schedule.seconds}</integer>`);
   } else if (job.schedule.kind === "calendar") {
     lines.push('  <key>StartCalendarInterval</key>');
     lines.push('  <dict>');
     const cal = job.schedule;
-    if (cal.minute !== undefined)  lines.push(`    <key>Minute</key><integer>${cal.minute}</integer>`);
-    if (cal.hour !== undefined)    lines.push(`    <key>Hour</key><integer>${cal.hour}</integer>`);
-    if (cal.day !== undefined)     lines.push(`    <key>Day</key><integer>${cal.day}</integer>`);
-    if (cal.weekday !== undefined) lines.push(`    <key>Weekday</key><integer>${cal.weekday}</integer>`);
-    if (cal.month !== undefined)   lines.push(`    <key>Month</key><integer>${cal.month}</integer>`);
+    if (isFiniteInt(cal.minute))  lines.push(`    <key>Minute</key><integer>${cal.minute}</integer>`);
+    if (isFiniteInt(cal.hour))    lines.push(`    <key>Hour</key><integer>${cal.hour}</integer>`);
+    if (isFiniteInt(cal.day))     lines.push(`    <key>Day</key><integer>${cal.day}</integer>`);
+    if (isFiniteInt(cal.weekday)) lines.push(`    <key>Weekday</key><integer>${cal.weekday}</integer>`);
+    if (isFiniteInt(cal.month))   lines.push(`    <key>Month</key><integer>${cal.month}</integer>`);
     lines.push('  </dict>');
   } else {
     // calendar-array
@@ -101,9 +106,9 @@ export function generatePlist(job: LaunchdJob): string {
     lines.push('  <array>');
     for (const e of job.schedule.entries) {
       lines.push('    <dict>');
-      if (e.minute !== undefined)  lines.push(`      <key>Minute</key><integer>${e.minute}</integer>`);
-      if (e.hour !== undefined)    lines.push(`      <key>Hour</key><integer>${e.hour}</integer>`);
-      if (e.weekday !== undefined) lines.push(`      <key>Weekday</key><integer>${e.weekday}</integer>`);
+      if (isFiniteInt(e.minute))  lines.push(`      <key>Minute</key><integer>${e.minute}</integer>`);
+      if (isFiniteInt(e.hour))    lines.push(`      <key>Hour</key><integer>${e.hour}</integer>`);
+      if (isFiniteInt(e.weekday)) lines.push(`      <key>Weekday</key><integer>${e.weekday}</integer>`);
       lines.push('    </dict>');
     }
     lines.push('  </array>');

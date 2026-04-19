@@ -256,3 +256,18 @@
 - Did NOT touch Claude Desktop's Schedule tab.
 - Did NOT write SKILL.md into the user's real `~/.claude/scheduled-tasks/`.
 - When user runs the contracts, results go into `.planning/phases/02-adapters/02-SUMMARY.md` under the existing "Manual Smoke Test Results (Wave 4)" section (currently pending-placeholder).
+
+## 2026-04-19 03:22 EST
+
+### User Prompt
+"The adapter's parseCron(\"*/5 * * * *\") produces { minute: NaN } because parseInt(\"*/5\", 10) returns NaN, and NaN !== undefined so the launchd-writer emits <integer>NaN</integer>, which plutil -lint correctly rejects."
+
+### Actions Taken
+- Created `dashboard/lib/runtime-adapters/cron.ts` — shared parseCron with `*/N` fast-path (minute step → N-minute interval, hour step → N-hour interval), `* * * * *` → 60s interval, and a strict `^\d+$` guard so unsupported cron features (ranges, lists, named aliases, malformed steps) drop to undefined rather than NaN.
+- Modified `dashboard/lib/runtime-adapters/codex.ts` — removed local parseCron, imports from `./cron`.
+- Modified `dashboard/lib/runtime-adapters/gemini.ts` — same swap.
+- Modified `dashboard/lib/runtime-adapters/launchd-writer.ts` — replaced `!== undefined` checks with `Number.isFinite` guards for every calendar and calendar-array integer field (defense-in-depth against any future NaN upstream).
+- Created `dashboard/tests/cron.test.ts` — 31 it() blocks covering fallback, step-syntax fast paths, standard calendar, explicit NaN-never-leaks sweep across 13 inputs, and unsupported-feature drop-to-undefined.
+- Extended `dashboard/tests/launchd-writer.test.ts` — 2 new it() blocks asserting NaN never emits `<integer>NaN</integer>` in calendar dict or calendar-array entries.
+- `pnpm typecheck` exit 0. `pnpm test` 137/137 (was 104; +31 cron + 2 launchd-writer NaN).
+- Frozen-surface diff with dynamic PHASE2_BASE = 0 lines (all additions are net-new in `dashboard/lib/runtime-adapters/` + `dashboard/tests/`, none of which are in the v0.1 frozen list).

@@ -198,3 +198,44 @@ describe("installPlist + uninstallPlist", () => {
     expect(result.ok).toBe(true);
   });
 });
+
+describe("generatePlist — NaN defense (regression)", () => {
+  // Prevents the plutil-lint failure caught during Phase 2 manual smoke:
+  // an upstream cron parser returned `{ minute: NaN }`, which satisfied
+  // `!== undefined` and leaked `<integer>NaN</integer>` into the plist.
+  it("omits calendar fields whose value is NaN", async () => {
+    const { generatePlist } = await import("@/lib/runtime-adapters/launchd-writer");
+    const xml = generatePlist({
+      label: "com.sleepwalker.codex.nan-guard",
+      programArguments: ["/bin/runner"],
+      // NaN values should NEVER reach this layer, but if they do the writer
+      // must drop them rather than emit invalid plist XML.
+      schedule: { kind: "calendar", minute: NaN, hour: 6 },
+      stdoutPath: "/o",
+      stderrPath: "/e",
+    });
+    expect(xml).not.toContain("NaN");
+    expect(xml).not.toContain("<integer>NaN</integer>");
+    // The finite sibling survives:
+    expect(xml).toContain("<key>Hour</key><integer>6</integer>");
+    // The NaN field is silently omitted:
+    expect(xml).not.toContain("<key>Minute</key>");
+  });
+
+  it("omits calendar-array entry fields whose value is NaN", async () => {
+    const { generatePlist } = await import("@/lib/runtime-adapters/launchd-writer");
+    const xml = generatePlist({
+      label: "com.sleepwalker.codex.array-nan",
+      programArguments: ["/bin/runner"],
+      schedule: {
+        kind: "calendar-array",
+        entries: [{ minute: NaN, hour: 9, weekday: 1 }],
+      },
+      stdoutPath: "/o",
+      stderrPath: "/e",
+    });
+    expect(xml).not.toContain("NaN");
+    expect(xml).toContain("<key>Hour</key><integer>9</integer>");
+    expect(xml).toContain("<key>Weekday</key><integer>1</integer>");
+  });
+});

@@ -47,6 +47,7 @@ import {
   type LaunchdJob,
   type LaunchdSchedule,
 } from "./launchd-writer";
+import { parseCron } from "./cron";
 
 const execFileP = promisify(execFile);
 
@@ -90,25 +91,9 @@ async function readQuotaProject(): Promise<string | null> {
   }
 }
 
-/**
- * Cron-5 → LaunchdSchedule. Phase 2 supports single-time conversion;
- * unparseable input falls back to daily interval (86400s). Matches codex.ts
- * verbatim — Phase 3 editor adds richer cron validation (cronstrue).
- */
-function parseCron(cron: string | null): LaunchdSchedule {
-  if (!cron) return { kind: "interval", seconds: 86400 };
-  const parts = cron.split(/\s+/);
-  if (parts.length !== 5) return { kind: "interval", seconds: 86400 };
-  const num = (s: string) => (s === "*" ? undefined : parseInt(s, 10));
-  return {
-    kind: "calendar",
-    minute: num(parts[0]),
-    hour: num(parts[1]),
-    day: num(parts[2]),
-    month: num(parts[3]),
-    weekday: num(parts[4]),
-  };
-}
+// Cron-5 → LaunchdSchedule is shared with codex.ts — see ./cron.ts. The inline
+// copy was removed because parseInt("*/5", 10) returned NaN, which bypassed
+// `!== undefined` guards and leaked `<integer>NaN</integer>` into the plist.
 
 export const geminiAdapter: RuntimeAdapter = {
   runtime: "gemini",
