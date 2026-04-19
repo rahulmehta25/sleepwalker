@@ -1,20 +1,20 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-19 after Phase 3 UI-SPEC approved (gsd-ui-checker APPROVED 6/6 dimensions)
+**Last updated:** 2026-04-18 after Phase 2 planning (10 plans authored + checker PASSED)
 
 ## Project Reference
 
 **Core value:** Write a prompt + pick a schedule + pick a runtime -> click once -> a live agent exists on that runtime, scheduled, audited, and reviewed from one place. No copy-paste, no terminal, no multi-step wiring.
 
-**Current focus:** Establish the adapter foundation (Phase 1) so every runtime integration is type-safe, collision-proof, and backward-compatible with v0.1.
+**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; ready to execute.
 
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
-**Phase:** 1 — Foundation (complete); next = Phase 2 Adapters planning
-**Plan:** 01-04 complete (frozen-surface exit gate passed, Phase 1 sealed)
-**Status:** Phase 1 complete — advance via `/gsd-plan-phase 2`
+**Phase:** 2 — Adapters (planned, ready to execute)
+**Plan:** 10 plans authored (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor, 02-04 supervisor harness, 02-05 claude-routines, 02-06 claude-desktop, 02-07 codex, 02-08 gemini, 02-09 registry swap + warning field, 02-10 exit gate + manual smokes)
+**Status:** Plan-checker PASSED — advance via `/gsd-execute-phase 2`
 
 **Milestone progress:**
 ```
@@ -26,6 +26,11 @@
 [####] 4/4 plans complete (01-01, 01-02, 01-03, 01-04 all done)
 ```
 
+**Phase 2 progress:**
+```
+[OOOOOOOOOO] 0/10 plans complete (all authored, none executed)
+```
+
 ## Performance Metrics
 
 | Metric | Value |
@@ -33,7 +38,7 @@
 | Requirements mapped | 32/32 (100%) |
 | Phases defined | 6 |
 | Phases complete | 1/6 (Phase 1 Foundation sealed) |
-| Plans authored | 4 (Phase 1) |
+| Plans authored | 14 (Phase 1: 4, Phase 2: 10) |
 | Plans complete | 4 (01-01, 01-02, 01-03, 01-04) |
 | Requirements complete | 2/32 (ADPT-01, ADPT-02 both sealed by exit gate) |
 | v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18 |
