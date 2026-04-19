@@ -81,6 +81,15 @@ export interface HealthStatus {
   version?: string;
   /** User-facing reason if unavailable, e.g. "codex not in PATH" */
   reason?: string;
+  /**
+   * Non-blocking warning when available=true. Used for auth conflicts
+   * (subscription + env-key both configured), missing optional configs
+   * (Gemini quota project), etc. Drives the yellow badge in the dashboard
+   * landing page (green = available + no warning; yellow = available +
+   * warning; grey = unavailable). Added in Phase 2 Plan 09 per CONTEXT.md
+   * D-04 + D-08 Claude's Discretion (additive amendment to Phase 1 surface).
+   */
+  warning?: string;
 }
 
 /**
