@@ -134,3 +134,16 @@
 - Zero real launchctl, codex, or gemini invocations; no network I/O; fixture bundles are cleaned up on EXIT trap.
 - Harness runs green end-to-end: `bash hooks/tests/supervisor-tests.sh` → 24 PASS / 0 FAIL / exit 0; final line is `all supervisor tests passed`.
 - Commit `b39859d` — `test(02-04): add supervisor-tests.sh bash harness with 6 scenarios`.
+
+## 2026-04-19 02:10 EST
+
+### User Prompt
+"Execute Phase 2 Plan 05 — author claude-routines runtime adapter + test."
+
+### Actions Taken
+- Created `dashboard/lib/runtime-adapters/claude-routines.ts` (105 lines): `claudeRoutinesAdapter: RuntimeAdapter` implementing all 5 methods with `runtime: "claude-routines"` discriminant. `deploy(bundle)` returns `{ok: true, handoffUrl: https://claude.ai/code/routines/new?name=...&prompt=...&cadence=..., artifact: "browser-handoff:<slug>"}` — name/prompt/cadence run through `encodeURIComponent` per Threat T-02-05-01 (ASVS V14 output encoding, cannot break out of query string). `undeploy` returns `{ok: true, handoffUrl: "https://claude.ai/code/routines", artifact: "browser-handoff-undeploy"}`. `runNow` imports and delegates to v0.1 `fireRoutine(bundle.slug, context)` — on success maps `{sessionId, sessionUrl} → {runId, watchUrl}`, on failure passes `res.error` through with `HTTP <status>` fallback. `listRuns` returns `[]` (Phase 5 wires queue-aggregator). `healthCheck` uses `promisify(execFile)("/bin/zsh", ["-l", "-c", "claude --version"])` — Pitfall 1 login-shell PATH resolution on dev machines where `claude` lives at `~/.local/bin/` or `/opt/homebrew/bin/`. No throws anywhere (result objects per convention).
+- Re-exported `CC_ROUTINE_BETA = "experimental-cc-routine-2026-04-01"` as single source of truth for Pitfall 12 beta-header drift — test asserts equality with hardcoded literal so future Anthropic deprecation triggers a compile-time-detectable test failure.
+- Created `dashboard/tests/claude-routines.test.ts` (183 lines, 7 `it()` blocks): (1) `deploy` URL encoding — `Morning Brief` → `Morning%20Brief`, `Do a daily brief.` → `Do%20a%20daily%20brief.`, `0 6 * * *` → `0%206%20*%20*%20*`; (2) `undeploy` routines-list URL + `browser-handoff-undeploy` artifact; (3) `runNow` happy path — `globalThis.fetch` mocked + `setCloudCredential` configured, result.runId = session_01TEST; (4) `runNow` no-credential path — fireRoutine returns `no-credentials-configured`, adapter passes through verbatim; (5) `healthCheck` happy — `vi.doMock("node:child_process")` returns `claude-cli 1.0.45\n`, adapter trims to `claude-cli 1.0.45`; (6) `healthCheck` failure — mock throws `command not found`, adapter returns `available: false, reason` containing `claude CLI not found`; (7) `CC_ROUTINE_BETA` equality assertion. Mocks use `vi.doMock` + `vi.resetModules` / `vi.doUnmock` pattern for isolation between it() blocks.
+- Dashboard suite: 72 → 79 passing (7 new). `pnpm typecheck` exit 0. Zero real claude CLI invocations, zero network I/O, zero filesystem writes (beyond `makeTempHome` for credentials persistence).
+- Commit `62bdaa7` — `feat(02-05): add claude-routines runtime adapter`.
+
