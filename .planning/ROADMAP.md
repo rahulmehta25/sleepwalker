@@ -66,7 +66,17 @@ Plans:
   3. A user can spend 10 minutes editing, accidentally close the tab or click "Routines" in the sidebar, and return to find their draft intact via localStorage + in-app navigation intercept; no keystrokes lost.
   4. Attempting to save a routine with slug `../../../evil`, `Has Spaces`, `UPPERCASE`, or a `(runtime, slug)` pair that already exists anywhere under `routines-*/` is rejected with a clear message and no partial writes.
   5. Password managers (1Password, LastPass), browser autofill, browser spellcheck, and autocorrect cannot silently mutate the prompt textarea; inputs announce their opt-out via `autocomplete="off"`, `data-1p-ignore`, and siblings.
-**Plans**: TBD
+**Plans**: 8 plans
+
+Plans:
+- [ ] 03-01-PLAN.md -- deps install + vitest jsdom config + RoutineBundleInput zod schema + 12-block accept/reject matrix (EDIT-02, EDIT-04)
+- [ ] 03-02-PLAN.md -- secret-patterns.ts + scanForSecrets pure utility + 14-block pattern test matrix (EDIT-02)
+- [ ] 03-03-PLAN.md -- bundles.ts read-side directory enumeration (listBundles/hasBundle/hasBundleAnyRuntime/readBundle) + 15 tests (EDIT-04)
+- [ ] 03-04-PLAN.md -- atomic-write.ts directory-swap helper + 7-scenario test matrix (EDIT-02)
+- [ ] 03-05-PLAN.md -- saveRoutine + checkSlugAvailability Server Actions + 12-block E2E tests (EDIT-02, EDIT-04)
+- [ ] 03-06-PLAN.md -- /editor page.tsx shell + 5 presentational subcomponents + 3 jsdom .test.tsx files (EDIT-01)
+- [ ] 03-07-PLAN.md -- EditorClient state machine + autosave + autofill opt-out + secret-scan preview + integration tests (EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05)
+- [ ] 03-08-PLAN.md -- phase exit gate: frozen-surface diff + test suite green + 03-VALIDATION flip + ROADMAP/STATE update
 
 ### Phase 4: Deploy
 **Goal**: Wire adapters and editor together so Deploy, Run-now, enable/disable, Save-to-repo, and health badges are one-click actions on the dashboard, with a state-machine deploy that auto-rolls-back on partial failure.
@@ -111,7 +121,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 3/10 | In Progress | - |
-| 3. Editor | 0/TBD | Not started | - |
+| 3. Editor | 0/8 | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |
