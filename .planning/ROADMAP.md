@@ -42,7 +42,19 @@ Plans:
   3. The supervisor script, when invoked by launchd, strips ANSI, routes the prompt via file (never argv), enforces the character budget with SIGTERM on exceed, and emits audit entries regardless of whether the wrapped CLI exits 0.
   4. `healthCheckAll()` returns four `HealthStatus` objects where unavailable runtimes report `{available: false, reason: "..."}` and never throw; a fresh Mac missing `codex` still loads the dashboard.
   5. Every consumer in v0.2 reaches runtimes through `getAdapter(runtime)`; no file in `dashboard/` directly imports a specific adapter module.
-**Plans**: TBD
+**Plans**: 10 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- slug.ts assertValidSlug guard + slug.test.ts throw coverage (ADPT-02 amend)
+- [ ] 02-02-PLAN.md -- launchd-writer.ts plist generator + install/uninstall + 8 Vitest blocks (ADPT-03)
+- [ ] 02-03-PLAN.md -- bin/sleepwalker-run-cli supervisor (~200 bash) (ADPT-04 + SAFE-02)
+- [ ] 02-04-PLAN.md -- supervisor-tests.sh harness 6 scenarios (ADPT-04 verification)
+- [ ] 02-05-PLAN.md -- claude-routines.ts adapter + 7 tests (ADPT-05)
+- [ ] 02-06-PLAN.md -- claude-desktop.ts adapter + 6 tests (ADPT-06)
+- [ ] 02-07-PLAN.md -- codex.ts adapter + 6 tests (ADPT-07)
+- [ ] 02-08-PLAN.md -- gemini.ts adapter + 7 tests (ADPT-08)
+- [ ] 02-09-PLAN.md -- registry swap + HealthStatus.warning amendment + adapter-registry.test.ts (ADPT-09)
+- [ ] 02-10-PLAN.md -- exit gate + manual smoke tests + ROADMAP/STATE updates (all ADPT + SAFE-02 sealed)
 
 ### Phase 3: Editor
 **Goal**: Deliver a `/editor` route where a user can fill a form, hit Save, and have a valid, secret-free, collision-checked routine bundle written to `routines-<runtime>/<slug>/` with autosave protecting against lost work.
@@ -98,7 +110,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
-| 2. Adapters | 0/TBD | Not started | - |
+| 2. Adapters | 0/10 | Not started | - |
 | 3. Editor | 0/TBD | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
@@ -106,4 +118,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-18 after Plan 01-04 execution (Phase 1 complete)*
+*Last updated: 2026-04-19 after /gsd-plan-phase 2 (Phase 2 plans authored)*
