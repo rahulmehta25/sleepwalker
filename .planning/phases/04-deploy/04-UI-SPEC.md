@@ -1,10 +1,11 @@
 ---
 phase: 4
 slug: deploy
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-19
+reviewed_at: 2026-04-19
 ---
 
 # Phase 4 — UI Design Contract: Deploy, Run-now, Save-to-repo, Drift, Health
@@ -602,14 +603,14 @@ No third-party component registries are used by this phase. All UI primitives ar
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS (no new sizes or weights; all mapped onto Phase 3 tokens)
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS (no shadcn, no third-party UI registries)
 
-**Approval:** pending
+**Approval:** approved 2026-04-19 by gsd-ui-checker
 
 ---
 
