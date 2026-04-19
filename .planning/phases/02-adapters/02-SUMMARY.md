@@ -89,11 +89,19 @@ Per Phase 1 lessons learned: PHASE2_BASE is computed dynamically from git histor
 
 ### Claude Desktop Smoke (test/manual/claude-desktop-smoke.md)
 
-- **Run timestamp:** _(pending)_
-- **macOS + Claude Desktop versions:** _(pending)_
-- **Step 5 (Q1 outcome):** _(pending — choose one: auto-pickup / requires Schedule visit / requires manual add)_
-- **Step 7 (output file written):** _(pending)_
-- **Phase 6 docs recommendation:** _(pending)_
+- **Run timestamp:** 2026-04-19 (pre-Phase-3 smoke run, user-reported)
+- **macOS + Claude Desktop versions:** Claude Desktop 1.3109.0
+- **Step 5 (Q1 outcome):** **(c) requires manual add** — Claude Desktop does NOT pick up `SKILL.md` files dropped into `~/.claude/scheduled-tasks/<slug>/`, even after visiting the Schedule tab. Users must use Desktop's "Add Scheduled Task" UI directly and paste the generated `SKILL.md` content.
+- **Step 7 (output file written):** n/a — because Desktop never picked up the synthetic routine, it never fired, so no output file was written. This is the expected consequence of outcome (c).
+- **Phase 6 docs recommendation:** AUTHORING.md MUST state explicitly: "After Sleepwalker deploys a Claude Desktop routine, you MUST open Claude Desktop → Schedule → Add, and paste the generated SKILL.md content. Otherwise the routine will never run."
+- **Phase 3 UX implication:** the claude-desktop `deploy()` returning `{ok: true}` is misleading without a clipboard handoff. Dashboard Deploy drawer (or Editor save confirmation) must either (a) automatically `pbcopy` the SKILL.md contents AND open the `claude://scheduled-tasks` handoff URL, or (b) show an explicit "⚠ Next step: paste into Desktop's Schedule tab" instruction with a one-click "Copy SKILL.md" affordance. Tracked as Plan 02-11 (TCC staging + Desktop clipboard) — see Open Issues below.
+
+### Codex Adapter Smoke Partial Results (user-reported)
+
+- **Step 6 (parseCron):** PASSED. parseCron fix validated against a real codex adapter deploy flow.
+- **Steps 8–9 (end-to-end supervisor execution):** NOT CERTIFIABLE from this smoke environment due to macOS TCC (Transparency, Consent, and Control) blocking writes from `launchctl`-spawned processes to `~/Desktop/`. Adapter, plist writer, and `launchctl bootstrap` integration are all verified to that layer; full supervisor-executed job output cannot be observed without relocating the smoke working tree out of `~/Desktop/` or staging the supervisor to `~/.sleepwalker/bin/`.
+- **Environmental state confirmed clean:** no stale launchd jobs (only unrelated `com.slker.codex.registry-probe` from earlier dev work), no residual plists, no residual SKILL.md files, no residual `/tmp` files, no residual fixtures. `git status` unchanged from pre-smoke (only pre-existing untracked files).
+- **Open Issue — TCC staging:** Recommend Plan 02-11 (follow-up) adds two small fixes: (1) `install.sh` copies `bin/sleepwalker-run-cli` to `~/.sleepwalker/bin/` (TCC-safe path) and adapters prefer that path when present; (2) Desktop adapter `deploy()` or dashboard UI additionally `pbcopy`s `SKILL.md` content. Together: ~30 LOC + 3 tests. Converts outcome (c) from a 3-step manual copy to a one-click UX.
 
 ### How to run
 
