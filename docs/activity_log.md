@@ -1,5 +1,30 @@
 # Activity Log
 
+## 2026-04-19 04:45 EST
+
+### User Prompt
+"Execute Phase 3 Plan 03-06 (Wave 3 — /editor page shell + RuntimeRadioGrid + CronPreview with both tests) for Sleepwalker v0.2."
+
+### Actions Taken
+- Created `dashboard/app/editor/page.tsx` (29 lines) — async Server Component; awaits `healthCheckAll()` + `listBundles()`; reshapes `HealthStatus[]` into `Record<Runtime, HealthStatus>` via reduce at the server/client boundary; renders `PageHeader` with exact UI-SPEC strings (eyebrow="AUTHORING" / title="Author a routine" / full subtitle) then `<EditorClient healthStatuses={...} existingSlugs={...} />`; `export const dynamic = "force-dynamic"` matches settings/page.tsx precedent
+- Created `dashboard/app/editor/editor-client.tsx` (26 lines) — deliberate stub with `data-testid="editor-client-stub"` and locked `{healthStatuses: Record<Runtime, HealthStatus>; existingSlugs: string[]}` prop surface; renders placeholder div `editor-client pending plan 03-08`; Plan 03-08 will replace wholesale with the full useActionState + autosave + draft-recovery state machine
+- Committed Task 1 as `f343478` (`feat(03-06): add /editor page.tsx Server Component shell + editor-client stub`)
+- Created `dashboard/tests/runtime-radio-grid.test.tsx` (128 lines) — TDD RED first; 6 it() blocks using @testing-library/react + userEvent; uses `afterEach(cleanup)` to prevent DOM leakage between renders; `userEvent.click` on disabled input to respect browser-correct "no event on disabled" semantics (fireEvent bypasses disabled in jsdom)
+- Created `dashboard/app/editor/_components/runtime-radio-grid.tsx` (96 lines) — 2x2 radio-card grid with `CARDS` readonly array as source of truth for 4 UI-SPEC titles + descriptions + lucide icons (Cloud/Workflow/ScrollText/ListChecks); selected card → `panel-raised ring-1 ring-dawn-400`; unavailable → `opacity-40 cursor-not-allowed` + disabled input + `pill-amber` reason + native `title` tooltip "{reason}. See AUTHORING.md -> Runtime setup."; available + warning → `pill-amber` with AlertCircle (first UI consumer of 02-09 HealthStatus.warning); available clean → `pill-green` "Ready"; radios are `sr-only` inside `<label>` wrappers; grid container is `role="radiogroup" aria-label="Runtime"` for WCAG 2.1 AA
+- Modified `dashboard/vitest.config.ts` (+4 lines) — added `esbuild: { jsx: "automatic" }` to enable React 19 automatic JSX runtime so `.test.tsx` files compile without `import React`. Rule-3 blocking fix: without this every jsdom test fails with `ReferenceError: React is not defined`
+- Committed Task 2 as `92e8313` (`feat(03-06): add RuntimeRadioGrid + 6 jsdom tests`); 3 files changed; 234 insertions
+- Created `dashboard/tests/cron-preview.test.tsx` (43 lines) — TDD RED first; 4 it() blocks; asserts valid cron → `.pill-aurora` with "Runs" prefix; invalid (empty / 4-field) → exact UI-SPEC literal `Invalid cron — 5 fields required (minute hour day month weekday).` in `.text-signal-red`; midnight cron "0 0 * * *" → aurora pill with Runs prefix
+- Created `dashboard/app/editor/_components/cron-preview.tsx` (31 lines) — pure function; pre-split field-count guard routes any non-5-field expression to the UI-SPEC error literal (deterministic across cronstrue versions); valid expressions call `cronstrue.toString(trimmed, { verbose: false, use24HourTimeFormat: true })` inside try/catch; cronstrue throw falls back to same UI-SPEC error
+- Committed Task 3 as `f302d3d` (`feat(03-06): add CronPreview + 4 jsdom tests`); 2 files; 74 insertions
+- `pnpm typecheck` exit 0 after each task; `pnpm test` 221 → 227 → 231 green; `pnpm build` confirms /editor route compiles at 640 B / 141 kB first-load; supervisor harness unchanged (bash-only, out of scope)
+- Created `.planning/phases/03-editor/03-06-SUMMARY.md` — 3 commits / 10 test blocks / 5 Rule-2+Rule-3 auto-fixes documented / Known Stubs entry for editor-client.tsx / self-check PASSED; 363 insertions across 7 files
+- Modified `.planning/phases/03-editor/03-VALIDATION.md` — rows 2 (EDIT-01 unavailable-dimmed) + 3 (EDIT-01 cronstrue-preview) flipped to `3-06-02` / `3-06-03` ✅ green 2026-04-19
+- Modified `.planning/ROADMAP.md` — ticked plan 03-06 box with 3 commit hashes; Phase 3 progress table row 5/8 → 6/8; footer note updated to Plan 06 execution
+- Modified `.planning/STATE.md` — Last updated note + Current Position flipped 5/8 → 6/8 with Waves 0+1+2a COMPLETE; Phase 3 progress bar; test suite line 221 → 231; Plans complete 14 → 20; new Plan 03-06 row in metrics table; appended Decisions entry narrating the three commits + five auto-fixes; Session Continuity updated to resume from 03-07
+- Modified `.planning/REQUIREMENTS.md` — EDIT-01 status "Pending" → "Partial" with 03-06 commit hashes + note that rows 1 + 4 depend on 03-08
+- Pre-existing uncommitted changes in `dashboard/lib/cloud-cache.ts` / `dashboard/lib/runtime-adapters/codex.ts` / `dashboard/lib/runtime-adapters/gemini.ts` / `dashboard/tests/cloud-cache.test.ts` from a parallel session preserved untouched — all 3 commits used explicit `git add <paths>` so zero scope bleed
+- No AI attribution on any commit (per global CLAUDE.md)
+
 ## 2026-04-19 06:45 EST
 
 ### User Prompt

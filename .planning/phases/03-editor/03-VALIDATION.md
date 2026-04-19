@@ -44,8 +44,8 @@ source: derived from 03-RESEARCH.md §Validation Architecture (commit c343cb8)
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | TBD | TBD | 2 | EDIT-01 | — | `/editor` route renders form with 7 fields incl. runtime radio, cron preview, reversibility, budget | integration (client) | `cd dashboard && pnpm test editor-client.test.tsx` | ❌ Wave 2 | ⬜ pending |
-| TBD | TBD | 2 | EDIT-01 | — | Unavailable runtimes dimmed with fix-tooltip | integration | `cd dashboard && pnpm test runtime-radio-grid.test.tsx` | ❌ Wave 2 | ⬜ pending |
-| TBD | TBD | 2 | EDIT-01 | — | Cron input shows cronstrue preview | integration | `cd dashboard && pnpm test cron-preview.test.tsx` | ❌ Wave 2 | ⬜ pending |
+| 3-06-02 | 03-06 | 2 | EDIT-01 | — | Unavailable runtimes dimmed with fix-tooltip | integration | `cd dashboard && pnpm test runtime-radio-grid.test.tsx` | ✅ dashboard/tests/runtime-radio-grid.test.tsx | ✅ green 2026-04-19 |
+| 3-06-03 | 03-06 | 2 | EDIT-01 | — | Cron input shows cronstrue preview | integration | `cd dashboard && pnpm test cron-preview.test.tsx` | ✅ dashboard/tests/cron-preview.test.tsx | ✅ green 2026-04-19 |
 | TBD | TBD | 0 | EDIT-02 | SAFE-02 | `saveRoutine` zod-validates; invalid input returns structured fieldErrors | unit | `cd dashboard && pnpm test bundle-schema.test.ts` | ❌ Wave 0 | ⬜ pending |
 | 3-02-02 | 03-02 | 0 | EDIT-02 | SAFE-02 | `saveRoutine` secret-scans; Stripe / GitHub / AWS / 40-hex / OpenAI / Anthropic / Slack / Google / PEM all detected | unit | `cd dashboard && pnpm test secret-scan.test.ts` | ✅ dashboard/tests/secret-scan.test.ts | ✅ green 2026-04-19 |
 | 3-04-01 | 03-04 | 1 | EDIT-02 | SAFE-02 | `saveRoutine` writes `config.json` + `prompt.md` atomically (directory-swap) | unit | `cd dashboard && pnpm test atomic-write.test.ts` | ✅ dashboard/tests/atomic-write.test.ts | ✅ green 2026-04-19 |

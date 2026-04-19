@@ -114,7 +114,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | ADPT-07 | Phase 2 | Complete (02-07 codex adapter + 6 Vitest blocks, commit fbda124, 2026-04-19; real-Mac launchctl/audit smoke pending — test/manual/codex-adapter-smoke.md) |
 | ADPT-08 | Phase 2 | Complete (02-08 gemini adapter + 7 Vitest blocks, commit 72c6f69, 2026-04-19) |
 | ADPT-09 | Phase 2 | Complete (02-09 registry swap + HealthStatus.warning amendment + adapter-registry.test.ts, commits db1e65d + a2f0563 + fc2b84a + 78eaaf7, 2026-04-19) |
-| EDIT-01 | Phase 3 | Pending |
+| EDIT-01 | Phase 3 | Partial (03-06 /editor shell + RuntimeRadioGrid + CronPreview landed 2026-04-19, commits f343478 + 92e8313 + f302d3d; 2/4 VALIDATION rows green [unavailable-dimmed 3-06-02, cronstrue-preview 3-06-03]; rows 1 + 4 [7-field form render + autosave integration] depend on 03-08 full EditorClient state machine) |
 | EDIT-02 | Phase 3 | Complete (03-05 saveRoutine + 12 E2E test blocks covering secret-blocks-write + atomic-write + SKILL.md branch, commits 5505e32 + 70cc247, 2026-04-19) |
 | EDIT-03 | Phase 3 | Pending |
 | EDIT-04 | Phase 3 | Complete (03-01 zod slug regex + 03-03 hasBundleAnyRuntime + 03-05 saveRoutine/checkSlugAvailability cross-runtime composition, commits 8286db4 + 509adb0 + 5505e32 + 70cc247, 2026-04-19) |

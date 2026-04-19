@@ -74,7 +74,7 @@ Plans:
 - [x] 03-03-PLAN.md -- bundles.ts read-side directory enumeration (listBundles/hasBundle/hasBundleAnyRuntime/readBundle) + 18 tests (EDIT-04) — **completed 2026-04-19** (commit 509adb0; suite 179 → 197 green)
 - [x] 03-04-PLAN.md -- atomic-write.ts directory-swap helper + 8-scenario test matrix (EDIT-02) — **completed 2026-04-19** (commit 96690b0; suite 197 → 205 green)
 - [x] 03-05-PLAN.md -- saveRoutine + checkSlugAvailability Server Actions + 16-block E2E tests (EDIT-02, EDIT-04) — **completed 2026-04-19** (commits 5505e32 + 70cc247; suite 205 → 221 green)
-- [ ] 03-06-PLAN.md -- /editor page.tsx shell + 5 presentational subcomponents + 3 jsdom .test.tsx files (EDIT-01)
+- [x] 03-06-PLAN.md -- /editor page.tsx shell + editor-client stub + RuntimeRadioGrid + CronPreview + 10 jsdom .test.tsx blocks (EDIT-01 partial — 2/4 VALIDATION rows green) — **completed 2026-04-19** (commits f343478 + 92e8313 + f302d3d; suite 221 → 231 green; first jsdom tests in repo; vitest esbuild jsx=automatic)
 - [ ] 03-07-PLAN.md -- EditorClient state machine + autosave + autofill opt-out + secret-scan preview + integration tests (EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05)
 - [ ] 03-08-PLAN.md -- phase exit gate: frozen-surface diff + test suite green + 03-VALIDATION flip + ROADMAP/STATE update
 
@@ -121,11 +121,11 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
-| 3. Editor | 5/8 | In Progress (Wave 0 + Wave 1 COMPLETE — all server-side primitives + saveRoutine landed; Wave 2 client components next) | - |
+| 3. Editor | 6/8 | In Progress (Waves 0 + 1 + 2a COMPLETE — `/editor` shell + RuntimeRadioGrid + CronPreview ship; Wave 2b (03-07 SecretScanPanel/DraftRecoveryBanner/PreviewPanel) + Wave 2c (03-08 full EditorClient state machine) remain) | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 3 Plan 04 execution (atomic-write.ts directory-swap helper landed — commit 96690b0; 8 new test blocks; dashboard suite 197 → 205 green; typecheck exit 0; Plan 03-05 saveRoutine Server Action now fully dep-cleared — atomic-write, secret-scan, zod schema, hasBundleAnyRuntime all live; Phase 3 progress 4/8 plans complete; v0.1 frozen surface diff 0 lines)*
+*Last updated: 2026-04-19 after Phase 3 Plan 06 execution (/editor page.tsx shell + editor-client stub + RuntimeRadioGrid + CronPreview landed — commits f343478 + 92e8313 + f302d3d; 10 new jsdom test blocks — first .test.tsx files in repo; dashboard suite 221 → 231 green; typecheck exit 0; `/editor` route compiles via `pnpm build` at 640 B / 141 kB first-load; vitest esbuild now uses React 19 automatic JSX runtime; 03-VALIDATION rows 2 + 3 flip to 3-06-02/03 green; EDIT-01 partial — 2/4 rows green; Phase 3 progress 6/8 plans complete; v0.1 frozen surface diff 0 lines)*
