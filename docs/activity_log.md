@@ -1,5 +1,23 @@
 # Activity Log
 
+## 2026-04-19 05:30 EST
+
+### User Prompt
+"Execute Phase 3 Plan 03-02 (secret-patterns.ts + secret-scan.ts + 14-block test matrix) for Sleepwalker v0.2."
+
+### Actions Taken
+- Created `dashboard/lib/secret-patterns.ts` (30 lines) exporting `SecretPattern` interface and `SECRET_PATTERNS: readonly SecretPattern[]` with exactly 11 gitleaks-style entries (stripe-live-key, stripe-test-key, github-pat, github-oauth, aws-access-key, slack-token, openai-key, anthropic-key, google-api-key, generic-40-hex, pem-private-key); all regexes use `/g` flag; regex literals match 03-RESEARCH.md §Secret-Pattern Source verbatim
+- Committed Task 1 as `64fb6ec` (`feat(03-02): add secret-patterns.ts registry (11 gitleaks-style patterns)`)
+- Created `dashboard/tests/secret-scan.test.ts` — TDD RED first; 100 lines, 18 executed it() cases across 3 describe groups (3 negative: empty / safe-prose / `${VAR}`-placeholder; 11 positive: `it.each` over 9 patterns + dedicated OpenAI T3BlbkFJ infix + PEM header blocks; 4 location-accuracy: line=3 on third line, multi-match no-short-circuit, matched+description populated, sort-order invariant)
+- Created `dashboard/lib/secret-scan.ts` — 52 lines; exports pure `scanForSecrets(text: string): SecretMatch[]` that never throws, returns [] for empty/safe input, returns ALL matches across ALL patterns (no short-circuit), sorts by (line, column) ascending before return; per-scan regex clone (`new RegExp(source, flags)`) defeats shared-lastIndex corruption; zero-width-match safety belt present
+- `pnpm test secret-scan.test.ts` went from FAIL (RED — module not found) to 18/18 pass (GREEN); full suite 161 → 179 green; `pnpm typecheck` exit 0
+- Committed Task 2 as `891e2f3` (`feat(03-02): add scanForSecrets pure utility + 18 test blocks`)
+- Used explicit `git add <paths>` for both commits; pre-existing uncommitted changes in `dashboard/lib/cloud-cache.ts` / `dashboard/lib/runtime-adapters/codex.ts` / `dashboard/lib/runtime-adapters/gemini.ts` / `dashboard/tests/cloud-cache.test.ts` (from a parallel session) preserved untouched — verified via `git show --stat`
+- Created `.planning/phases/03-editor/03-02-SUMMARY.md` — 3 files / 2 commits / metrics / Pitfall-#5 mitigation ASCII diagram / self-check PASSED
+- Updated `.planning/ROADMAP.md` — ticked plan 03-02 box with commit hashes and suite delta
+- Updated `.planning/STATE.md` — Current Position flipped 1/9 → 2/9 plans, Phase 3 progress bar bumped to `[##-------]`, suite-size line bumped 161 → 179, new Decision entry (full commit sequence + Pitfall-#5 structural defeat), new Plan 03-02 row in metrics table, flipped Phase 3 open todo count, refreshed Last session / Stopped at / Resume file
+- Updated `.planning/phases/03-editor/03-VALIDATION.md` — row 5 (EDIT-02 secret-scan / Stripe / GitHub / AWS / 40-hex / OpenAI / Anthropic / Slack / Google / PEM detection) Task ID flipped from `TBD` to `3-02-02`, File Exists flipped to ✅, Status flipped to ✅ green 2026-04-19
+
 ## 2026-04-18 03:25 EST
 
 ### User Prompt

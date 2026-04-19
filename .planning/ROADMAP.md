@@ -70,7 +70,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md -- deps install + vitest jsdom config + RoutineBundleInput zod schema + 12-block accept/reject matrix (EDIT-02, EDIT-04) — **completed 2026-04-19** (commits 104547f + 8286db4; suite 137 → 161 green)
-- [ ] 03-02-PLAN.md -- secret-patterns.ts + scanForSecrets pure utility + 14-block pattern test matrix (EDIT-02)
+- [x] 03-02-PLAN.md -- secret-patterns.ts + scanForSecrets pure utility + 18-block pattern test matrix (EDIT-02) — **completed 2026-04-19** (commits 64fb6ec + 891e2f3; suite 161 → 179 green)
 - [ ] 03-03-PLAN.md -- bundles.ts read-side directory enumeration (listBundles/hasBundle/hasBundleAnyRuntime/readBundle) + 15 tests (EDIT-04)
 - [ ] 03-04-PLAN.md -- atomic-write.ts directory-swap helper + 7-scenario test matrix (EDIT-02)
 - [ ] 03-05-PLAN.md -- saveRoutine + checkSlugAvailability Server Actions + 12-block E2E tests (EDIT-02, EDIT-04)
