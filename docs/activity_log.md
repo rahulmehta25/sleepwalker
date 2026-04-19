@@ -271,3 +271,17 @@
 - Extended `dashboard/tests/launchd-writer.test.ts` — 2 new it() blocks asserting NaN never emits `<integer>NaN</integer>` in calendar dict or calendar-array entries.
 - `pnpm typecheck` exit 0. `pnpm test` 137/137 (was 104; +31 cron + 2 launchd-writer NaN).
 - Frozen-surface diff with dynamic PHASE2_BASE = 0 lines (all additions are net-new in `dashboard/lib/runtime-adapters/` + `dashboard/tests/`, none of which are in the v0.1 frozen list).
+
+## 2026-04-19 04:30 EST
+
+### User Prompt
+"/gsd-ui-phase" (auto-detected next unplanned phase = 4 Deploy)
+
+### Actions Taken
+- Created `.planning/phases/04-deploy/` directory
+- Spawned gsd-ui-researcher — produced `.planning/phases/04-deploy/04-UI-SPEC.md` (commit `f80e58f`) covering all 5 Phase 4 surfaces: Deploy drawer (4-step state machine + rollback cascade), Run-now toast+stay-put, Save-to-repo two-stage modal with flock, per-card DRIFT pill + Redeploy swap, 4-badge runtime health row in PageHeader meta
+- Phase 3 design system inherited verbatim (no new tokens, fonts, spacing, or weights)
+- Spawned gsd-ui-checker — VERIFIED 6/6 dimensions (Copywriting / Visuals / Color / Typography / Spacing / Registry Safety) with zero blockers and zero FLAGs
+- Applied checker sign-off commit `75f74b6`: flipped frontmatter `status: draft` → `approved`, added `reviewed_at: 2026-04-19`, ticked all 6 sign-off checkboxes
+- All 7 Phase 4 requirements (DEPL-01..05, REPO-01, HLTH-01) traceable to specific UI elements
+- Updated `.planning/STATE.md`: appended Phase 4 UI-SPEC decision to Decisions block, added Phase 4 UI-SPEC todo (checked), added Phase 4 planning todo (open)
