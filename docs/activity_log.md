@@ -204,3 +204,20 @@
 - No Rule auto-fixes required: pattern inherited cleanly from codex.ts (including the spawn-not-execFile lesson from Plan 02-07). No architectural deviations from the plan.
 - Commit `20eb0b2` — `feat(02-08): add gemini runtime adapter`.
 
+
+## 2026-04-19 02:53 EST
+
+### User Prompt
+"Execute Phase 2 Plan 09 — registry swap + HealthStatus.warning amendment."
+
+### Actions Taken
+- Modified `dashboard/lib/runtime-adapters/types.ts`: appended optional `warning?: string` field to the `HealthStatus` interface (additive, non-breaking). JSDoc explains the green/yellow/grey dashboard badge mapping (green = available && !warning; yellow = available && warning; grey = !available). Phase 1 frozen-surface export count unchanged at 8. Per CONTEXT.md D-04 + D-08 Claude's Discretion — VALIDATION.md §Anti-Requirements line 162 explicitly permits additive amendment to this single interface.
+- Modified `dashboard/lib/runtime-adapters/index.ts`: removed the `notImplemented()` function (~20 lines) and 4 stub assignments; added 4 `import` statements for real adapters (`claudeRoutinesAdapter`, `claudeDesktopAdapter`, `codexAdapter`, `geminiAdapter`); populated `ADAPTERS: Record<Runtime, RuntimeAdapter>` with the real adapter references in the Phase 1 key order (claude-routines, claude-desktop, codex, gemini). `getAdapter()` and `healthCheckAll()` signatures unchanged. Type-only barrel re-exports at the bottom preserved verbatim. File is now 45 lines (was ~70). Transient type imports (RoutineBundle, DeployResult, RunNowResult, RunRecord) trimmed because they were only referenced in the deleted stub bodies; external consumers still get them via the barrel re-exports.
+- Modified `dashboard/lib/runtime-adapters/codex.ts`: healthCheck return block migrated from `reason: warning ? 'WARN: ${warning}' : undefined` to `warning` (direct field). Docblock paragraph about temporary WARN: encoding replaced with dedicated-field description.
+- Modified `dashboard/lib/runtime-adapters/gemini.ts`: identical healthCheck migration. Docblock paragraph updated.
+- Modified `dashboard/tests/codex.test.ts`: 2 healthCheck tests updated. Happy-path test now also asserts `result.warning` is undefined. Auth-conflict test migrated from `result.reason` / `/^WARN: /` regex to `result.warning`, with `result.reason` asserted undefined (reason is reserved for unavailable). The version-probe-failure test stays unchanged (reason is still correct for !available).
+- Modified `dashboard/tests/gemini.test.ts`: 3 healthCheck tests updated. Happy-path asserts `result.warning` undefined. SAC+API-key conflict test + missing-quota test migrated from `result.reason` WARN: prefix to `result.warning`.
+- Created `dashboard/tests/adapter-registry.test.ts` (125 lines, 2 describe × 6 it() blocks): (1) ADAPTERS has exactly 4 keys in the expected sort; (2) each adapter's runtime discriminant matches its registry key (defense against T-02-09-01 adapter mismatch); (3) getAdapter returns the same reference as ADAPTERS[runtime]; (4) no adapter still says 'not implemented' — probes deploy() on every adapter and asserts error strings never match /not implemented/i (regression guard against Phase 1 stub return, T-02-09-03); (5) healthCheckAll returns exactly 4 HealthStatus objects with correct runtime discriminants under a fail-all execFile mock (T-02-09-04 never-throws); (6) HealthStatus.warning field exists and is optional (type-level assertion that the Plan 09 amendment compiles).
+- Dashboard suite: 98 → 104 passing tests (+6 new adapter-registry). `pnpm typecheck` exit 0. Frozen-surface diff against HEAD~5 (`af8ffa3` 02-08) returns 0 lines across routines-local/ routines-cloud/ hooks/sleepwalker-*.sh install.sh bin/sleepwalker-execute.
+- Four atomic commits: `db1e65d` (feat types.ts warning field), `a2f0563` (refactor codex+gemini healthCheck migration), `fc2b84a` (feat index.ts registry swap), `78eaaf7` (test adapter-registry).
+- ADPT-09 sealed. VALIDATION.md rows 2-08-01..02 can be marked green. Wave 3 registry swap complete — Phase 2 exit gate (Plan 10) is the only remaining task.
