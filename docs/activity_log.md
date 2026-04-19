@@ -57,3 +57,11 @@
 - Confirmed all 7 Phase 1 artifacts exist at declared paths
 - Updated .planning/ROADMAP.md Phase 1 block: 4 plans listed, status In progress
 - Phase 1 plans authored: 01-01 (types + index), 01-02 (directory scaffolding), 01-03 (slug + tests), 01-04 (verification gate)
+
+## 2026-04-19 00:15 EST
+
+### User Prompt
+"Research how to implement Phase 2: Adapters for Sleepwalker v0.2. Phase 2 ships 4 runtime adapters + the launchd writer + bash supervisor that Codex/Gemini adapters depend on."
+
+### Actions Taken
+- Created .planning/phases/02-adapters/02-RESEARCH.md (1942 lines): full Phase 2 research covering ADPT-03..09 + SAFE-02. Documents launchd-writer.ts API (generatePlist + installPlist + uninstallPlist), bin/sleepwalker-run-cli exact bash outline with PATH resolution / sleep-window + reversibility + char-budget gates / ANSI strip / audit JSONL shape, per-adapter TS shapes (claude-routines ~85 LOC, claude-desktop ~85 LOC, codex ~140 LOC, gemini ~130 LOC), assertValidSlug injection diff for slug.ts, Codex + Gemini auth-conflict detection, Vitest mock strategy with execFile hoisting, manual smoke test contract for test/manual/codex-adapter-smoke.md, recommended 4-wave plan structure, mandatory Validation Architecture section for Nyquist VALIDATION.md (28 requirement-to-test rows + Wave 0 gaps), live-CLI probes (codex 0.118.0 / gemini 0.31.0 / claude at ~/.local/bin), assumptions log (10 items with risk assessment)
