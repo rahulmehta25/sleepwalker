@@ -16,7 +16,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 - [x] **ADPT-05**: Runtime adapter **Claude Code Routines** (`claude-routines.ts`) — `deploy()` returns `{handoffUrl}` for `/schedule create` + pre-filled browser; `runNow()` wraps existing `fire-routine.ts`; `healthCheck()` probes beta-header + `claude` CLI availability — **completed 2026-04-19 (02-05, commits 62bdaa7 + d7223a8)**
 - [x] **ADPT-06**: Runtime adapter **Claude Code Desktop Scheduled Tasks** (`claude-desktop.ts`) — `deploy()` copies SKILL.md to `~/.claude/scheduled-tasks/<slug>/` and returns a handoff URL for Desktop's Schedule page; `healthCheck()` probes for `~/.claude/` and Desktop binary — **completed 2026-04-19 (02-06, commit 81f68ca)**
 - [x] **ADPT-07**: Runtime adapter **Codex Pro** (`codex.ts`) — `deploy()` writes `~/Library/LaunchAgents/com.sleepwalker.codex.<slug>.plist` invoking the supervisor; `healthCheck()` probes `codex --version`, active auth mode, and absolute binary path — **completed 2026-04-19 (02-07, commit fbda124)**
-- [ ] **ADPT-08**: Runtime adapter **Gemini CLI Pro** (`gemini.ts`) — `deploy()` writes plist with explicit `GOOGLE_CLOUD_PROJECT` env var invoking the supervisor; `healthCheck()` probes `gemini --version` + auth + quota project
+- [x] **ADPT-08**: Runtime adapter **Gemini CLI Pro** (`gemini.ts`) — `deploy()` writes plist with explicit `GOOGLE_CLOUD_PROJECT` env var invoking the supervisor; `healthCheck()` probes `gemini --version` + auth + quota project — **completed 2026-04-19 (02-08, commit 72c6f69)**
 - [ ] **ADPT-09**: `ADAPTERS` registry + `getAdapter(runtime)` + `healthCheckAll()` shipping in `dashboard/lib/runtime-adapters/index.ts`; every consumer uses registry lookups, never direct imports
 
 ### Routine Editor (Phase 2 territory)
@@ -112,7 +112,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | ADPT-05 | Phase 2 | Complete (02-05 claude-routines adapter + 7 Vitest blocks, commits 62bdaa7 + d7223a8, 2026-04-19) |
 | ADPT-06 | Phase 2 | Complete (02-06 claude-desktop adapter + 6 Vitest blocks, commit 81f68ca, 2026-04-19) |
 | ADPT-07 | Phase 2 | Complete (02-07, fbda124) |
-| ADPT-08 | Phase 2 | Pending |
+| ADPT-08 | Phase 2 | Complete (02-08 gemini adapter + 7 Vitest blocks, commit 72c6f69, 2026-04-19) |
 | ADPT-09 | Phase 2 | Pending |
 | EDIT-01 | Phase 3 | Pending |
 | EDIT-02 | Phase 3 | Pending |
