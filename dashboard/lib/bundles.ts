@@ -20,7 +20,7 @@ import matter from "gray-matter";
 import type { Runtime, Reversibility } from "./runtime-adapters/types";
 import { RUNTIMES } from "./runtime-adapters/slug";
 
-const RUNTIME_ROOT: Record<Runtime, string> = {
+export const RUNTIME_ROOT: Record<Runtime, string> = {
   "claude-routines": "routines-cloud",
   "claude-desktop": "routines-local",
   codex: "routines-codex",
