@@ -71,7 +71,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md -- deps install + vitest jsdom config + RoutineBundleInput zod schema + 12-block accept/reject matrix (EDIT-02, EDIT-04) — **completed 2026-04-19** (commits 104547f + 8286db4; suite 137 → 161 green)
 - [x] 03-02-PLAN.md -- secret-patterns.ts + scanForSecrets pure utility + 18-block pattern test matrix (EDIT-02) — **completed 2026-04-19** (commits 64fb6ec + 891e2f3; suite 161 → 179 green)
-- [ ] 03-03-PLAN.md -- bundles.ts read-side directory enumeration (listBundles/hasBundle/hasBundleAnyRuntime/readBundle) + 15 tests (EDIT-04)
+- [x] 03-03-PLAN.md -- bundles.ts read-side directory enumeration (listBundles/hasBundle/hasBundleAnyRuntime/readBundle) + 18 tests (EDIT-04) — **completed 2026-04-19** (commit 509adb0; suite 179 → 197 green)
 - [ ] 03-04-PLAN.md -- atomic-write.ts directory-swap helper + 7-scenario test matrix (EDIT-02)
 - [ ] 03-05-PLAN.md -- saveRoutine + checkSlugAvailability Server Actions + 12-block E2E tests (EDIT-02, EDIT-04)
 - [ ] 03-06-PLAN.md -- /editor page.tsx shell + 5 presentational subcomponents + 3 jsdom .test.tsx files (EDIT-01)
@@ -121,11 +121,11 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
-| 3. Editor | 0/8 | Not started | - |
+| 3. Editor | 3/8 | In Progress (Wave 0 COMPLETE + 03-03 landed; Wave 1 half done) | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 2 Plan 10 execution (automated exit gate green — typecheck exit 0, vitest 104/104 across 16 files, supervisor bash harness 24 PASS / 0 FAIL, frozen-surface diff 0 lines vs dynamic PHASE2_BASE 0ec59df; 2 manual smoke tests deferred to user — contracts at test/manual/codex-adapter-smoke.md + test/manual/claude-desktop-smoke.md; Phase 2 code complete; Phase 3 ready for /gsd-execute-phase 3)*
+*Last updated: 2026-04-19 after Phase 3 Plan 03 execution (bundles.ts read-side directory enumeration landed — commit 509adb0; 18 new test blocks; dashboard suite 179 → 197 green; typecheck exit 0; Plan 03-05 saveRoutine + checkSlugAvailability Server Action now unblocked since hasBundle + hasBundleAnyRuntime are live; Phase 3 progress 3/8 plans complete — Wave 0 sealed + 03-03 landed; v0.1 frozen surface diff 0 lines)*

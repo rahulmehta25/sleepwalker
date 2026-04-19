@@ -1,5 +1,31 @@
 # Activity Log
 
+## 2026-04-19 06:15 EST
+
+### User Prompt
+"Execute Phase 3 Plan 03-03 (bundles.ts read-side directory enumeration + 15-block test matrix) for Sleepwalker v0.2."
+
+### Actions Taken
+- Created `dashboard/tests/bundles.test.ts` — TDD RED first; 210 lines, 18 `it()` blocks across 4 describe groups (listBundles × 6 incl. `_test-zen` v0.1-prefix-preservation + `.DS_Store` non-dir filter; hasBundle × 5 via `it.each` on all 4 runtimes + missing-slug; hasBundleAnyRuntime × 3 incl. first-match-wins RUNTIMES-tuple-order edge; readBundle × 4 incl. malformed-JSON → null + gray-matter SKILL.md parse); test isolation via `makeTempHome()` + fresh `fs.mkdtempSync` as cwd so enumeration starts from a clean slate free of the real repo's v0.1 routines.
+- Verified RED: `pnpm test bundles.test.ts` → 18 fail with `Cannot find module '@/lib/bundles'` as expected.
+- Created `dashboard/lib/bundles.ts` — 177 lines; exports `listBundles()` / `hasBundle(runtime,slug)` / `hasBundleAnyRuntime(slug)` / `readBundle(runtime,slug)` plus `BundleDescriptor` + `RoutineBundleRead` types. Uses private `RUNTIME_ROOT` map (claude-routines → routines-cloud, claude-desktop → routines-local, codex → routines-codex, gemini → routines-gemini) on the read path — NOT `toBundleDir` — per Phase 2 CONTEXT.md lines 89-91 so v0.1 `_test-zen` and `sleepwalker-*` prefixes enumerate without `assertValidSlug` rejection. Tolerant parse: gray-matter for claude-desktop/claude-routines SKILL.md; JSON.parse for codex/gemini config.json with fallback cascade `prompt.md` file → `cfg.prompt` string → empty. Local `isReversibility()` type-guard narrows YAML/JSON `unknown` values before assigning to the `Reversibility` union. All parse errors → `null`, never throws.
+- Verified GREEN: `pnpm test bundles.test.ts` → 18/18 pass; full suite 179 → 197 green; `pnpm typecheck` exit 0.
+- Committed as `509adb0` (`feat(03-03): add bundles.ts read-side enumeration + 18 test blocks`) with explicit `git add dashboard/lib/bundles.ts dashboard/tests/bundles.test.ts` — pre-existing parallel-session uncommitted changes in `cloud-cache.ts` / `codex.ts` / `gemini.ts` / `cloud-cache.test.ts` preserved untouched; zero scope bleed.
+- Created `.planning/phases/03-editor/03-03-SUMMARY.md` — 2 files / 1 commit / metrics / verification table / Phase 2 CONTEXT.md-§v0.1-Bundle-Reading-satisfied-by-construction cross-ref / self-check PASSED.
+- Updated `.planning/ROADMAP.md` — ticked plan 03-03 box with commit hash and suite delta; Progress table Phase 3 row bumped 0/8 → 3/8 with "Wave 0 COMPLETE + 03-03 landed" status; footer refreshed.
+- Updated `.planning/STATE.md` — Current Position flipped 2/9 → 3/8 (plans count also corrected 9 → 8 to match ROADMAP), Phase 3 progress bar bumped to `[###-----]`, suite-size line bumped 179 → 197, added new Decision log entry (full design rationale — RUNTIME_ROOT map choice, tolerant parse contract, first-match-wins cross-runtime collision), added new Plan 03-03 row in performance metrics table, flipped Phase 3 open todo to 3/8 done with next-steps note, refreshed Last session / Stopped at / Resume file.
+- Updated `.planning/phases/03-editor/03-VALIDATION.md` — row 20 (EDIT-04 `bundles.ts::hasBundle` returns true/false) Task ID flipped from `TBD` to `3-03-01`, File Exists flipped to ✅, Status flipped to ✅ green 2026-04-19.
+- Verified v0.1 frozen-surface diff: `git diff HEAD~1 -- install.sh hooks/ routines-local/ routines-cloud/ bin/sleepwalker-execute dashboard/lib/queue.ts dashboard/lib/audit.ts` → 0 lines.
+
+### Files Modified
+- `dashboard/lib/bundles.ts` (created, 177 lines)
+- `dashboard/tests/bundles.test.ts` (created, 210 lines)
+- `.planning/phases/03-editor/03-03-SUMMARY.md` (created)
+- `.planning/phases/03-editor/03-VALIDATION.md` (row 20 flipped to 3-03-01 ✅)
+- `.planning/ROADMAP.md` (plan 03-03 box ticked; Phase 3 progress row bumped 0/8 → 3/8; footer refreshed)
+- `.planning/STATE.md` (Current Position + progress bar + performance metrics + Decisions log + open todos + session continuity refreshed)
+- `docs/activity_log.md` (this entry)
+
 ## 2026-04-19 05:30 EST
 
 ### User Prompt
