@@ -1,20 +1,20 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-19 after Phase 2 Plan 01 execution (slug assertValidSlug guard shipped)
+**Last updated:** 2026-04-19 after Phase 2 Plan 02 execution (launchd-writer plist generator + install/uninstall primitives shipped)
 
 ## Project Reference
 
 **Core value:** Write a prompt + pick a schedule + pick a runtime -> click once -> a live agent exists on that runtime, scheduled, audited, and reviewed from one place. No copy-paste, no terminal, no multi-step wiring.
 
-**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 1 complete (02-01 slug guard), 9 remaining.
+**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 2 complete (02-01 slug guard, 02-02 launchd-writer), 8 remaining.
 
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
 **Phase:** 2 — Adapters (in progress)
-**Plan:** 1/10 complete — 02-01 shipped assertValidSlug guard into all 6 identifier builders; next is 02-02 launchd-writer
-**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-02
+**Plan:** 2/10 complete — 02-02 shipped launchd-writer.ts (generatePlist + installPlist + uninstallPlist) + 9 Vitest blocks; Wave 1 continues with 02-03 bash supervisor
+**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-03
 
 **Milestone progress:**
 ```
@@ -28,7 +28,7 @@
 
 **Phase 2 progress:**
 ```
-[#---------] 1/10 plans complete (02-01 shipped; 02-02..02-10 pending)
+[##--------] 2/10 plans complete (02-01 + 02-02 shipped; 02-03..02-10 pending)
 ```
 
 ## Performance Metrics
@@ -39,10 +39,10 @@
 | Phases defined | 6 |
 | Phases complete | 1/6 (Phase 1 Foundation sealed) |
 | Plans authored | 14 (Phase 1: 4, Phase 2: 10) |
-| Plans complete | 5 (01-01, 01-02, 01-03, 01-04, 02-01) |
-| Requirements complete | 2/32 (ADPT-01, ADPT-02 both sealed; 02-01 is an ADPT-02 enforcement amendment) |
-| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18 |
-| Dashboard test suite | 63/63 green (56 v0.1+Phase 1 + 7 new slug throw assertions) |
+| Plans complete | 6 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02) |
+| Requirements complete | 3/32 (ADPT-01, ADPT-02, ADPT-03 sealed) |
+| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18; frozen-surface gate 0-line diff after 02-02 |
+| Dashboard test suite | 72/72 green (63 Phase-1+02-01 baseline + 9 new launchd-writer tests) |
 
 | Plan | Duration | Tasks | Files | Commit |
 |------|----------|-------|-------|--------|
@@ -51,6 +51,7 @@
 | 01-03 | ~3 min | 3 | 3 | 313bf62 / fbe8adc / 8b73e0f |
 | 01-04 | ~2 min | 5 | 1 | b924c9a |
 | 02-01 | 3 min | 3 | 3 | c5922de |
+| 02-02 | 4 min | 4 | 3 | e14bbe6 |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@
 - **2026-04-18** — Plan 01-04 exit gate passed: dynamic PHASE1_BASE (parent of `c146acf` = `03d063d`) confirms 0-line diff across all 14 enumerated v0.1 paths; `pnpm typecheck` exit 0; `pnpm test` 56/56 green; all 7 Phase 1 artifacts present (4049+2332+3149+3173+3×gitkeep = 13,230 bytes); ROADMAP Phase 1 row flipped to `4/4 Complete 2026-04-18`. ADPT-01 and ADPT-02 sealed. Commit b924c9a. Phase 1 Foundation complete; Phase 2 Adapters is now the critical path.
 - **2026-04-19** — Phase 3 UI-SPEC approved. `03-UI-SPEC.md` (440 lines, commits 1152375 + 961c4d3) locks the Editor route visual/interaction contract against the existing bespoke "lunar/celestial" Tailwind 3.4 palette (ink/moon/dawn/aurora/signal). Two-column layout at ≥1024px (form + sticky preview), 2×2 radio-card runtime picker with live health pills, inline red secret-scan panel, auto-derived slug with manual override, cronstrue-pill live preview, explicit draft-recovery banner (no silent restore). gsd-ui-checker APPROVED 6/6 (Copywriting, Visuals, Color, Typography, Spacing, Registry Safety); 1 non-blocking FLAG on Typography header cleared in follow-up commit. Bespoke design system — no shadcn, no third-party registries, `ui_safety_gate` not applicable. Planner for Phase 3 now has a prescriptive design source-of-truth before `/gsd-plan-phase 3`.
 - **2026-04-19** — Plan 02-01 resolved Phase 1 review debt item #1 by injecting a module-private `assertValidSlug()` throw guard into every identifier builder in `dashboard/lib/runtime-adapters/slug.ts` (toFleetKey, toLaunchdLabel, toMarkerTag, toBranchPrefix, toPlistPath, toBundleDir). `parseFleetKey` deliberately unguarded (construct-throws / parse-returns-null asymmetry preserved per result-object convention; NOTE comment added so future readers understand the intent). `assertValidSlug` is NOT exported → public API stays at exactly 10 surfaces. File grew 92 → 118 lines; suite grew 56 → 63 tests. Single atomic commit `c5922de` covers slug.ts + slug.test.ts + activity log per v0.1 amend-log convention. Wave 2 adapters inherit path-traversal / shell-metacharacter / git-ref-invalid rejection by construction.
+- **2026-04-19** — Plan 02-02 shipped `dashboard/lib/runtime-adapters/launchd-writer.ts` (226 lines): 3 type exports (`LaunchdSchedule` discriminated union, `LaunchdJob`, `InstallResult`) + 3 functions (`generatePlist` pure XML templating with 5-char escape for `&<>"'`; `installPlist` async mode-0644 write + plutil -lint gate + bootout-first + bootstrap with rollback-unlink; `uninstallPlist` async bootout + ENOENT-tolerant unlink). Backed by `dashboard/tests/launchd-writer.test.ts` (200 lines, 9 Vitest it() blocks using `vi.doMock("node:child_process")` — no real launchctl or plutil). Single atomic commit `e14bbe6` (amended to include activity log) covers both source files per v0.1 convention. Dashboard suite grew 63 → 72 passing tests. Frozen-surface diff against `e14bbe6~1` returns 0 lines. ADPT-03 sealed. Two minor auto-adds documented in SUMMARY: 9th test block for bootstrap-failure rollback (threat T-02-02-04) and try/catch-instead-of-re-throw in uninstallPlist to match AC7 single-throw cap.
 
 ### Open Todos
 
@@ -80,7 +82,8 @@
 - [x] Execute Phase 1 Plan 04 (frozen-surface gate) — completed 2026-04-18 as commit `b924c9a`
 - [x] Plan Phase 2 (Adapters): ADPT-03 through ADPT-09 + SAFE-02 — planned 2026-04-19 (10 plans across 4 waves authored)
 - [x] Execute Phase 2 Plan 01 (slug.ts assertValidSlug guard + throw coverage) — completed 2026-04-19 as commit `c5922de`
-- [ ] Execute Phase 2 Plan 02 (launchd-writer.ts plist generator + tests) — `/gsd-execute-phase 2`
+- [x] Execute Phase 2 Plan 02 (launchd-writer.ts plist generator + tests) — completed 2026-04-19 as commit `e14bbe6`
+- [ ] Execute Phase 2 Plan 03 (bin/sleepwalker-run-cli bash supervisor) — `/gsd-execute-phase 2`
 - [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work in Plan 02-06)
 - [x] UI-SPEC for Phase 3 Editor — approved 2026-04-19 (commits 1152375 + 961c4d3); textarea locked in, Monaco spike no longer needed per research/SUMMARY.md Phase 3 flag
 - [ ] Plan Phase 3 (Editor) with approved UI-SPEC as design context — `/gsd-plan-phase 3`
@@ -91,14 +94,15 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session:** Phase 2 Plan 01 execution (2026-04-19) — assertValidSlug guard shipped
+**Last session:** Phase 2 Plan 02 execution (2026-04-19) — launchd-writer.ts generator + install/uninstall primitives shipped
 
 **Resumption context:**
-- Phase 2 Wave 1 kicked off with Plan 02-01: `dashboard/lib/runtime-adapters/slug.ts` now enforces ADPT-02 at the code level. A new module-private `assertValidSlug()` helper throws on invalid input and is the first statement of all 6 identifier builders. `parseFleetKey` intentionally unguarded (parse-returns-null asymmetry preserved, documented inline). Public API unchanged at exactly 10 exports.
-- Commit `c5922de` (single atomic) covers `dashboard/lib/runtime-adapters/slug.ts` + `dashboard/tests/slug.test.ts` + `docs/activity_log.md` — plan Task 3 intentionally requests one commit via `git commit --amend --no-edit` to match v0.1 convention.
-- Dashboard test suite grew 56 → 63 (13 → 20 it() blocks in slug.test.ts; 28 → 35 expect assertions). Zero regressions. `pnpm typecheck` green. Frozen-surface gate still 0-line diff (only slug.ts and slug.test.ts in frozen-modify list changed, matching Phase 2 VALIDATION permissions).
-- Next action: `/gsd-execute-phase 2` → Plan 02-02 (launchd-writer.ts plist generator). 02-02 depends only on slug.ts builders, so it is the next critical-path target.
-- Wave 1 blockers: none. Waves 2-3 adapters now inherit path-traversal / uppercase / empty-string / leading-digit rejection by construction.
+- Phase 2 Wave 1 continues: Plan 02-02 added `dashboard/lib/runtime-adapters/launchd-writer.ts` — the hand-rolled plist XML writer + launchctl bootstrap/bootout primitive that Wave 2 Codex and Gemini adapters will compose. Public surface: 3 type exports (LaunchdSchedule, LaunchdJob, InstallResult) + 3 functions (generatePlist pure, installPlist async with rollback, uninstallPlist async idempotent).
+- Commit `e14bbe6` (single atomic, amended) covers `dashboard/lib/runtime-adapters/launchd-writer.ts` + `dashboard/tests/launchd-writer.test.ts` + `docs/activity_log.md`. Plan Task 4 explicitly requested this single-commit shape via `git commit --amend --no-edit`.
+- Dashboard test suite grew 63 → 72 (9 new Vitest it() blocks in launchd-writer.test.ts: 5 pure-generator + 4 install/uninstall happy-path + rollback + idempotency). Zero regressions. `pnpm typecheck` green. Frozen-surface gate still 0-line diff against `e14bbe6~1`.
+- Two minor deviations documented in 02-02-SUMMARY.md: (a) added a 9th `it()` block for bootstrap-failure rollback (Rule 2 auto-add; threat T-02-02-04 was in the behavior spec but missing from the test list), (b) refactored `uninstallPlist` to use try/catch instead of re-throw in the fs.unlink catch (keeps `grep -c "^\s*throw "` at exactly 1 per AC7; behavior unchanged).
+- Next action: `/gsd-execute-phase 2` → Plan 02-03 (bin/sleepwalker-run-cli bash supervisor). 02-03 is the final Wave 1 foundation; it shares Wave 1 with 02-01 and 02-02 but has no cross-file dependencies, so sequential execution can proceed immediately.
+- Wave 1 blockers: none. ADPT-03 sealed. Wave 2 adapters now have `installPlist` / `uninstallPlist` / `LaunchdJob` ready to compose.
 
 **Files in play:**
 - `.planning/PROJECT.md` — v0.1 Validated + v0.2 Active requirements + Out of Scope

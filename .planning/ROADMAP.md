@@ -45,8 +45,8 @@ Plans:
 **Plans**: 10 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- slug.ts assertValidSlug guard + slug.test.ts throw coverage (ADPT-02 amend)
-- [ ] 02-02-PLAN.md -- launchd-writer.ts plist generator + install/uninstall + 8 Vitest blocks (ADPT-03)
+- [x] 02-01-PLAN.md -- slug.ts assertValidSlug guard + slug.test.ts throw coverage (ADPT-02 amend) — **completed 2026-04-19** (commit c5922de)
+- [x] 02-02-PLAN.md -- launchd-writer.ts plist generator + install/uninstall + 9 Vitest blocks (ADPT-03) — **completed 2026-04-19** (commit e14bbe6)
 - [ ] 02-03-PLAN.md -- bin/sleepwalker-run-cli supervisor (~200 bash) (ADPT-04 + SAFE-02)
 - [ ] 02-04-PLAN.md -- supervisor-tests.sh harness 6 scenarios (ADPT-04 verification)
 - [ ] 02-05-PLAN.md -- claude-routines.ts adapter + 7 tests (ADPT-05)
@@ -110,7 +110,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
-| 2. Adapters | 1/10 | In Progress | - |
+| 2. Adapters | 2/10 | In Progress | - |
 | 3. Editor | 0/TBD | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
@@ -118,4 +118,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 2 Plan 01 execution (02-01 slug guard complete, commit c5922de)*
+*Last updated: 2026-04-19 after Phase 2 Plan 02 execution (02-02 launchd-writer complete, commit e14bbe6)*
