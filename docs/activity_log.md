@@ -285,3 +285,24 @@
 - Applied checker sign-off commit `75f74b6`: flipped frontmatter `status: draft` → `approved`, added `reviewed_at: 2026-04-19`, ticked all 6 sign-off checkboxes
 - All 7 Phase 4 requirements (DEPL-01..05, REPO-01, HLTH-01) traceable to specific UI elements
 - Updated `.planning/STATE.md`: appended Phase 4 UI-SPEC decision to Decisions block, added Phase 4 UI-SPEC todo (checked), added Phase 4 planning todo (open)
+
+## 2026-04-19 05:10 EST
+
+### User Prompt
+"Execute Phase 3 Plan 03-01 (Wave 0 foundations — net-new deps + vitest jsdom + bundle-schema.ts) for Sleepwalker v0.2."
+
+### Actions Taken
+- Ran `pnpm add zod@4.3.6 cronstrue@3.14.0 yaml@2.8.3 gray-matter@4.0.3` in `dashboard/`
+- Ran `pnpm add -D @testing-library/react@^16 @testing-library/user-event@^14 jsdom@^25` in `dashboard/` (resolved RTL 16.3.2, user-event 14.6.1, jsdom 25.0.1)
+- Modified `dashboard/package.json` + `dashboard/pnpm-lock.yaml` (deps additions only; no pre-existing entry changed)
+- Modified `dashboard/vitest.config.ts` — added `tests/**/*.test.tsx` to `include` and `environmentMatchGlobs: [["tests/**/*.test.tsx", "jsdom"]]` so jsdom applies only to `.test.tsx` files; default `environment: "node"` preserved
+- Committed Task 1 as `104547f` (`chore(03-01): install zod/cronstrue/yaml/gray-matter deps + jsdom testing stack`)
+- Created `dashboard/tests/bundle-schema.test.ts` — TDD RED first; 193 lines, 17 it() blocks expanded to 24 via it.each; covers accept paths + UI-SPEC-literal reject messages for name/slug/runtime/prompt/schedule/reversibility/budget
+- Created `dashboard/lib/bundle-schema.ts` — 68 lines; exports `RoutineBundleInput` zod schema with every `message:` override pulled verbatim from `03-UI-SPEC.md` §Validation messages; SLUG_REGEX duplicated locally (zero Phase-2 coupling); `budget: z.coerce.number()` for FormData string survival
+- `pnpm test bundle-schema` went from FAIL (RED) to 24/24 pass (GREEN); full suite 137 → 161 green; `pnpm typecheck` exit 0
+- Committed Task 2 as `8286db4` (`feat(03-01): add RoutineBundleInput zod schema + 12 accept/reject tests`; amended with SUMMARY + ROADMAP + STATE + activity_log)
+- Frozen-surface diff against `104547f~1` returns 0 lines across 14 v0.1 paths
+- Created `.planning/phases/03-editor/03-01-SUMMARY.md` — 5 files / 2 commits / metrics / UI-SPEC fidelity table / self-check PASSED
+- Updated `.planning/ROADMAP.md` — ticked plan 03-01 box with commit hashes and suite delta
+- Updated `.planning/STATE.md` — Current Position flipped Phase 2 → Phase 3 (1/9 plans), Phase 3 progress bar added, suite-size line bumped 104 → 161, new Decision entry, new Plan 03-01 row in metrics table, flipped Phase 3 open todo to in-progress, refreshed Last session / Stopped at / Resume file
+- 03-VALIDATION.md rows 4 (EDIT-02 accept/reject) + 14/15/16/17 (EDIT-04 slug regex + traversal + spaces + uppercase) now satisfied by Task ID `3-01-02`
