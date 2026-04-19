@@ -1,20 +1,20 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-19 after Phase 2 Plan 03 execution (bin/sleepwalker-run-cli bash supervisor shipped — ADPT-04 + SAFE-02 sealed)
+**Last updated:** 2026-04-19 after Phase 2 Plan 04 execution (hooks/tests/supervisor-tests.sh bash harness shipped — Wave 1 complete; VALIDATION.md rows 2-03-01..06 green)
 
 ## Project Reference
 
 **Core value:** Write a prompt + pick a schedule + pick a runtime -> click once -> a live agent exists on that runtime, scheduled, audited, and reviewed from one place. No copy-paste, no terminal, no multi-step wiring.
 
-**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 3 complete (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor), 7 remaining.
+**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 4 complete (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor, 02-04 supervisor-tests harness), 6 remaining. **Wave 1 complete.**
 
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
 **Phase:** 2 — Adapters (in progress)
-**Plan:** 3/10 complete — 02-03 shipped `bin/sleepwalker-run-cli` (183-line bash supervisor, mode 100755, all 5 safety gates + audit contract + perl ANSI strip); Wave 1 completes with 02-04 bash test harness
-**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-04
+**Plan:** 4/10 complete — 02-04 shipped `hooks/tests/supervisor-tests.sh` (275-line bash integration harness, mode 100755, 6 scenarios, 24 PASS / 0 FAIL, `all supervisor tests passed` line); Wave 1 complete. Wave 2 (four adapter plans) is the next critical path.
+**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-05 (claude-routines adapter)
 
 **Milestone progress:**
 ```
@@ -28,7 +28,7 @@
 
 **Phase 2 progress:**
 ```
-[###-------] 3/10 plans complete (02-01 + 02-02 + 02-03 shipped; 02-04..02-10 pending)
+[####------] 4/10 plans complete (02-01 + 02-02 + 02-03 + 02-04 shipped; Wave 1 complete; 02-05..02-10 pending)
 ```
 
 ## Performance Metrics
@@ -39,10 +39,11 @@
 | Phases defined | 6 |
 | Phases complete | 1/6 (Phase 1 Foundation sealed) |
 | Plans authored | 14 (Phase 1: 4, Phase 2: 10) |
-| Plans complete | 7 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03) |
-| Requirements complete | 5/32 (ADPT-01, ADPT-02, ADPT-03, ADPT-04, SAFE-02 sealed) |
-| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18; frozen-surface gate 0-line diff after 02-03 (supervisor is new additive `bin/` file) |
-| Dashboard test suite | 72/72 green (63 Phase-1+02-01 baseline + 9 new launchd-writer tests; 02-03 adds no TS code) |
+| Plans complete | 8 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04) |
+| Requirements complete | 5/32 (ADPT-01, ADPT-02, ADPT-03, ADPT-04, SAFE-02 — the latter two *behaviorally* verified by 02-04 harness after 02-03 structurally sealed them) |
+| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18; frozen-surface gate 0-line diff after 02-04 (harness is new additive `hooks/tests/` file; v0.1 `run-tests.sh` untouched) |
+| Dashboard test suite | 72/72 green (unchanged — harness is bash, not TS) |
+| Supervisor harness | 24 PASS / 0 FAIL / exit 0 (`bash hooks/tests/supervisor-tests.sh` → `all supervisor tests passed`) |
 
 | Plan | Duration | Tasks | Files | Commit |
 |------|----------|-------|-------|--------|
@@ -53,6 +54,7 @@
 | 02-01 | 3 min | 3 | 3 | c5922de |
 | 02-02 | 4 min | 4 | 3 | e14bbe6 |
 | 02-03 | 3 min | 3 | 2 | 39f7eb3 |
+| 02-04 | 6 min | 3 | 2 | 5bdb19c |
 
 ## Accumulated Context
 
@@ -75,6 +77,7 @@
 - **2026-04-19** — Plan 02-01 resolved Phase 1 review debt item #1 by injecting a module-private `assertValidSlug()` throw guard into every identifier builder in `dashboard/lib/runtime-adapters/slug.ts` (toFleetKey, toLaunchdLabel, toMarkerTag, toBranchPrefix, toPlistPath, toBundleDir). `parseFleetKey` deliberately unguarded (construct-throws / parse-returns-null asymmetry preserved per result-object convention; NOTE comment added so future readers understand the intent). `assertValidSlug` is NOT exported → public API stays at exactly 10 surfaces. File grew 92 → 118 lines; suite grew 56 → 63 tests. Single atomic commit `c5922de` covers slug.ts + slug.test.ts + activity log per v0.1 amend-log convention. Wave 2 adapters inherit path-traversal / shell-metacharacter / git-ref-invalid rejection by construction.
 - **2026-04-19** — Plan 02-02 shipped `dashboard/lib/runtime-adapters/launchd-writer.ts` (226 lines): 3 type exports (`LaunchdSchedule` discriminated union, `LaunchdJob`, `InstallResult`) + 3 functions (`generatePlist` pure XML templating with 5-char escape for `&<>"'`; `installPlist` async mode-0644 write + plutil -lint gate + bootout-first + bootstrap with rollback-unlink; `uninstallPlist` async bootout + ENOENT-tolerant unlink). Backed by `dashboard/tests/launchd-writer.test.ts` (200 lines, 9 Vitest it() blocks using `vi.doMock("node:child_process")` — no real launchctl or plutil). Single atomic commit `e14bbe6` (amended to include activity log) covers both source files per v0.1 convention. Dashboard suite grew 63 → 72 passing tests. Frozen-surface diff against `e14bbe6~1` returns 0 lines. ADPT-03 sealed. Two minor auto-adds documented in SUMMARY: 9th test block for bootstrap-failure rollback (threat T-02-02-04) and try/catch-instead-of-re-throw in uninstallPlist to match AC7 single-throw cap.
 - **2026-04-19** — Plan 02-03 shipped `bin/sleepwalker-run-cli` (183 lines, mode 100755): bash supervisor with `set -euo pipefail`, `#!/bin/bash` shebang (byte-identical to v0.1 hooks), two helpers (`audit_emit` 2-arg JSON-fragment emitter; `strip_ansi` 3-class perl regex for CSI/OSC/DCS-PM-APC), five safety gates (usage-check EX_USAGE 64; bundle-preflight EX_NOINPUT 66; PATH-resolution with `/bin/zsh -l -c` then `/bin/bash -l -c` login-shell fallback chain + exit 127; sleep-window defer; reversibility policy defer), char-budget watchdog (`kill -0` liveness probe + `wc -c` poll every second + SIGTERM + SIGKILL-after-2s escalation), per-runtime static CLI_ARGS array (codex `exec - --json`; gemini `-p - --output-format stream-json --yolo`) — prompt text NEVER in argv (Pitfall 4 defeated by construction), backgrounded CLI pipeline with stderr-fold + strip_ansi + tee, terminal-event mutual exclusivity (budget_exceeded / completed / failed with exactly one emit per invocation). Single atomic commit `39f7eb3` covers supervisor + activity log per v0.1 convention. Dashboard suite stays 72/72 green (supervisor is bash-only). Two AC-grep clarifications documented in SUMMARY (same category as Plan 02-01 AC-doc notes): terminal-event regex count is 6 due to early-exit `failed` emits outside the terminal block, preview-encoder count is 4 due to explanatory comment — both behavioral intents verified via scoped grep. ADPT-04 + SAFE-02 sealed. Wave 2 codex/gemini adapters now have a real supervisor path for their `LaunchdJob.programArguments`.
+- **2026-04-19** — Plan 02-04 shipped `hooks/tests/supervisor-tests.sh` (275 lines, mode 100755): bash integration harness with `set -euo pipefail`, isolated `$HOME` via `mktemp -d -t sw-supervisor-XXXXXX`, fixture `codex` / `gemini` bash stubs in `$TEST_BIN` on prepended PATH, `reset_state()` + `make_bundle()` helpers, `assert_eq` / `assert_contains` / `assert_file_lines` helpers copied verbatim from v0.1 `hooks/tests/run-tests.sh` pattern, EXIT trap cleaning both `$TEST_HOME` and per-scenario fixture bundles. Six scenarios cover VALIDATION.md rows 2-03-01..06: (1) codex happy path with `started` + `completed` + exit 0; (2) SAFE-02 ANSI strip — raw CSI bytes absent, literal `[32m` absent, `green-prefix` payload preserved; (3) char-budget SIGTERM — runaway fixture blows through 500-byte cap, `budget_exceeded` event emits; (4) reversibility defer — red routine under balanced policy defers without emitting `started`; (5) bundle missing — exit 66 + `failed` event with `bundle not found` reason; (6) gemini happy path — second runtime arm green. Harness runs green end-to-end: `bash hooks/tests/supervisor-tests.sh` → 24 PASS / 0 FAIL / exit 0 / final line `all supervisor tests passed`. Zero real launchctl/codex/gemini invocations; bash stubs only. Single atomic commit `5bdb19c` (pre-amend `b39859d`) covers harness + activity log per v0.1 amend convention. One Rule-3 auto-fix documented in SUMMARY: runaway fixture chunks changed from raw 2000-byte blobs to newline-terminated chunks because `perl -pe` is line-oriented (without `\n` perl buffers indefinitely and the watchdog never sees OUTPUT_FILE grow past budget — supervisor itself is unchanged; real codex/gemini emit NDJSON so production flow is unaffected). ADPT-04 + SAFE-02 are now *behaviorally* verified on top of 02-03's structural ship. Wave 1 complete; Wave 2 adapter work (Plans 02-05..08) is the next critical path.
 
 ### Open Todos
 
@@ -86,7 +89,8 @@
 - [x] Execute Phase 2 Plan 01 (slug.ts assertValidSlug guard + throw coverage) — completed 2026-04-19 as commit `c5922de`
 - [x] Execute Phase 2 Plan 02 (launchd-writer.ts plist generator + tests) — completed 2026-04-19 as commit `e14bbe6`
 - [x] Execute Phase 2 Plan 03 (bin/sleepwalker-run-cli bash supervisor) — completed 2026-04-19 as commit `39f7eb3`
-- [ ] Execute Phase 2 Plan 04 (test/supervisor-tests.sh bash harness — 6 scenarios verifying audit contract + budget SIGTERM + ANSI strip) — `/gsd-execute-phase 2`
+- [x] Execute Phase 2 Plan 04 (hooks/tests/supervisor-tests.sh bash harness — 6 scenarios verifying audit contract + budget SIGTERM + ANSI strip) — completed 2026-04-19 as commit `5bdb19c` (24 PASS / 0 FAIL / `all supervisor tests passed`)
+- [ ] Execute Phase 2 Plan 05 (claude-routines.ts adapter + 7 Vitest blocks; ADPT-05) — Wave 2 kickoff — `/gsd-execute-phase 2`
 - [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work in Plan 02-06)
 - [x] UI-SPEC for Phase 3 Editor — approved 2026-04-19 (commits 1152375 + 961c4d3); textarea locked in, Monaco spike no longer needed per research/SUMMARY.md Phase 3 flag
 - [ ] Plan Phase 3 (Editor) with approved UI-SPEC as design context — `/gsd-plan-phase 3`
@@ -97,15 +101,18 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session:** Phase 2 Plan 03 execution (2026-04-19) — bin/sleepwalker-run-cli bash supervisor shipped (ADPT-04 + SAFE-02 sealed)
+**Last session:** Phase 2 Plan 04 execution (2026-04-19) — hooks/tests/supervisor-tests.sh bash harness shipped (Wave 1 complete)
 
 **Resumption context:**
-- Phase 2 Wave 1 continues: Plan 02-03 added `bin/sleepwalker-run-cli` — the 183-line bash supervisor that launchd will invoke for every Codex and Gemini scheduled run. `#!/bin/bash` shebang (byte-identical to v0.1 hooks), `set -euo pipefail`, mode 100755 in git index. Two helpers (`audit_emit` JSON-fragment emitter + `strip_ansi` perl-based CSI/OSC/DCS-PM-APC regex), five safety gates (usage-check, bundle-preflight, PATH-resolution with zsh/bash login-shell fallback, sleep-window, reversibility policy), char-budget watchdog (SIGTERM + SIGKILL-2s), per-runtime static CLI_ARGS (codex `exec - --json`; gemini `-p - --output-format stream-json --yolo` — prompt text never in argv per Pitfall #4). Terminal-event emission is mutually-exclusive (budget_exceeded / completed / failed — exactly one emit per invocation).
-- Commit `39f7eb3` (single atomic, amended) covers `bin/sleepwalker-run-cli` + `docs/activity_log.md`. Plan Task 3 explicitly requested this single-commit shape via `git commit --amend --no-edit`, matching Plan 02-01 and 02-02 precedent.
-- Dashboard test suite unchanged at 72/72 green (supervisor is bash-only; no TS touched). `pnpm typecheck` still exit 0.
-- Two AC-grep clarifications documented in 02-03-SUMMARY.md (same category as Plan 02-01 AC5/AC2 notes): (a) terminal-event regex returns 6 instead of 3 due to early-exit `failed` emits at preflight sites that never coexist with a `started` emit on the same invocation — scoped grep on the terminal block (lines 170-183) returns exactly 3, matching the behavioral intent; (b) preview-encoder count returns 4 instead of 3 due to the explanatory comment on line 170 — excluding comment lines returns exactly 3. Both behavioral intents are satisfied structurally.
-- Next action: `/gsd-execute-phase 2` → Plan 02-04 (test/supervisor-tests.sh bash harness — 6 scenarios: bundle-missing, PATH-miss, sleep-window defer, reversibility defer, char-budget SIGTERM, happy-path completed). 02-04 is the final Wave 1 plan and will behaviorally verify the audit contract + budget mechanism this plan shipped structurally.
-- Wave 1 blockers: none. ADPT-04 and SAFE-02 sealed. Wave 2 codex/gemini adapters now have a real supervisor path for their `LaunchdJob.programArguments`.
+- Phase 2 Wave 1 complete: Plan 02-04 added `hooks/tests/supervisor-tests.sh` — the 275-line bash integration harness that exercises `bin/sleepwalker-run-cli` end-to-end with fixture codex/gemini stubs, isolated `$HOME`, and 6 assertion scenarios covering VALIDATION.md rows 2-03-01 through 2-03-06. `#!/bin/bash` shebang, `set -euo pipefail`, mode 100755 in git index. Pattern copied verbatim from v0.1 `hooks/tests/run-tests.sh`: `mktemp -d -t sw-supervisor-XXXXXX` for isolated HOME, `FIXTURE_BUNDLES` array + dual-layer `cleanup()` in EXIT trap, PASS/FAIL counters, `assert_eq` / `assert_contains` / `assert_file_lines` helpers. Zero real launchctl / codex / gemini invocations; fixture bash stubs on `$TEST_BIN`-prepended PATH only.
+- Six scenarios cover the supervisor's behavioral contract: (1) codex happy path — started + completed + exit_code 0; (2) SAFE-02 ANSI strip — no raw CSI bytes, no literal `[32m`, `green-prefix` payload preserved; (3) char-budget SIGTERM — runaway codex fixture blows through 500-byte cap, `budget_exceeded` event emits; (4) reversibility defer — red routine under balanced policy defers without emitting `started`; (5) bundle missing — exit 66 + `failed` event with `bundle not found` reason; (6) gemini happy path — second runtime arm green.
+- Harness run: `bash hooks/tests/supervisor-tests.sh` → 24 PASS / 0 FAIL / exit 0; final line `all supervisor tests passed`.
+- One Rule-3 auto-fix documented in 02-04-SUMMARY.md: runaway fixture emits newline-terminated 2000-byte chunks instead of raw blobs. Supervisor's `strip_ansi` uses `perl -pe` which is line-oriented; without `\n` on each chunk perl buffers indefinitely, `tee` never writes, the watchdog never sees OUTPUT_FILE grow past budget, and `budget_exceeded` never fires. Supervisor itself is unchanged — real codex/gemini both emit NDJSON so production flow is unaffected. Fix is harness-side only.
+- Commit `5bdb19c` (single atomic, amended; pre-amend `b39859d`) covers `hooks/tests/supervisor-tests.sh` + `docs/activity_log.md`. Plan Task 3 explicitly requested this single-commit shape via `git commit --amend --no-edit`, matching Plan 02-01/02/03 precedent.
+- Dashboard test suite unchanged at 72/72 green (harness is bash-only; no TS touched). Frozen-surface diff returns 0 lines.
+- VALIDATION.md rows 2-03-01 through 2-03-06 all flip from ⬜ pending to ✅ green with this plan's harness.
+- Next action: `/gsd-execute-phase 2` → Plan 02-05 (claude-routines adapter + 7 Vitest blocks — ADPT-05). Wave 2 (Plans 02-05 through 02-08) can run in parallel per the plan's wave structure; Plan 02-09 (registry swap) blocks on all four; Plan 02-10 (exit gate) blocks on 02-09.
+- Wave 1 blockers: none. Wave 2 codex/gemini adapters now have a behaviorally-ratified supervisor path for their `LaunchdJob.programArguments`.
 
 **Files in play:**
 - `.planning/PROJECT.md` — v0.1 Validated + v0.2 Active requirements + Out of Scope
