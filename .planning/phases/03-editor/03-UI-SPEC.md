@@ -1,10 +1,11 @@
 ---
 phase: 3
 slug: editor
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-19
+reviewed_at: 2026-04-19
 ---
 
 # Phase 3 — UI Design Contract: Routine Editor
@@ -51,7 +52,7 @@ Declared values (all multiples of 4, mapped to Tailwind defaults):
 
 ## Typography
 
-Exactly 4 sizes, 2 effective weight families (Fraunces uses variable `wght` axis — treated as "display regular 320" and "display bold 600"; Bricolage body uses 400/500/600 but only 400 + 500 are active in the Editor).
+4 distinct font sizes (11, 12, 14, 48 px) and 4 inherited weights (400 body / 500 label / 600 heading / Fraunces variable `wght` axis at 320 display + 600 display-bold). No new sizes or weights are introduced this phase — every value below is already shipped in v0.1 via `globals.css` primitives. Fraunces uses variable `wght` axis; Bricolage body uses 400 + 500 only in the Editor.
 
 | Role | Size (px / Tailwind) | Weight | Line Height | Font | Where |
 |------|----------------------|--------|-------------|------|-------|
@@ -418,14 +419,14 @@ No third-party component registries are used by this phase. All UI primitives ar
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS (FLAG cleared — header revised to "4 sizes / 4 inherited weights")
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-04-19 by gsd-ui-checker
 
 ---
 
