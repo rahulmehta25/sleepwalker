@@ -1,0 +1,183 @@
+#!/bin/bash
+# Sleepwalker CLI supervisor.
+# Wraps codex/gemini invocations with v0.1-equivalent safety semantics for
+# runtimes that have no hook schema. The only entry point launchd invokes
+# for v0.2 Codex/Gemini scheduled jobs.
+#
+# USAGE (launchd and Run-now both use this form):
+#   /abs/path/bin/sleepwalker-run-cli <runtime> <slug>
+#
+# INVARIANTS (enforced by this script):
+#   - User prompt text NEVER touches argv or a shell-expanded string (Pitfall #4).
+#   - stdin-only prompt routing (cat prompt.md | codex exec - --json).
+#   - All audit writes pass through perl ANSI strip (SAFE-02).
+#   - Budget exceeded -> SIGTERM + budget_exceeded event.
+#   - Exactly one `started` event + exactly one terminal event per invocation.
+#
+# EXIT CODES:
+#   0   — any terminal state (completed/failed/deferred/budget_exceeded)
+#   64  — EX_USAGE (missing args)
+#   66  — EX_NOINPUT (bundle prompt.md missing)
+#   127 — CLI binary not found on any PATH source
+
+set -euo pipefail
+
+# --- Inputs ---
+RUNTIME="${1:-}"   # "codex" | "gemini"
+SLUG="${2:-}"
+[ -z "$RUNTIME" ] && { echo "usage: $0 <runtime> <slug>" >&2; exit 64; }
+[ -z "$SLUG" ]    && { echo "usage: $0 <runtime> <slug>" >&2; exit 64; }
+
+# --- Paths ---
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BUNDLE_DIR="${REPO_ROOT}/routines-${RUNTIME}/${SLUG}"
+PROMPT_FILE="${BUNDLE_DIR}/prompt.md"
+CONFIG_FILE="${BUNDLE_DIR}/config.json"
+AUDIT_FILE="${HOME}/.sleepwalker/audit.jsonl"
+SETTINGS_FILE="${HOME}/.sleepwalker/settings.json"
+STATE_DIR="${HOME}/.sleepwalker"
+FLEET="${RUNTIME}/${SLUG}"
+
+mkdir -p "$STATE_DIR" "${STATE_DIR}/logs"
+touch "$AUDIT_FILE"
+
+# --- Safety envs (SAFE-02 — re-export defensively; plist already sets these) ---
+export NO_COLOR=1
+export TERM=dumb
+export CI=true
+
+# --- Helper: audit emit ---
+# $1 = event name; $2 = extra JSON fragment (already-formed key:value pairs, no leading/trailing comma)
+audit_emit() {
+  local ts event extra
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  event="$1"
+  extra="${2:-}"
+  if [ -n "$extra" ]; then
+    printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s",%s}\n' \
+      "$ts" "$FLEET" "$RUNTIME" "$event" "$extra" >> "$AUDIT_FILE"
+  else
+    printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s"}\n' \
+      "$ts" "$FLEET" "$RUNTIME" "$event" >> "$AUDIT_FILE"
+  fi
+}
+
+# --- Helper: strip ANSI (CSI + OSC + DCS/PM/APC) ---
+# Reads from stdin, writes ANSI-stripped content to stdout. perl is macOS built-in at /usr/bin/perl.
+strip_ansi() {
+  perl -pe 's/\e\[[0-9;?]*[a-zA-Z]//g; s/\e\][^\a]*\a//g; s/\e[PX^_][^\e]*\e\\//g'
+}
+
+# --- Preflight: bundle prompt must exist (Pitfall #6) ---
+if [ ! -f "$PROMPT_FILE" ]; then
+  audit_emit "failed" "\"reason\":\"bundle not found\",\"bundle\":\"${BUNDLE_DIR}\""
+  exit 66
+fi
+
+# --- PATH resolution (Pitfall #1 — launchd strips PATH) ---
+if command -v "$RUNTIME" >/dev/null 2>&1; then
+  CLI_ABS="$(command -v "$RUNTIME")"
+else
+  # Fallback: login-shell PATH via zsh
+  CLI_ABS="$(/bin/zsh -l -c "command -v $RUNTIME" 2>/dev/null || true)"
+  if [ -z "$CLI_ABS" ]; then
+    # Final fallback: bash login shell (catches users still on bash)
+    CLI_ABS="$(/bin/bash -l -c "command -v $RUNTIME" 2>/dev/null || true)"
+  fi
+  if [ -z "$CLI_ABS" ]; then
+    audit_emit "failed" "\"reason\":\"$RUNTIME not found on PATH\""
+    exit 127
+  fi
+fi
+
+# --- Sleep window gate ---
+HOUR=$(date +%H | sed 's/^0//'); HOUR=${HOUR:-0}
+SLEEP_START=$(jq -r '.sleep_window.start_hour // 23' "$SETTINGS_FILE" 2>/dev/null || echo 23)
+SLEEP_END=$(jq -r '.sleep_window.end_hour // 7'     "$SETTINGS_FILE" 2>/dev/null || echo 7)
+if [ "$SLEEP_START" -gt "$SLEEP_END" ]; then
+  if [ "$HOUR" -ge "$SLEEP_START" ] || [ "$HOUR" -lt "$SLEEP_END" ]; then IN_SLEEP=1; else IN_SLEEP=0; fi
+else
+  if [ "$HOUR" -ge "$SLEEP_START" ] && [ "$HOUR" -lt "$SLEEP_END" ]; then IN_SLEEP=1; else IN_SLEEP=0; fi
+fi
+if [ "$IN_SLEEP" -eq 0 ] && [ "${SLEEPWALKER_MODE:-auto}" != "overnight" ]; then
+  audit_emit "deferred" "\"reason\":\"outside sleep window\",\"hour\":$HOUR"
+  exit 0
+fi
+
+# --- Reversibility / policy gate ---
+REVERSIBILITY=$(jq -r '.reversibility // "yellow"' "$CONFIG_FILE" 2>/dev/null || echo "yellow")
+POLICY=$(jq -r --arg f "$FLEET" '.policies[$f] // "balanced"' "$SETTINGS_FILE" 2>/dev/null || echo "balanced")
+DECISION="allow"
+if [ "$POLICY" = "strict" ]   && [ "$REVERSIBILITY" != "green" ]; then DECISION="defer"; fi
+if [ "$POLICY" = "balanced" ] && [ "$REVERSIBILITY" = "red" ];   then DECISION="defer"; fi
+if [ "$DECISION" = "defer" ]; then
+  audit_emit "deferred" "\"reason\":\"policy $POLICY blocks $REVERSIBILITY\""
+  exit 0
+fi
+
+# --- Char budget (default 40000 if config is absent or malformed) ---
+BUDGET=$(jq -r '.budget // 40000' "$CONFIG_FILE" 2>/dev/null || echo 40000)
+
+# --- Emit started event ---
+audit_emit "started" "\"cli\":\"$CLI_ABS\",\"budget\":$BUDGET"
+
+# --- CLI argv dispatch (per-runtime; NO user text in argv ever) ---
+case "$RUNTIME" in
+  codex)
+    CLI_ARGS=(exec - --json)
+    ;;
+  gemini)
+    CLI_ARGS=(-p - --output-format stream-json --yolo)
+    ;;
+  *)
+    audit_emit "failed" "\"reason\":\"unknown runtime $RUNTIME\""
+    exit 64
+    ;;
+esac
+
+# --- Invoke CLI with stdin-piped prompt, stream through ANSI strip + budget watchdog ---
+OUTPUT_FILE="$(mktemp -t sleepwalker-run-cli.XXXXXX)"
+trap 'rm -f "$OUTPUT_FILE"' EXIT
+
+# stdin comes from prompt.md; stdout+stderr combine -> strip_ansi -> tee to OUTPUT_FILE (discarded from our stdout)
+set +e
+cat "$PROMPT_FILE" | "$CLI_ABS" "${CLI_ARGS[@]}" 2>&1 | strip_ansi | tee "$OUTPUT_FILE" >/dev/null &
+CLI_PID=$!
+
+# Background char-budget watchdog: polls wc -c every second; SIGTERM + SIGKILL-after-2s on exceed
+(
+  while kill -0 "$CLI_PID" 2>/dev/null; do
+    sleep 1
+    SIZE=$(wc -c < "$OUTPUT_FILE" 2>/dev/null || echo 0)
+    if [ "$SIZE" -gt "$BUDGET" ]; then
+      kill -TERM "$CLI_PID" 2>/dev/null || true
+      sleep 2
+      kill -KILL "$CLI_PID" 2>/dev/null || true
+      break
+    fi
+  done
+) &
+WATCHDOG_PID=$!
+
+wait "$CLI_PID"
+CLI_EXIT=$?
+kill "$WATCHDOG_PID" 2>/dev/null || true
+set -e
+
+FINAL_SIZE=$(wc -c < "$OUTPUT_FILE" 2>/dev/null || echo 0)
+
+# --- Emit terminal event (exactly one: completed | failed | budget_exceeded) ---
+# JSON-safe preview: `head -c 500 | jq -Rs .` produces a valid JSON string literal
+if [ "$FINAL_SIZE" -gt "$BUDGET" ] && [ "$CLI_EXIT" -ne 0 ]; then
+  PARTIAL_PREVIEW=$(head -c 500 "$OUTPUT_FILE" | jq -Rs .)
+  audit_emit "budget_exceeded" "\"chars_consumed\":$FINAL_SIZE,\"chars_limit\":$BUDGET,\"partial_output_bytes\":$FINAL_SIZE,\"preview\":$PARTIAL_PREVIEW,\"exit_code\":$CLI_EXIT"
+  exit 0
+fi
+if [ "$CLI_EXIT" -eq 0 ]; then
+  PREVIEW=$(head -c 500 "$OUTPUT_FILE" | jq -Rs .)
+  audit_emit "completed" "\"chars_consumed\":$FINAL_SIZE,\"preview\":$PREVIEW,\"exit_code\":0"
+else
+  PREVIEW=$(head -c 500 "$OUTPUT_FILE" | jq -Rs .)
+  audit_emit "failed" "\"chars_consumed\":$FINAL_SIZE,\"preview\":$PREVIEW,\"exit_code\":$CLI_EXIT"
+fi
+exit 0

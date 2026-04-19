@@ -109,3 +109,15 @@
 - Created `dashboard/tests/launchd-writer.test.ts` (~200 lines): 9 Vitest it() blocks — 5 generate tests (calendar, interval, calendar-array, XML escape, env-var presence/absence) + 4 install/uninstall tests (happy-path command order, lint-failure rollback, bootstrap-failure rollback, idempotent uninstall). Uses vi.doMock('node:child_process') — no real launchctl or plutil invocations.
 - Full dashboard suite: 63 → 72 passing tests (plan expected >=71).
 - Commit `e63ad7c` — `feat(02-02): add launchd-writer with plist generator and install/uninstall primitives`.
+
+## 2026-04-19 01:42 EST
+
+### User Prompt
+"Execute Phase 2 Plan 03 — author bin/sleepwalker-run-cli supervisor."
+
+### Actions Taken
+- Created `bin/sleepwalker-run-cli` (183 lines, +x, mode 100755 in git): bash supervisor with set -euo pipefail. Header + preflight (bundle prompt.md existence check, EX_NOINPUT 66) + PATH resolution (inherited PATH → `/bin/zsh -l -c` → `/bin/bash -l -c` fallback, exit 127 on final miss) + sleep-window gate (deferred on `outside sleep window`) + reversibility policy gate (strict blocks non-green; balanced blocks red) + started-event emit + per-runtime CLI argv dispatch (codex=`exec - --json`; gemini=`-p - --output-format stream-json --yolo`) + char-budget watchdog (polls `wc -c` every second, SIGTERM + SIGKILL-2s on exceed) + terminal-event emit (completed / failed / budget_exceeded) with jq -Rs encoded 500-char preview.
+- SAFE-02: `NO_COLOR=1 TERM=dumb CI=true` exported defensively (plist also sets these); perl ANSI strip covers CSI + OSC + DCS/PM/APC escape classes in pipeline before any tee/audit write.
+- Pitfall 4 defeated by construction: user prompt text is read from `prompt.md` and piped via stdin; `CLI_ARGS` is a STATIC array per runtime and never contains the prompt string.
+- Verified: `/bin/bash -n bin/sleepwalker-run-cli` → 0, `test -x` → 0, `git ls-files --stage` → 100755. Dashboard suite still 72/72 green (supervisor does not touch TS).
+- Commit `4afe02a` — `feat(02-03): add bin/sleepwalker-run-cli supervisor`.
