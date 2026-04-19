@@ -8,7 +8,7 @@
 ## Phases
 
 - [x] **Phase 1: Foundation** - Freeze the adapter interface and slug-namespacing conventions that unblock all parallel work
-- [ ] **Phase 2: Adapters** - Ship four runtime adapters + supervisor + launchd writer so every target runtime can be deployed and probed
+- [x] **Phase 2: Adapters** - Ship four runtime adapters + supervisor + launchd writer so every target runtime can be deployed and probed — **code complete 2026-04-19** (2 manual smokes pending user execution; contracts at `test/manual/*-smoke.md`)
 - [ ] **Phase 3: Editor** - `/editor` form writes validated, secret-scanned routine bundles to disk with autosave and collision protection
 - [ ] **Phase 4: Deploy** - One-click deploy state machine + Run-now + Save-to-repo + health badges wire adapters through the dashboard UI
 - [ ] **Phase 5: Queue** - Codex + Gemini runs flow into the Morning Queue with ANSI-stripped, race-free, flock-protected audit
@@ -54,7 +54,7 @@ Plans:
 - [x] 02-07-PLAN.md -- codex.ts adapter + 6 tests (ADPT-07) — **completed 2026-04-19** (commit fbda124)
 - [x] 02-08-PLAN.md -- gemini.ts adapter + 7 tests (ADPT-08) — **completed 2026-04-19** (commit 72c6f69)
 - [x] 02-09-PLAN.md -- registry swap + HealthStatus.warning amendment + adapter-registry.test.ts (ADPT-09) — **completed 2026-04-19** (commits db1e65d + a2f0563 + fc2b84a + 78eaaf7)
-- [ ] 02-10-PLAN.md -- exit gate + manual smoke tests + ROADMAP/STATE updates (all ADPT + SAFE-02 sealed)
+- [x] 02-10-PLAN.md -- exit gate + manual smoke tests + ROADMAP/STATE updates (ADPT-03..09 + SAFE-02 code complete; 2 manual smokes pending user) — **code complete 2026-04-19** (commit 0331f69 contracts + this closeout commit; automated gate green: typecheck + vitest 104/104 + supervisor 24/24 + frozen-surface diff 0 lines vs PHASE2_BASE 0ec59df)
 
 ### Phase 3: Editor
 **Goal**: Deliver a `/editor` route where a user can fill a form, hit Save, and have a valid, secret-free, collision-checked routine bundle written to `routines-<runtime>/<slug>/` with autosave protecting against lost work.
@@ -120,7 +120,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
-| 2. Adapters | 9/10 | In Progress | - |
+| 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
 | 3. Editor | 0/8 | Not started | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
@@ -128,4 +128,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 2 Plan 09 execution (02-09 registry swap + HealthStatus.warning amendment + adapter-registry.test.ts, commits db1e65d + a2f0563 + fc2b84a + 78eaaf7; ADPT-09 sealed; dashboard suite 98 -> 104 green; frozen-surface diff 0 lines; only 02-10 exit gate remaining)*
+*Last updated: 2026-04-19 after Phase 2 Plan 10 execution (automated exit gate green — typecheck exit 0, vitest 104/104 across 16 files, supervisor bash harness 24 PASS / 0 FAIL, frozen-surface diff 0 lines vs dynamic PHASE2_BASE 0ec59df; 2 manual smoke tests deferred to user — contracts at test/manual/codex-adapter-smoke.md + test/manual/claude-desktop-smoke.md; Phase 2 code complete; Phase 3 ready for /gsd-execute-phase 3)*

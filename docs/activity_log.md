@@ -231,3 +231,28 @@
 - Created `test/manual/codex-adapter-smoke.md` (118 lines): 11-step real-Mac contract for codex deploy → kickstart → bootout cycle. Steps 1-11 cover: REPO_ROOT setup, fixture bundle creation, deploy via adapter Node invocation, `launchctl print` verification, plist mode-0644 check, `plutil -lint` pass, `launchctl kickstart -k` trigger, audit.jsonl `started`/`completed` event assertion with `SMOKE_OK` preview, stdout log inspection, undeploy via adapter, and cleanup verification (`launchctl print` must report "could not find", plist removed, fixture bundle `rm -rf`). Pass criteria require steps 4/5/6/8/9/11 match + no `failed`/`budget_exceeded` events.
 - Created `test/manual/claude-desktop-smoke.md` (87 lines): Q1 resolution contract for Research Question "does Claude Code Desktop pick up a fresh SKILL.md dropped into ~/.claude/scheduled-tasks/<slug>/ without Schedule-tab action?" Step 5 captures one of three outcomes: YES (auto-pickup) / NO but visible after refresh (Schedule-tab visit required — deeplink in handoffUrl resolves) / NO never visible without manual add (Desktop doesn't watch directory — Phase 6 docs implication). Step 7 verifies the timestamp-writer routine actually fired.
 - Both files are documentation-only (no executable code); will be run on real Mac by the orchestrator in Task 3 of Plan 02-10 (checkpoint:human-action; requires launchctl bootstrap which cannot be mocked).
+
+## 2026-04-19 03:15 EST
+
+### User Prompt
+"Execute Phase 2 Plan 02-10 (phase exit gate) — AUTOMATED TASKS ONLY. User explicitly deferred the two manual smoke tests (codex launchctl + Claude Desktop Schedule tab) because they require real hardware side-effects on their Mac that cannot be mocked and that you cannot perform autonomously."
+
+### Actions Taken
+- Verified `test/manual/codex-adapter-smoke.md` (118 lines) + `test/manual/claude-desktop-smoke.md` (87 lines) already committed in prior session (commit 0331f69) matching the 02-RESEARCH.md 11-step contract and Q1 Desktop-pickup resolution contract respectively.
+- Ran automated phase exit gate (4 steps, all green):
+  1. `cd dashboard && pnpm typecheck` exit 0.
+  2. `cd dashboard && pnpm test` exit 0 — 104 tests passed across 16 files.
+  3. `bash hooks/tests/supervisor-tests.sh` exit 0 — 24 PASS / 0 FAIL / `all supervisor tests passed`.
+  4. Frozen-surface diff with dynamic PHASE2_BASE (computed via `git log --reverse --diff-filter=A -- dashboard/lib/runtime-adapters/launchd-writer.ts | head -1`~1 = `e14bbe6~1` = `0ec59df`) returned 0 lines across all 20 enumerated v0.1 paths.
+- Created `.planning/phases/02-adapters/02-10-SUMMARY.md` (plan-level SUMMARY): documents automated-only execution, automated gate results, deferred-to-user rationale, and self-check.
+- Created `.planning/phases/02-adapters/02-SUMMARY.md` (phase-level rollup): per-plan table (02-01..02-10) with commits + test deltas, automated gate output, Manual Smoke Test Results section with pending-placeholders, frozen-surface audit, TODO section for the two deferred smokes.
+- Updated `.planning/ROADMAP.md`: Phase 2 row flipped to `[x]` with "code complete 2026-04-19 (2 manual smokes pending user execution)"; plan 02-10 checkbox flipped to `[x]` with commit references; Progress table row updated to `10/10 | Code Complete (manual smokes pending) | 2026-04-19`; Last-updated footer refreshed.
+- Updated `.planning/STATE.md`: Last-updated timestamp; Current focus / Current Position / Milestone progress bar `[##----] 2/6`; Phase 2 progress bar `[##########] 10/10`; Performance Metrics (phases complete 2/6, plans complete 14, frozen-surface line documenting dynamic PHASE2_BASE 0ec59df); Plan duration table row for 02-10; new Decision entry for Plan 02-10 automated-only execution; Open Todos — flipped 02-10 automated portion to `[x]`; added explicit open todo pointing at both contract docs for user to run; Session Continuity — Last session / Stopped-at / Resume-file / Resumption-context all rewritten; Next action advanced to `/gsd-execute-phase 3`.
+- Updated `.planning/REQUIREMENTS.md`: ADPT-03 section checkbox flipped to `[x]` with "code complete (manual launchctl bootstrap smoke pending)"; ADPT-03 traceability row flipped from Pending to "Code Complete ... manual smoke pending"; ADPT-06 traceability row amended to flag Q1 Schedule-tab smoke pending; ADPT-07 traceability row amended to flag real-Mac launchctl smoke pending; Last-updated footer refreshed with Phase 2 seal context.
+- Closeout commit (separate from activity-log amend convention this time because the closeout touches only planning metadata + both SUMMARY files + docs/activity_log.md, with zero code changes): `docs(02-10): seal Phase 2 Adapters automated gate — manual smokes deferred to user`.
+
+### NOT done (deferred to user per instruction)
+- Did NOT execute the 11-step codex smoke test. Did NOT run `launchctl bootstrap` or `launchctl kickstart` or any launchctl command against real user launchd.
+- Did NOT touch Claude Desktop's Schedule tab.
+- Did NOT write SKILL.md into the user's real `~/.claude/scheduled-tasks/`.
+- When user runs the contracts, results go into `.planning/phases/02-adapters/02-SUMMARY.md` under the existing "Manual Smoke Test Results (Wave 4)" section (currently pending-placeholder).

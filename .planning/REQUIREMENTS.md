@@ -11,7 +11,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 
 - [x] **ADPT-01**: `RuntimeAdapter` TypeScript interface is frozen and exported from `dashboard/lib/runtime-adapters/types.ts` with `deploy`, `undeploy`, `runNow`, `listRuns`, `healthCheck` methods and typed `RoutineBundle`, `DeployResult`, `HealthStatus` shapes — **completed 2026-04-18 (01-01, commit c146acf)**
 - [x] **ADPT-02**: Slug namespacing convention is enforced everywhere: internal key `<runtime>/<slug>`, launchd label `com.sleepwalker.<runtime>.<slug>`, audit marker `[sleepwalker:<runtime>/<slug>]`, branch prefix `claude/sleepwalker/<runtime>/<slug>/*` — **completed 2026-04-18 (01-02 directory scaffolding, commit b38416c; 01-03 slug.ts validator + 7 identifier builders + 13 it() / 28 expect() unit coverage, commits 313bf62 + fbe8adc + 8b73e0f)**
-- [ ] **ADPT-03**: `launchd-writer.ts` produces a valid plist, installs via `launchctl bootstrap gui/$UID`, uninstalls via `launchctl bootout`, and validates with `plutil -lint` before bootstrap
+- [x] **ADPT-03**: `launchd-writer.ts` produces a valid plist, installs via `launchctl bootstrap gui/$UID`, uninstalls via `launchctl bootout`, and validates with `plutil -lint` before bootstrap — **code complete 2026-04-19 (02-02, commit e14bbe6; manual `launchctl bootstrap` smoke pending user — contract: test/manual/codex-adapter-smoke.md)**
 - [x] **ADPT-04**: `bin/sleepwalker-run-cli` supervisor resolves absolute CLI path via login shell, enforces sleep-window + reversibility + char-budget gates, strips ANSI, and emits normalized `audit.jsonl` entries — **completed 2026-04-19 (02-03, commit 39f7eb3)**
 - [x] **ADPT-05**: Runtime adapter **Claude Code Routines** (`claude-routines.ts`) — `deploy()` returns `{handoffUrl}` for `/schedule create` + pre-filled browser; `runNow()` wraps existing `fire-routine.ts`; `healthCheck()` probes beta-header + `claude` CLI availability — **completed 2026-04-19 (02-05, commits 62bdaa7 + d7223a8)**
 - [x] **ADPT-06**: Runtime adapter **Claude Code Desktop Scheduled Tasks** (`claude-desktop.ts`) — `deploy()` copies SKILL.md to `~/.claude/scheduled-tasks/<slug>/` and returns a handoff URL for Desktop's Schedule page; `healthCheck()` probes for `~/.claude/` and Desktop binary — **completed 2026-04-19 (02-06, commit 81f68ca)**
@@ -107,11 +107,11 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 |-------------|-------|--------|
 | ADPT-01 | Phase 1 | Complete (01-01 c146acf; 01-04 exit gate verified b924c9a, 2026-04-18) |
 | ADPT-02 | Phase 1 | Complete (01-02 scaffolding b38416c; 01-03 slug.ts + tests 313bf62/fbe8adc/8b73e0f; 01-04 exit gate verified b924c9a, 2026-04-18) |
-| ADPT-03 | Phase 2 | Pending |
+| ADPT-03 | Phase 2 | Code Complete (02-02 launchd-writer.ts + 9 Vitest blocks, commit e14bbe6, 2026-04-19; manual launchctl bootstrap smoke pending — test/manual/codex-adapter-smoke.md) |
 | ADPT-04 | Phase 2 | Complete (02-03 bin/sleepwalker-run-cli supervisor, commit 39f7eb3, 2026-04-19) |
 | ADPT-05 | Phase 2 | Complete (02-05 claude-routines adapter + 7 Vitest blocks, commits 62bdaa7 + d7223a8, 2026-04-19) |
-| ADPT-06 | Phase 2 | Complete (02-06 claude-desktop adapter + 6 Vitest blocks, commit 81f68ca, 2026-04-19) |
-| ADPT-07 | Phase 2 | Complete (02-07, fbda124) |
+| ADPT-06 | Phase 2 | Complete (02-06 claude-desktop adapter + 6 Vitest blocks, commit 81f68ca, 2026-04-19; Q1 Desktop Schedule-tab pickup smoke pending — test/manual/claude-desktop-smoke.md) |
+| ADPT-07 | Phase 2 | Complete (02-07 codex adapter + 6 Vitest blocks, commit fbda124, 2026-04-19; real-Mac launchctl/audit smoke pending — test/manual/codex-adapter-smoke.md) |
 | ADPT-08 | Phase 2 | Complete (02-08 gemini adapter + 7 Vitest blocks, commit 72c6f69, 2026-04-19) |
 | ADPT-09 | Phase 2 | Complete (02-09 registry swap + HealthStatus.warning amendment + adapter-registry.test.ts, commits db1e65d + a2f0563 + fc2b84a + 78eaaf7, 2026-04-19) |
 | EDIT-01 | Phase 3 | Pending |
@@ -153,4 +153,4 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 
 ---
 *Requirements defined: 2026-04-18*
-*Last updated: 2026-04-18 after Plan 01-04 execution (Phase 1 exit gate passed; ADPT-01 + ADPT-02 sealed)*
+*Last updated: 2026-04-19 after Phase 2 Plan 10 execution (Phase 2 automated exit gate green; ADPT-03..09 + SAFE-02 code complete; manual smoke tests for codex (real launchctl bootstrap) + claude-desktop (Q1 Schedule-tab observation) deferred to user — contracts at test/manual/codex-adapter-smoke.md + test/manual/claude-desktop-smoke.md; results will be recorded in .planning/phases/02-adapters/02-SUMMARY.md after user executes)*
