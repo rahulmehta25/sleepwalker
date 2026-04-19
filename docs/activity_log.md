@@ -1,5 +1,31 @@
 # Activity Log
 
+## 2026-04-19 06:45 EST
+
+### User Prompt
+"Execute Phase 3 Plan 03-04 (atomic-write.ts directory-swap helper + 7-scenario test matrix) for Sleepwalker v0.2."
+
+### Actions Taken
+- Created `dashboard/tests/atomic-write.test.ts` — TDD RED first; 157 lines, 8 `it()` blocks in a single `describe("atomicWriteBundle")`: (1) happy-path 2 files with content roundtrip, (2) utf8 multibyte + newlines roundtrip, (3) pre-existing finalDir → errorCode:collision + no `.already-here.tmp-*` sibling leakage, (4) auto-created nested parent (`deeply/nested/...`), (5) mid-write io failure via null-byte filename → errorCode:io + no tmp siblings remain + finalDir absent, (6) permission via `chmod 0o555` parent → errorCode accepts permission OR io (kernel-dependent), (7) error-string populated on collision, (8) mode bits non-executable (0o111 === 0). `afterEach` chmods back to 0o755 before `rm-rf` to defend against test-6 leaving a read-only tree.
+- Verified RED: `pnpm test atomic-write.test.ts` → all 8 fail with `Cannot find module '@/lib/atomic-write'` as expected.
+- Created `dashboard/lib/atomic-write.ts` — 85 lines; exports `AtomicWriteResult` discriminated result type + `atomicWriteBundle(finalDir, files): AtomicWriteResult`. Algorithm: (1) pre-flight `fs.existsSync(finalDir)` → collision with NO tmp creation, (2) `fs.mkdirSync(parent, recursive)` with EACCES/EPERM → permission, (3) `fs.mkdtempSync(path.join(parent, ".${base}.tmp-"))` sibling-of-final invariant guarantees same-FS rename, (4) `fs.writeFileSync` each entry with utf8 encoding, (5) single `fs.renameSync(tmpDir, finalDir)` atomic swap. Mid-write errors: `fs.rmSync(tmpDir, recursive, force)` inside try/catch (cleanup never throws); EEXIST/ENOTEMPTY (APFS Pitfall #6) → collision; all other → io. Only POSIX-atomic-as-a-pair strategy per 03-RESEARCH.md §EDIT-02.
+- Verified GREEN: `pnpm test atomic-write.test.ts` → 8/8 pass; full suite 197 → 205 green; `pnpm typecheck` exit 0.
+- Committed as `96690b0` (`feat(03-04): add atomicWriteBundle directory-swap + 8 test scenarios`) with explicit `git add dashboard/lib/atomic-write.ts dashboard/tests/atomic-write.test.ts` — pre-existing parallel-session uncommitted changes in `cloud-cache.ts` / `codex.ts` / `gemini.ts` / `cloud-cache.test.ts` preserved untouched; zero scope bleed.
+- Created `.planning/phases/03-editor/03-04-SUMMARY.md` — 2 files / 1 commit / metrics / verification table / 8-scenario test map / EDIT-02 cross-ref / self-check PASSED.
+- Updated `.planning/ROADMAP.md` — ticked plan 03-04 box with commit hash and suite delta; Progress table Phase 3 row bumped 3/8 → 4/8 with "Wave 1 saveRoutine is last" status; footer refreshed.
+- Updated `.planning/STATE.md` — Current Position flipped 3/8 → 4/8, Phase 3 progress bar bumped to `[####----]`, suite-size line bumped 197 → 205, added Plan 03-04 row in performance metrics table, refreshed Last updated header.
+- Updated `.planning/phases/03-editor/03-VALIDATION.md` — row 6 (EDIT-02 atomic-write directory-swap) Task ID flipped from `TBD` to `3-04-01`, File Exists flipped to ✅, Status flipped to ✅ green 2026-04-19.
+- Verified v0.1 frozen-surface diff: `git diff HEAD~1 -- install.sh hooks/ routines-local/ routines-cloud/ bin/sleepwalker-execute dashboard/lib/queue.ts dashboard/lib/audit.ts` → 0 lines.
+
+### Files Modified
+- `dashboard/lib/atomic-write.ts` (created, 85 lines)
+- `dashboard/tests/atomic-write.test.ts` (created, 157 lines)
+- `.planning/phases/03-editor/03-04-SUMMARY.md` (created)
+- `.planning/phases/03-editor/03-VALIDATION.md` (row 6 flipped to 3-04-01 ✅)
+- `.planning/ROADMAP.md` (plan 03-04 box ticked; Phase 3 progress row bumped 3/8 → 4/8; footer refreshed)
+- `.planning/STATE.md` (Current Position + progress bar + performance metrics + suite-size + Last updated header refreshed)
+- `docs/activity_log.md` (this entry)
+
 ## 2026-04-19 06:15 EST
 
 ### User Prompt

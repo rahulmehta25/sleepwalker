@@ -1,7 +1,7 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-19 after Phase 3 Plan 03 sequential execution (bundles.ts read-side directory enumeration landed: `dashboard/lib/bundles.ts` (177 lines) exports 6 public symbols — `listBundles()` + `hasBundle(runtime,slug)` + `hasBundleAnyRuntime(slug)` + `readBundle(runtime,slug)` + `BundleDescriptor` + `RoutineBundleRead` types. Uses `RUNTIME_ROOT` map (NOT toBundleDir) on the read path so v0.1 slug prefixes `sleepwalker-*` + `_test-zen` enumerate cleanly. Tolerant parse: gray-matter for claude-desktop/claude-routines SKILL.md, JSON.parse for codex/gemini config.json; all errors → null, never throws. `hasBundleAnyRuntime` iterates RUNTIMES tuple order → first-match wins, enables Plan 03-05 cross-runtime collision check. `dashboard/tests/bundles.test.ts` (210 lines) adds 18 `it()` blocks across 4 describe groups (listBundles × 6, hasBundle × 5, hasBundleAnyRuntime × 3, readBundle × 4) including a dedicated `_test-zen` v0.1-prefix-preservation test. Suite 179 → 197 green, typecheck exit 0. Single commit `509adb0`. 03-VALIDATION row 20 flips to `3-03-01 ✅ green`. Plan 03-05 saveRoutine + checkSlugAvailability fully unblocked.)
+**Last updated:** 2026-04-19 after Phase 3 Plan 04 sequential execution (atomic-write.ts directory-swap helper landed: `dashboard/lib/atomic-write.ts` (85 lines) exports 2 public symbols — `atomicWriteBundle(finalDir, files)` + `AtomicWriteResult` discriminated result type. Directory-swap algorithm: pre-flight `fs.existsSync(finalDir)` collision check (no tmp creation on collision) → `fs.mkdirSync(parent, recursive)` with EACCES/EPERM→permission mapping → `fs.mkdtempSync(path.join(parent, ".${base}.tmp-"))` sibling-of-final invariant guarantees same-FS rename → `fs.writeFileSync` each entry with utf8 encoding → single `fs.renameSync(tmpDir, finalDir)` atomic swap. Mid-write errors trigger best-effort `fs.rmSync(tmpDir, recursive, force)` inside try/catch so cleanup never throws. APFS Pitfall #6 handled: EEXIST/ENOTEMPTY during rename → errorCode:collision; all other → io. `dashboard/tests/atomic-write.test.ts` (157 lines) adds 8 `it()` blocks: happy path (2 files + content roundtrip), utf8 multibyte + newlines, pre-existing collision (no `.<base>.tmp-*` leakage), auto-created nested parent, mid-write io failure via null-byte filename (cleanup verified + finalDir absent), permission error via chmod 0o555 parent, error-string-populated, mode bits non-executable. Suite 197 → 205 green, typecheck exit 0. Single commit `96690b0`. 03-VALIDATION row 6 flips to `3-04-01 ✅ green`. Plan 03-05 saveRoutine now fully dep-cleared — atomic-write + secret-scan + zod schema + hasBundleAnyRuntime all live.)
 
 ## Project Reference
 
@@ -13,8 +13,8 @@
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
 **Phase:** 3 — Editor (IN PROGRESS: Wave 0 fully sealed + 03-03 landed 2026-04-19; 5 plans remain)
-**Plan:** 03-03 complete (commit `509adb0` feat bundles.ts read-side enumeration + 18-block test matrix). Next: any of 03-04 (atomic-write.ts directory-swap helper) / 03-05 (saveRoutine + checkSlugAvailability Server Action — now unblocked since bundles.ts hasBundle + hasBundleAnyRuntime are live).
-**Status:** Phase 3 execution in progress — 3/8 plans done (38%). Wave 0 COMPLETE (03-01 + 03-02). Wave 1 half-done (03-03 landed; 03-04 + 03-05 next). Plan 03-05 saveRoutine now fully dep-cleared; 03-04 is parallel-safe with 03-05.
+**Plan:** 03-04 complete (commit `96690b0` feat atomic-write.ts directory-swap + 8-block test matrix). Next: 03-05 (saveRoutine + checkSlugAvailability Server Action — ALL deps now live: atomic-write + secret-scan + zod schema + hasBundleAnyRuntime).
+**Status:** Phase 3 execution in progress — 4/8 plans done (50%). Wave 0 COMPLETE (03-01 + 03-02). Wave 1 almost done (03-03 + 03-04 landed; only 03-05 remains). All atomic primitives for saveRoutine are now on disk.
 
 **Milestone progress:**
 ```
@@ -33,7 +33,7 @@
 
 **Phase 3 progress:**
 ```
-[###-----] 3/8 plans complete (03-01 done 2026-04-19 — zod schema + jsdom test env; 03-02 done 2026-04-19 — 11-pattern shared secret scanner; 03-03 done 2026-04-19 — bundles.ts read-side enumeration + 18 tests)
+[####----] 4/8 plans complete (03-01 done 2026-04-19 — zod schema + jsdom test env; 03-02 done 2026-04-19 — 11-pattern shared secret scanner; 03-03 done 2026-04-19 — bundles.ts read-side enumeration + 18 tests; 03-04 done 2026-04-19 — atomic-write.ts directory-swap + 8 tests)
 ```
 
 ## Performance Metrics
@@ -47,7 +47,7 @@
 | Plans complete | 14 (01-01..04 + 02-01..10 — 02-10 automated portion shipped, 2 manual smokes deferred) |
 | Requirements complete | 10/32 — code complete: ADPT-01, ADPT-02, ADPT-03, ADPT-04, ADPT-05, ADPT-06, ADPT-07, ADPT-08, ADPT-09, SAFE-02 (ADPT-03/06/07 tagged "manual smoke pending" in REQUIREMENTS.md traceability — contracts at test/manual/codex-adapter-smoke.md + test/manual/claude-desktop-smoke.md) |
 | v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d (2026-04-18) AND PHASE2_BASE 0ec59df (parent of e14bbe6; first launchd-writer.ts commit); dynamic resolution via `git log --reverse --diff-filter=A -- dashboard/lib/runtime-adapters/launchd-writer.ts | head -1`; frozen-surface diff 0 lines after 02-10 automated gate (20 enumerated v0.1 paths checked) |
-| Dashboard test suite | 197/197 green after Phase 3 Plan 03 (Phase 3 plan-02 closed at 179/179; +18 new from bundles.test.ts listBundles/hasBundle/hasBundleAnyRuntime/readBundle matrix) |
+| Dashboard test suite | 205/205 green after Phase 3 Plan 04 (Phase 3 plan-03 closed at 197/197; +8 new from atomic-write.test.ts happy/utf8/collision/auto-parent/io-cleanup/permission/error-populated/mode-bits matrix) |
 | Supervisor harness | 24 PASS / 0 FAIL / exit 0 (`bash hooks/tests/supervisor-tests.sh` → `all supervisor tests passed`) |
 
 | Plan | Duration | Tasks | Files | Commit |
@@ -69,6 +69,7 @@
 | 03-01 | ~3 min | 2 | 5 | 104547f (deps + vitest) + 8286db4 (schema + tests) |
 | 03-02 | ~5 min | 2 | 3 | 64fb6ec (secret-patterns.ts) + 891e2f3 (secret-scan.ts + tests) |
 | 03-03 | ~5 min | 1 | 2 | 509adb0 (bundles.ts + bundles.test.ts) |
+| 03-04 | ~4 min | 1 | 2 | 96690b0 (atomic-write.ts + atomic-write.test.ts) |
 
 ## Accumulated Context
 
