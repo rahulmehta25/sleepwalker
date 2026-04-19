@@ -1,20 +1,20 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-19 after Phase 2 Plan 04 execution (hooks/tests/supervisor-tests.sh bash harness shipped — Wave 1 complete; VALIDATION.md rows 2-03-01..06 green)
+**Last updated:** 2026-04-19 after Phase 2 Plan 05 execution (claude-routines.ts adapter + 7 Vitest blocks shipped — first Wave 2 adapter green; VALIDATION.md rows 2-04-01..03 green; dashboard suite 72 -> 79 tests)
 
 ## Project Reference
 
 **Core value:** Write a prompt + pick a schedule + pick a runtime -> click once -> a live agent exists on that runtime, scheduled, audited, and reviewed from one place. No copy-paste, no terminal, no multi-step wiring.
 
-**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 4 complete (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor, 02-04 supervisor-tests harness), 6 remaining. **Wave 1 complete.**
+**Current focus:** Phase 2 Adapters — ship 4 runtime adapters + launchd writer + bash supervisor so every target runtime can be deployed and probed. 10 plans authored across 4 waves; 5 complete (02-01 slug guard, 02-02 launchd-writer, 02-03 supervisor, 02-04 supervisor-tests harness, 02-05 claude-routines adapter), 5 remaining. **Wave 1 complete. Wave 2 underway — 1 of 4 adapters green.**
 
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
 **Phase:** 2 — Adapters (in progress)
-**Plan:** 4/10 complete — 02-04 shipped `hooks/tests/supervisor-tests.sh` (275-line bash integration harness, mode 100755, 6 scenarios, 24 PASS / 0 FAIL, `all supervisor tests passed` line); Wave 1 complete. Wave 2 (four adapter plans) is the next critical path.
-**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-05 (claude-routines adapter)
+**Plan:** 5/10 complete — 02-05 shipped `dashboard/lib/runtime-adapters/claude-routines.ts` (105 lines) + `dashboard/tests/claude-routines.test.ts` (183 lines, 7 Vitest blocks); dashboard suite 72 → 79 green; ADPT-05 sealed. Wave 2 remaining: 02-06 (claude-desktop), 02-07 (codex), 02-08 (gemini) — all three runnable in parallel.
+**Status:** Phase 2 execution underway — next: `/gsd-execute-phase 2` → 02-06 (claude-desktop adapter)
 
 **Milestone progress:**
 ```
@@ -28,7 +28,7 @@
 
 **Phase 2 progress:**
 ```
-[####------] 4/10 plans complete (02-01 + 02-02 + 02-03 + 02-04 shipped; Wave 1 complete; 02-05..02-10 pending)
+[#####-----] 5/10 plans complete (02-01 + 02-02 + 02-03 + 02-04 + 02-05 shipped; Wave 1 complete; Wave 2 underway — claude-routines green, claude-desktop/codex/gemini pending; 02-06..02-10 pending)
 ```
 
 ## Performance Metrics
@@ -39,10 +39,10 @@
 | Phases defined | 6 |
 | Phases complete | 1/6 (Phase 1 Foundation sealed) |
 | Plans authored | 14 (Phase 1: 4, Phase 2: 10) |
-| Plans complete | 8 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04) |
-| Requirements complete | 5/32 (ADPT-01, ADPT-02, ADPT-03, ADPT-04, SAFE-02 — the latter two *behaviorally* verified by 02-04 harness after 02-03 structurally sealed them) |
-| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18; frozen-surface gate 0-line diff after 02-04 (harness is new additive `hooks/tests/` file; v0.1 `run-tests.sh` untouched) |
-| Dashboard test suite | 72/72 green (unchanged — harness is bash, not TS) |
+| Plans complete | 9 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04, 02-05) |
+| Requirements complete | 6/32 (ADPT-01, ADPT-02, ADPT-03, ADPT-04, ADPT-05, SAFE-02) |
+| v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d verified 2026-04-18; frozen-surface gate 0-line diff after 02-05 (new additive `claude-routines.ts` + `claude-routines.test.ts`; no v0.1 files touched) |
+| Dashboard test suite | 79/79 green (+7 new from 02-05: 4 describe × 7 it() in claude-routines.test.ts) |
 | Supervisor harness | 24 PASS / 0 FAIL / exit 0 (`bash hooks/tests/supervisor-tests.sh` → `all supervisor tests passed`) |
 
 | Plan | Duration | Tasks | Files | Commit |
@@ -55,6 +55,7 @@
 | 02-02 | 4 min | 4 | 3 | e14bbe6 |
 | 02-03 | 3 min | 3 | 2 | 39f7eb3 |
 | 02-04 | 6 min | 3 | 2 | 5bdb19c |
+| 02-05 | 4 min | 3 | 3 | 62bdaa7 + d7223a8 |
 
 ## Accumulated Context
 
@@ -78,6 +79,7 @@
 - **2026-04-19** — Plan 02-02 shipped `dashboard/lib/runtime-adapters/launchd-writer.ts` (226 lines): 3 type exports (`LaunchdSchedule` discriminated union, `LaunchdJob`, `InstallResult`) + 3 functions (`generatePlist` pure XML templating with 5-char escape for `&<>"'`; `installPlist` async mode-0644 write + plutil -lint gate + bootout-first + bootstrap with rollback-unlink; `uninstallPlist` async bootout + ENOENT-tolerant unlink). Backed by `dashboard/tests/launchd-writer.test.ts` (200 lines, 9 Vitest it() blocks using `vi.doMock("node:child_process")` — no real launchctl or plutil). Single atomic commit `e14bbe6` (amended to include activity log) covers both source files per v0.1 convention. Dashboard suite grew 63 → 72 passing tests. Frozen-surface diff against `e14bbe6~1` returns 0 lines. ADPT-03 sealed. Two minor auto-adds documented in SUMMARY: 9th test block for bootstrap-failure rollback (threat T-02-02-04) and try/catch-instead-of-re-throw in uninstallPlist to match AC7 single-throw cap.
 - **2026-04-19** — Plan 02-03 shipped `bin/sleepwalker-run-cli` (183 lines, mode 100755): bash supervisor with `set -euo pipefail`, `#!/bin/bash` shebang (byte-identical to v0.1 hooks), two helpers (`audit_emit` 2-arg JSON-fragment emitter; `strip_ansi` 3-class perl regex for CSI/OSC/DCS-PM-APC), five safety gates (usage-check EX_USAGE 64; bundle-preflight EX_NOINPUT 66; PATH-resolution with `/bin/zsh -l -c` then `/bin/bash -l -c` login-shell fallback chain + exit 127; sleep-window defer; reversibility policy defer), char-budget watchdog (`kill -0` liveness probe + `wc -c` poll every second + SIGTERM + SIGKILL-after-2s escalation), per-runtime static CLI_ARGS array (codex `exec - --json`; gemini `-p - --output-format stream-json --yolo`) — prompt text NEVER in argv (Pitfall 4 defeated by construction), backgrounded CLI pipeline with stderr-fold + strip_ansi + tee, terminal-event mutual exclusivity (budget_exceeded / completed / failed with exactly one emit per invocation). Single atomic commit `39f7eb3` covers supervisor + activity log per v0.1 convention. Dashboard suite stays 72/72 green (supervisor is bash-only). Two AC-grep clarifications documented in SUMMARY (same category as Plan 02-01 AC-doc notes): terminal-event regex count is 6 due to early-exit `failed` emits outside the terminal block, preview-encoder count is 4 due to explanatory comment — both behavioral intents verified via scoped grep. ADPT-04 + SAFE-02 sealed. Wave 2 codex/gemini adapters now have a real supervisor path for their `LaunchdJob.programArguments`.
 - **2026-04-19** — Plan 02-04 shipped `hooks/tests/supervisor-tests.sh` (275 lines, mode 100755): bash integration harness with `set -euo pipefail`, isolated `$HOME` via `mktemp -d -t sw-supervisor-XXXXXX`, fixture `codex` / `gemini` bash stubs in `$TEST_BIN` on prepended PATH, `reset_state()` + `make_bundle()` helpers, `assert_eq` / `assert_contains` / `assert_file_lines` helpers copied verbatim from v0.1 `hooks/tests/run-tests.sh` pattern, EXIT trap cleaning both `$TEST_HOME` and per-scenario fixture bundles. Six scenarios cover VALIDATION.md rows 2-03-01..06: (1) codex happy path with `started` + `completed` + exit 0; (2) SAFE-02 ANSI strip — raw CSI bytes absent, literal `[32m` absent, `green-prefix` payload preserved; (3) char-budget SIGTERM — runaway fixture blows through 500-byte cap, `budget_exceeded` event emits; (4) reversibility defer — red routine under balanced policy defers without emitting `started`; (5) bundle missing — exit 66 + `failed` event with `bundle not found` reason; (6) gemini happy path — second runtime arm green. Harness runs green end-to-end: `bash hooks/tests/supervisor-tests.sh` → 24 PASS / 0 FAIL / exit 0 / final line `all supervisor tests passed`. Zero real launchctl/codex/gemini invocations; bash stubs only. Single atomic commit `5bdb19c` (pre-amend `b39859d`) covers harness + activity log per v0.1 amend convention. One Rule-3 auto-fix documented in SUMMARY: runaway fixture chunks changed from raw 2000-byte blobs to newline-terminated chunks because `perl -pe` is line-oriented (without `\n` perl buffers indefinitely and the watchdog never sees OUTPUT_FILE grow past budget — supervisor itself is unchanged; real codex/gemini emit NDJSON so production flow is unaffected). ADPT-04 + SAFE-02 are now *behaviorally* verified on top of 02-03's structural ship. Wave 1 complete; Wave 2 adapter work (Plans 02-05..08) is the next critical path.
+- **2026-04-19** — Phase 3 Editor planned. `/gsd-plan-phase 3` ran research → pattern-mapper → planner → plan-checker. Artifacts: `03-RESEARCH.md` (1361 lines, commit `c343cb8`), `03-VALIDATION.md` (25 requirement-to-test rows, commit `e33d52b`), `03-PATTERNS.md` (24 files mapped to analogs, commit `2c7e190`), 9 PLAN.md files in 6 waves (commits `d64c359` plans + `7e4fbed` revision + `c8989ea` sweep). Plan-checker iteration 2 returned VERIFICATION PASSED across all 12 dimensions. EDIT-01 through EDIT-05 all covered. Hard build-order gate: plans 03-03, 03-05, 03-06 `depends_on: [phase-2-plan-02-09]`; only Wave 0 (03-01, 03-02) is safely parallel with Phase 2 execution. Net-new deps targeted: `zod@4.3.6` + `cronstrue@3.14.0` + `yaml@2.8.3` + `gray-matter@4.0.3` (runtime) and `@testing-library/react@^16` + `jsdom` (dev). Revision split: original 03-06 (6 tasks / 9 files — exceeded scope blocker) split into 03-06 (shell + RuntimeRadioGrid + CronPreview, 3 tasks) and 03-07 (SecretScanPanel + DraftRecoveryBanner + PreviewPanel, 3 tasks); old 03-07 → 03-08 EditorClient state machine; old 03-08 → 03-09 phase exit gate. Directory-swap atomic write (mkdtemp sibling + single-rename) is the only POSIX-atomic-as-a-pair write strategy and is locked as Plan 03-04. Phase 3 cannot fully execute until Phase 2 seals (02-05..02-10 pending).
 
 ### Open Todos
 
@@ -93,7 +95,8 @@
 - [ ] Execute Phase 2 Plan 05 (claude-routines.ts adapter + 7 Vitest blocks; ADPT-05) — Wave 2 kickoff — `/gsd-execute-phase 2`
 - [ ] Validate Claude Desktop scheduling via synthetic timestamp-writer test (flagged in research/SUMMARY.md Phase 1 research flag — belongs to Phase 2 Claude Desktop adapter work in Plan 02-06)
 - [x] UI-SPEC for Phase 3 Editor — approved 2026-04-19 (commits 1152375 + 961c4d3); textarea locked in, Monaco spike no longer needed per research/SUMMARY.md Phase 3 flag
-- [ ] Plan Phase 3 (Editor) with approved UI-SPEC as design context — `/gsd-plan-phase 3`
+- [x] Plan Phase 3 (Editor) with approved UI-SPEC as design context — completed 2026-04-19 (9 plans in 6 waves, commits `c343cb8` research / `e33d52b` validation / `2c7e190` patterns / `d64c359` plans + `7e4fbed` revision + `c8989ea` sweep; plan-checker VERIFICATION PASSED on iteration 2)
+- [ ] Execute Phase 3 Wave 0 in parallel with Phase 2 execution — Plans 03-01 (deps + bundle-schema) + 03-02 (secret-patterns + scan) depend only on net-new npm packages, not on runtime-adapters. Wave 1+ blocks on Phase 2 Plan 02-09 sealing
 
 ### Blockers
 
