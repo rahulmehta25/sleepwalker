@@ -89,8 +89,19 @@ Plans:
   3. Routine cards display Draft / Deployed / Drift status reading from `~/.sleepwalker/deploys/<slug>.state.json` and mtime comparison; per-routine enable/disable toggles call `bootout`/`bootstrap` and persist state in `config.json`.
   4. Clicking Save-to-repo stages only the exact files under `routines-<runtime>/<slug>/`, flock-guards the git index via `~/.sleepwalker/git.lock`, shows the user a `git diff --stat` preview before confirmation, never auto-pushes, and never sweeps up the user's unrelated uncommitted work.
   5. The dashboard landing page displays four runtime health badges (Claude Routines / Claude Desktop / Codex / Gemini) following the `brew doctor` pattern — green when ready, grey with a linked fix-instruction when not.
-**Plans**: TBD
+**Plans**: 9 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 04-01-PLAN.md -- deps (simple-git + proper-lockfile) + deploy-state.ts atomic I/O + drift math + 10 it() blocks (DEPL-01 + DEPL-03)
+- [ ] 04-02-PLAN.md -- save-to-repo.ts simple-git + proper-lockfile wrapper + never-push + real-git-repo tests (REPO-01)
+- [ ] 04-03-PLAN.md -- /api/health/all Route Handler with 2s per-adapter timeout + Promise.allSettled (HLTH-01 server)
+- [ ] 04-04-PLAN.md -- routines/actions.ts 4 deploy-family Server Actions (deploy state machine + rollback + runNow + setEnabled) (DEPL-01..05)
+- [ ] 04-05-PLAN.md -- routines/actions.ts 3 save-to-repo Server Action wrappers + integration round-trip (REPO-01)
+- [ ] 04-06-PLAN.md -- HealthBadgeRow + HealthBadge client components with 60s cache + focus refetch + manual refresh (HLTH-01 client)
+- [ ] 04-07-PLAN.md -- DeployProgressDrawer + DeployStepPill + StatusPill + RunNowButton with framer-motion + 500ms polling (DEPL-01..04)
+- [ ] 04-08-PLAN.md -- SaveToRepoModal two-stage Review->Confirm + DiffStatPanel + ConfirmDialog (REPO-01 + DEPL-05)
+- [ ] 04-09-PLAN.md -- route integration (routines/page + routines-client + landing page) + RoutineActionBar + Phase 4 exit gate (all 7 requirements)
 
 ### Phase 5: Queue
 **Goal**: Extend the Morning Queue and audit surface so Codex and Gemini runs produce normalized, ANSI-stripped, flock-protected JSONL that flows through every existing v0.1 consumer without code changes.
