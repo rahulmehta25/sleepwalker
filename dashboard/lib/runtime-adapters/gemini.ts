@@ -175,7 +175,10 @@ export const geminiAdapter: RuntimeAdapter = {
 
       const job: LaunchdJob = {
         label,
-        programArguments: [supervisor, "gemini", bundle.slug],
+        // bundle.bundlePath is the 4th arg so the staged supervisor resolves
+        // prompt.md + config.json without relying on $(dirname $0)/.. which
+        // after Plan 02-11 staging points to ~/.sleepwalker, not the repo.
+        programArguments: [supervisor, "gemini", bundle.slug, bundle.bundlePath],
         schedule: parseCron(bundle.schedule),
         stdoutPath: path.join(logsDir, `${label}.out`),
         stderrPath: path.join(logsDir, `${label}.err`),

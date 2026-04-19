@@ -139,8 +139,12 @@ describe("geminiAdapter.deploy", () => {
     );
     expect(xml).not.toContain("GEMINI_API_KEY");
     expect(xml).toContain("<key>NO_COLOR</key>");
-    // Plan 02-11: programArguments[0] is now the staged supervisor path
+    // Plan 02-11: programArguments[0] is now the staged supervisor path.
+    // Follow-up: 4th arg is bundle absolute path so staged supervisor can
+    // resolve prompt.md without $(dirname $0)/.. pointing at ~/.sleepwalker.
     expect(xml).toContain("/tmp/stubbed-supervisor");
+    expect(xml).toContain("<string>gemini</string>");
+    expect(xml).toMatch(/<string>[^<]*\/routines-gemini\/[^<]*<\/string>/);
   });
 
   it("emits TCC warning when bundlePath is under ~/Desktop/", async () => {

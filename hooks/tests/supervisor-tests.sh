@@ -257,6 +257,44 @@ assert_contains "s6: runtime is gemini"       '"runtime":"gemini"'  "$(cat "$HOM
 assert_contains "s6: fleet is gemini/test-basic" '"fleet":"gemini/test-basic"' "$(cat "$HOME/.sleepwalker/audit.jsonl")"
 
 # =============================================================================
+# Scenario 7: explicit bundle_dir arg ($3 override) — Plan 02-11 follow-up.
+# Staged supervisor at ~/.sleepwalker/bin/... cannot derive REPO_ROOT from
+# $(dirname $0)/.. The adapter must pass bundle.bundlePath as $3 so the
+# supervisor reads prompt.md from the real bundle location, not
+# ~/.sleepwalker/routines-codex/<slug>/.
+# =============================================================================
+echo "==> scenario 7: explicit bundle_dir arg overrides derived REPO_ROOT"
+reset_state
+# Create fixture bundle in a location that is NOT $REPO_ROOT/routines-codex/
+# so the only way the supervisor finds it is via the $3 override.
+S7_BUNDLE_DIR="$TEST_HOME/custom-bundles/codex/s7-explicit"
+mkdir -p "$S7_BUNDLE_DIR"
+cat > "$S7_BUNDLE_DIR/prompt.md" <<'EOF'
+scenario 7 prompt via explicit bundle_dir
+EOF
+cat > "$S7_BUNDLE_DIR/config.json" <<'EOF'
+{"reversibility":"yellow","char_budget":40000}
+EOF
+set +e
+SLEEPWALKER_MODE=overnight "$SUPERVISOR" codex s7-explicit "$S7_BUNDLE_DIR" >/dev/null
+SCEN7_EXIT=$?
+set -e
+assert_eq "s7: supervisor exits 0 when \$3 points to real bundle"  "0" "$SCEN7_EXIT"
+assert_file_lines "s7: audit has 2 lines (started + completed)"    "2" "$HOME/.sleepwalker/audit.jsonl"
+assert_contains "s7: fleet is codex/s7-explicit"  '"fleet":"codex/s7-explicit"' "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+
+# Negative control: without $3, the supervisor derives REPO_ROOT from
+# $(dirname $0)/.. (which is the real repo here, so
+# $REPO_ROOT/routines-codex/s7-explicit doesn't exist).
+echo "==> scenario 7b: missing \$3 with non-derivable bundle -> exit 66"
+reset_state
+set +e
+SLEEPWALKER_MODE=overnight "$SUPERVISOR" codex s7-explicit >/dev/null 2>&1
+SCEN7B_EXIT=$?
+set -e
+assert_eq "s7b: supervisor exits 66 (EX_NOINPUT) when derived bundle missing" "66" "$SCEN7B_EXIT"
+
+# =============================================================================
 # Summary
 # =============================================================================
 echo ""

@@ -88,11 +88,18 @@ describe("codexAdapter.deploy", () => {
     const stat = fsSync.statSync(result.artifact!);
     expect(stat.mode & 0o777).toBe(0o644);
     // Plist content excludes OPENAI_API_KEY (Pitfall #2) and points
-    // programArguments[0] at the staged supervisor (Plan 02-11)
+    // programArguments[0] at the staged supervisor (Plan 02-11).
+    // Post-02-11 follow-up: programArguments has 4 elements (supervisor,
+    // runtime, slug, bundlePath) so the staged supervisor can resolve
+    // prompt.md without $(dirname $0)/.. pointing at ~/.sleepwalker.
     const xml = fsSync.readFileSync(result.artifact!, "utf8");
     expect(xml).not.toContain("OPENAI_API_KEY");
     expect(xml).toContain("<key>NO_COLOR</key>");
     expect(xml).toContain("/tmp/stubbed-supervisor");
+    expect(xml).toContain("<string>codex</string>");
+    expect(xml).toContain("<string>morning-brief</string>");
+    // 4th arg: the bundle absolute path
+    expect(xml).toMatch(/<string>[^<]*\/routines-codex\/morning-brief<\/string>/);
     // Call ordering: plutil → bootout → bootstrap
     const cmds = execCalls.map((c) => `${c.cmd} ${c.args[0] ?? ""}`);
     expect(cmds).toEqual(

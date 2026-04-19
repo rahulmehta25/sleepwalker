@@ -5,7 +5,15 @@
 # for v0.2 Codex/Gemini scheduled jobs.
 #
 # USAGE (launchd and Run-now both use this form):
-#   /abs/path/bin/sleepwalker-run-cli <runtime> <slug>
+#   /abs/path/bin/sleepwalker-run-cli <runtime> <slug> [bundle_dir]
+#
+# The optional [bundle_dir] third argument is the absolute path to the bundle
+# directory (routines-<runtime>/<slug>). Adapters pass it explicitly so the
+# supervisor resolves prompt.md + config.json correctly when invoked from a
+# staged supervisor copy in ~/.sleepwalker/bin/ (where $(dirname $0)/.. would
+# otherwise resolve to ~/.sleepwalker, not the repo). Omitted for backward
+# compatibility with direct invocations of bin/sleepwalker-run-cli from inside
+# the repo tree — those still work.
 #
 # INVARIANTS (enforced by this script):
 #   - User prompt text NEVER touches argv or a shell-expanded string (Pitfall #4).
@@ -25,12 +33,22 @@ set -euo pipefail
 # --- Inputs ---
 RUNTIME="${1:-}"   # "codex" | "gemini"
 SLUG="${2:-}"
-[ -z "$RUNTIME" ] && { echo "usage: $0 <runtime> <slug>" >&2; exit 64; }
-[ -z "$SLUG" ]    && { echo "usage: $0 <runtime> <slug>" >&2; exit 64; }
+BUNDLE_ARG="${3:-}"  # Optional absolute bundle path; when empty we derive from $(dirname $0)/..
+[ -z "$RUNTIME" ] && { echo "usage: $0 <runtime> <slug> [bundle_dir]" >&2; exit 64; }
+[ -z "$SLUG" ]    && { echo "usage: $0 <runtime> <slug> [bundle_dir]" >&2; exit 64; }
 
 # --- Paths ---
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BUNDLE_DIR="${REPO_ROOT}/routines-${RUNTIME}/${SLUG}"
+# When bundle_dir is passed as $3 (adapter deploy flow post-staging), use it
+# verbatim. Otherwise fall back to the v0.1-era $(dirname $0)/.. derivation so
+# direct invocations from inside the repo (developer-run, supervisor-tests.sh
+# harness) keep working.
+if [ -n "$BUNDLE_ARG" ]; then
+  BUNDLE_DIR="$BUNDLE_ARG"
+  REPO_ROOT="$(cd "$(dirname "$BUNDLE_DIR")/.." && pwd 2>/dev/null || echo "")"
+else
+  REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+  BUNDLE_DIR="${REPO_ROOT}/routines-${RUNTIME}/${SLUG}"
+fi
 PROMPT_FILE="${BUNDLE_DIR}/prompt.md"
 CONFIG_FILE="${BUNDLE_DIR}/config.json"
 AUDIT_FILE="${HOME}/.sleepwalker/audit.jsonl"

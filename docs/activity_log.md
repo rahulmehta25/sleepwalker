@@ -512,3 +512,16 @@
 - Iteration 2 revision (commit `c4fa4b3`): 04-08 `wave: 2 → 3`; 04-09 `wave: 3 → 4`.
 - Plan-checker iteration 3: VERIFICATION PASSED across all 12 dimensions.
 - Updated `.planning/STATE.md`: appended Phase 4 planning decision to Decisions block, flipped Phase 4 planning todo complete, added Phase 4 execution todo.
+
+## 2026-04-19 19:28 EST
+
+### User Prompt
+"Plan 02-11's staging changed *where* the supervisor lives but didn't update *how* the supervisor finds the bundle. User's re-run from ~/Desktop/ saw audit.jsonl event=failed reason=bundle not found because $(dirname $0)/.. now resolves to ~/.sleepwalker, not the repo."
+
+### Actions Taken
+- Modified `bin/sleepwalker-run-cli`: accepted optional `$3` as absolute `BUNDLE_DIR`. Supervisor falls back to v0.1-era `$(dirname $0)/..` derivation when `$3` is empty (backward compatible with direct invocations and supervisor-tests.sh scenarios 1-6).
+- Modified `dashboard/lib/runtime-adapters/codex.ts`: `programArguments` now `[supervisor, "codex", bundle.slug, bundle.bundlePath]` — explicit 4th arg.
+- Modified `dashboard/lib/runtime-adapters/gemini.ts`: same 4-arg pattern.
+- Extended `dashboard/tests/codex.test.ts` + `dashboard/tests/gemini.test.ts` happy-path assertions: plist XML must contain `<string>codex|gemini</string>` AND `<string>…/routines-<runtime>/<slug></string>` byte-on-disk.
+- Extended `hooks/tests/supervisor-tests.sh`: added scenarios 7 (explicit `$3` bundle_dir resolves bundle outside derived REPO_ROOT) and 7b (missing `$3` with non-derivable bundle → exit 66 EX_NOINPUT). Harness grows 24 → 28 passes.
+- `pnpm typecheck` exit 0; `pnpm test` 262/262 green (no regressions); `bash hooks/tests/supervisor-tests.sh` 28/0; frozen-surface diff stays 0.
