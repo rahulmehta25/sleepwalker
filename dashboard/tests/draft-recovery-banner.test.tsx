@@ -5,6 +5,34 @@ import { DraftRecoveryBanner } from "@/app/editor/_components/draft-recovery-ban
 
 afterEach(cleanup);
 
+// Node 25 ships an experimental `globalThis.localStorage` that leaks into
+// jsdom's Window, leaving `window.localStorage` as a plain {} without a
+// Storage prototype (no .getItem / .setItem / .clear). Install a Map-backed
+// Storage-compatible stub so the component and assertions exercise the same
+// object. This only affects this test file — production code runs in real
+// browsers where window.localStorage is the real Storage.
+const makeStorage = (): Storage => {
+  const m = new Map<string, string>();
+  return {
+    get length() {
+      return m.size;
+    },
+    clear: () => m.clear(),
+    getItem: (k: string) => (m.has(k) ? (m.get(k) as string) : null),
+    setItem: (k: string, v: string) => {
+      m.set(k, String(v));
+    },
+    removeItem: (k: string) => {
+      m.delete(k);
+    },
+    key: (i: number) => Array.from(m.keys())[i] ?? null,
+  } satisfies Storage;
+};
+Object.defineProperty(window, "localStorage", {
+  configurable: true,
+  value: makeStorage(),
+});
+
 const validDraft = {
   version: 1,
   updatedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
@@ -21,7 +49,10 @@ const validDraft = {
 
 describe("DraftRecoveryBanner", () => {
   beforeEach(() => {
-    localStorage.clear();
+    // Node 25 ships an experimental localStorage global that can shadow
+    // jsdom's implementation. Always go through window.localStorage so
+    // tests exercise the same object the component sees.
+    window.localStorage.clear();
   });
 
   it("renders null when no draft in localStorage", () => {
@@ -35,7 +66,7 @@ describe("DraftRecoveryBanner", () => {
   });
 
   it("renders banner when valid draft present", () => {
-    localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
+    window.localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
     render(
       <DraftRecoveryBanner
         onRestore={() => {}}
@@ -48,7 +79,7 @@ describe("DraftRecoveryBanner", () => {
   });
 
   it("calls onRestore with draft fields when Restore draft clicked", () => {
-    localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
+    window.localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
     const onRestore = vi.fn();
     render(
       <DraftRecoveryBanner
@@ -65,7 +96,7 @@ describe("DraftRecoveryBanner", () => {
   });
 
   it("calls onStartFresh when Start fresh clicked", () => {
-    localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
+    window.localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
     const onStartFresh = vi.fn();
     render(
       <DraftRecoveryBanner
@@ -78,7 +109,7 @@ describe("DraftRecoveryBanner", () => {
   });
 
   it("renders null when localStorage has malformed JSON", () => {
-    localStorage.setItem("sleepwalker.draft.v1", "{bad json");
+    window.localStorage.setItem("sleepwalker.draft.v1", "{bad json");
     const { container } = render(
       <DraftRecoveryBanner
         onRestore={() => {}}
@@ -89,7 +120,7 @@ describe("DraftRecoveryBanner", () => {
   });
 
   it("disappears after user clicks Start fresh and clears localStorage", () => {
-    localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
+    window.localStorage.setItem("sleepwalker.draft.v1", JSON.stringify(validDraft));
     const { container } = render(
       <DraftRecoveryBanner
         onRestore={() => {}}
@@ -98,6 +129,6 @@ describe("DraftRecoveryBanner", () => {
     );
     fireEvent.click(screen.getByText("Start fresh"));
     expect(container.innerHTML).toBe("");
-    expect(localStorage.getItem("sleepwalker.draft.v1")).toBeNull();
+    expect(window.localStorage.getItem("sleepwalker.draft.v1")).toBeNull();
   });
 });
