@@ -223,6 +223,7 @@ describe("geminiAdapter.healthCheck", () => {
     expect(result.version).toContain("(quota: my-test-project)");
     expect(result.version).toContain("[auth: google-signin]");
     expect(result.reason).toBeUndefined();
+    expect(result.warning).toBeUndefined();
   });
 
   it("warns when GOOGLE_APPLICATION_CREDENTIALS and GEMINI_API_KEY both set", async () => {
@@ -246,10 +247,10 @@ describe("geminiAdapter.healthCheck", () => {
     const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
     const result = await geminiAdapter.healthCheck();
     expect(result.available).toBe(true);
-    expect(result.reason).toBeDefined();
-    expect(result.reason).toMatch(/^WARN: /);
-    expect(result.reason).toContain("GOOGLE_APPLICATION_CREDENTIALS");
-    expect(result.reason).toContain("GEMINI_API_KEY");
+    expect(result.warning).toBeDefined();
+    expect(result.warning).toContain("GOOGLE_APPLICATION_CREDENTIALS");
+    expect(result.warning).toContain("GEMINI_API_KEY");
+    expect(result.reason).toBeUndefined();  // Plan 09 amendment: warning field separates warn-but-allow from unavailable
   });
 
   it("warns when quota project unconfigured (no settings.json)", async () => {
@@ -268,7 +269,8 @@ describe("geminiAdapter.healthCheck", () => {
     const { geminiAdapter } = await import("@/lib/runtime-adapters/gemini");
     const result = await geminiAdapter.healthCheck();
     expect(result.available).toBe(true);
-    expect(result.reason).toMatch(/^WARN: /);
-    expect(result.reason).toContain("quota project");
+    expect(result.warning).toBeDefined();
+    expect(result.warning).toContain("quota project");
+    expect(result.reason).toBeUndefined();
   });
 });

@@ -22,9 +22,10 @@
 // Pitfall #4: prompt NEVER enters argv. Plist ProgramArguments is
 // [supervisor, runtime, slug] only; supervisor reads prompt.md via stdin.
 //
-// Auth-conflict (D-04 warn-but-allow): healthCheck surfaces conflicts via
-// "WARN: " prefix in `reason` (same temporary encoding as codex.ts; Plan
-// 02-09 migrates to a dedicated `warning` field on HealthStatus).
+// Auth-conflict (D-04 warn-but-allow): healthCheck sets the optional
+// `warning` field on HealthStatus when conflicts are detected
+// (GOOGLE_APPLICATION_CREDENTIALS + GEMINI_API_KEY both set, or missing
+// quota project). Dashboard renders yellow badge + tooltip from `warning`.
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -274,10 +275,7 @@ export const geminiAdapter: RuntimeAdapter = {
       runtime: "gemini",
       available: true,
       version: versionFinal,
-      // WARN: prefix is the temporary encoding until Plan 02-09 adds a
-      // dedicated `warning?: string` field. Convention: when available=true
-      // and reason is set, it's a warning (not a failure).
-      reason: warning ? `WARN: ${warning}` : undefined,
+      warning,  // undefined when no conflict; set to warning string when SAC+API-key conflict or missing quota (Plan 09 added this field)
     };
   },
 };

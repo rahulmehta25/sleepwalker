@@ -170,6 +170,7 @@ describe("codexAdapter.healthCheck", () => {
     expect(result.available).toBe(true);
     expect(result.version).toBe("codex-cli 0.118.0");
     expect(result.reason).toBeUndefined();
+    expect(result.warning).toBeUndefined();
   });
 
   it("warn-but-allow on auth conflict: ~/.codex/auth.json + OPENAI_API_KEY both present", async () => {
@@ -189,9 +190,9 @@ describe("codexAdapter.healthCheck", () => {
     const { codexAdapter } = await import("@/lib/runtime-adapters/codex");
     const result = await codexAdapter.healthCheck();
     expect(result.available).toBe(true);
-    expect(result.reason).toBeDefined();
-    expect(result.reason).toMatch(/^WARN: /);
-    expect(result.reason).toContain("OPENAI_API_KEY");
+    expect(result.warning).toBeDefined();
+    expect(result.warning).toContain("OPENAI_API_KEY");
+    expect(result.reason).toBeUndefined();  // reason is for unavailable; warning is for available+warning (Plan 09 amendment)
   });
 
   it("reports unavailable when codex --version fails", async () => {

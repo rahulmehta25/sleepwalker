@@ -15,13 +15,11 @@
 // Pitfall #4: prompt NEVER enters argv. Plist ProgramArguments is
 // [supervisor, runtime, slug] only; supervisor reads prompt.md via stdin.
 //
-// Auth-conflict (D-04 warn-but-allow): healthCheck parses
-// ~/.codex/config.toml for preferred_auth_method, checks
-// ~/.codex/auth.json + $OPENAI_API_KEY simultaneously; when both
-// subscription and env-key are present without preferred=apikey,
-// surfaces "WARN:" reason. Plan 09 adds a dedicated `warning` field
-// to HealthStatus; this adapter encodes the warning into `reason` for
-// now (cross-Plan-09 the encoding moves to the new field).
+// Auth-conflict (D-04 warn-but-allow): healthCheck sets the optional
+// `warning` field on HealthStatus when a subscription-vs-env-key conflict
+// is detected (~/.codex/auth.json + $OPENAI_API_KEY both present without
+// preferred_auth_method="apikey" in ~/.codex/config.toml). Dashboard
+// renders yellow badge + tooltip from `warning`.
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -215,9 +213,7 @@ export const codexAdapter: RuntimeAdapter = {
       runtime: "codex",
       available: true,
       version,
-      // Encode warning in `reason` until Plan 09 adds dedicated `warning?: string` field.
-      // Convention: when available=true and reason is set, it's a warning (not a failure).
-      reason: warning ? `WARN: ${warning}` : undefined,
+      warning,  // undefined when no conflict; set to the warning string when conflict detected (Plan 09 added this field)
     };
   },
 };
