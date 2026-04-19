@@ -55,7 +55,7 @@ source: derived from 03-RESEARCH.md §Validation Architecture (commit c343cb8)
 | TBD | TBD | 2 | EDIT-03 | — | Autosave hook debounces 500ms and writes `sleepwalker.draft.v1` | integration (jsdom) | `cd dashboard && pnpm test editor-client.test.tsx -t "autosave"` | ❌ Wave 2 | ⬜ pending |
 | TBD | TBD | 2 | EDIT-03 | — | `beforeunload` prompts when dirty | integration | `cd dashboard && pnpm test editor-client.test.tsx -t "beforeunload"` | ❌ Wave 2 | ⬜ pending |
 | TBD | TBD | 2 | EDIT-03 | — | Successful save clears `sleepwalker.draft.v1` | integration | `cd dashboard && pnpm test editor-client.test.tsx -t "save clears draft"` | ❌ Wave 2 | ⬜ pending |
-| TBD | TBD | 2 | EDIT-03 | — | Draft-recovery banner shows when draft from prior session exists | integration | `cd dashboard && pnpm test draft-recovery-banner.test.tsx` | ❌ Wave 2 | ⬜ pending |
+| 3-07-02 | 03-07 | 2 | EDIT-03 | — | Draft-recovery banner shows when draft from prior session exists | integration | `cd dashboard && pnpm test draft-recovery-banner.test.tsx` | ✅ dashboard/tests/draft-recovery-banner.test.tsx | ✅ green 2026-04-19 |
 | TBD | TBD | 0 | EDIT-04 | SAFE-02 | Slug regex `^[a-z][a-z0-9-]{0,63}$` enforced via zod | unit | `cd dashboard && pnpm test bundle-schema.test.ts -t "slug regex"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | EDIT-04 | SAFE-02 | `../../../evil` rejected (regex fail) | unit | `cd dashboard && pnpm test bundle-schema.test.ts -t "path traversal rejected"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | EDIT-04 | — | `Has Spaces` rejected | unit | `cd dashboard && pnpm test bundle-schema.test.ts -t "spaces rejected"` | ❌ Wave 0 | ⬜ pending |

@@ -66,7 +66,7 @@ Plans:
   3. A user can spend 10 minutes editing, accidentally close the tab or click "Routines" in the sidebar, and return to find their draft intact via localStorage + in-app navigation intercept; no keystrokes lost.
   4. Attempting to save a routine with slug `../../../evil`, `Has Spaces`, `UPPERCASE`, or a `(runtime, slug)` pair that already exists anywhere under `routines-*/` is rejected with a clear message and no partial writes.
   5. Password managers (1Password, LastPass), browser autofill, browser spellcheck, and autocorrect cannot silently mutate the prompt textarea; inputs announce their opt-out via `autocomplete="off"`, `data-1p-ignore`, and siblings.
-**Plans**: 8 plans
+**Plans**: 9 plans
 
 Plans:
 - [x] 03-01-PLAN.md -- deps install + vitest jsdom config + RoutineBundleInput zod schema + 12-block accept/reject matrix (EDIT-02, EDIT-04) — **completed 2026-04-19** (commits 104547f + 8286db4; suite 137 → 161 green)
@@ -75,8 +75,9 @@ Plans:
 - [x] 03-04-PLAN.md -- atomic-write.ts directory-swap helper + 8-scenario test matrix (EDIT-02) — **completed 2026-04-19** (commit 96690b0; suite 197 → 205 green)
 - [x] 03-05-PLAN.md -- saveRoutine + checkSlugAvailability Server Actions + 16-block E2E tests (EDIT-02, EDIT-04) — **completed 2026-04-19** (commits 5505e32 + 70cc247; suite 205 → 221 green)
 - [x] 03-06-PLAN.md -- /editor page.tsx shell + editor-client stub + RuntimeRadioGrid + CronPreview + 10 jsdom .test.tsx blocks (EDIT-01 partial — 2/4 VALIDATION rows green) — **completed 2026-04-19** (commits f343478 + 92e8313 + f302d3d; suite 221 → 231 green; first jsdom tests in repo; vitest esbuild jsx=automatic)
-- [ ] 03-07-PLAN.md -- EditorClient state machine + autosave + autofill opt-out + secret-scan preview + integration tests (EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05)
-- [ ] 03-08-PLAN.md -- phase exit gate: frozen-surface diff + test suite green + 03-VALIDATION flip + ROADMAP/STATE update
+- [x] 03-07-PLAN.md -- SecretScanPanel + DraftRecoveryBanner + PreviewPanel presentational subcomponents + 6 jsdom test blocks (EDIT-03 partial — 1/4 VALIDATION rows green: banner visibility) — **completed 2026-04-19** (commits 674d86e + 9b14e09 + 9742c56 + 555e9de; suite 231 → 237 green; `/editor` route still 640 B / 141 kB; Node 25 + jsdom localStorage polyfill installed inline in test)
+- [ ] 03-08-PLAN.md -- EditorClient full state machine: useActionState wiring against saveRoutine + 500ms autosave + slug auto-derive + beforeunload intercept + autofill opt-out + integration tests (EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05)
+- [ ] 03-09-PLAN.md -- phase exit gate: frozen-surface diff + test suite green + 03-VALIDATION flip + ROADMAP/STATE update
 
 ### Phase 4: Deploy
 **Goal**: Wire adapters and editor together so Deploy, Run-now, enable/disable, Save-to-repo, and health badges are one-click actions on the dashboard, with a state-machine deploy that auto-rolls-back on partial failure.
@@ -121,11 +122,11 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
-| 3. Editor | 6/8 | In Progress (Waves 0 + 1 + 2a COMPLETE — `/editor` shell + RuntimeRadioGrid + CronPreview ship; Wave 2b (03-07 SecretScanPanel/DraftRecoveryBanner/PreviewPanel) + Wave 2c (03-08 full EditorClient state machine) remain) | - |
+| 3. Editor | 7/9 | In Progress (Waves 0 + 1 + 2a + 2b COMPLETE — all five presentational subcomponents live; Wave 2c (03-08 full EditorClient state machine) + Wave 3 (03-09 phase exit gate) remain) | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 3 Plan 06 execution (/editor page.tsx shell + editor-client stub + RuntimeRadioGrid + CronPreview landed — commits f343478 + 92e8313 + f302d3d; 10 new jsdom test blocks — first .test.tsx files in repo; dashboard suite 221 → 231 green; typecheck exit 0; `/editor` route compiles via `pnpm build` at 640 B / 141 kB first-load; vitest esbuild now uses React 19 automatic JSX runtime; 03-VALIDATION rows 2 + 3 flip to 3-06-02/03 green; EDIT-01 partial — 2/4 rows green; Phase 3 progress 6/8 plans complete; v0.1 frozen surface diff 0 lines)*
+*Last updated: 2026-04-19 after Phase 3 Plan 07 execution (SecretScanPanel + DraftRecoveryBanner + PreviewPanel landed — commits 674d86e + 9b14e09 + 9742c56 + 555e9de; 6 new jsdom test blocks on draft-recovery-banner; dashboard suite 231 → 237 green; typecheck exit 0; `/editor` route still compiles at 640 B / 141 kB; 03-VALIDATION row 13 flips to 3-07-02 green; EDIT-03 partial — 1/4 rows green (banner visibility); Phase 3 progress 7/9 plans complete; v0.1 frozen surface diff 0 lines; all five presentational subcomponents now import-ready for Plan 03-08 EditorClient state machine)*
