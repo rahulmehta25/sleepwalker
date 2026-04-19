@@ -1,23 +1,23 @@
 "use client";
 
 import type { HealthStatus, Runtime } from "@/lib/runtime-adapters/types";
-import {
-  toBundleDir,
-  toMarkerTag,
-  toPlistPath,
-} from "@/lib/runtime-adapters/slug";
 import { CronPreview } from "./cron-preview";
 
 // Sticky right-column preview — see .planning/phases/03-editor/03-UI-SPEC.md
 // §Grid (lines 220-225) + §Live-preview copy (lines 156-163).
 //
-// Safety note: toBundleDir / toPlistPath / toMarkerTag all throw on invalid
-// slug (Phase 2 CONTEXT.md line 43: assertValidSlug is a programmer-bug
-// guard). During in-flight typing the slug is briefly invalid, so every
-// builder call runs through safe() which returns the fallback placeholder
-// instead of unmounting the panel. Display forward slashes so "routines-
-// codex/morning-brief/" matches the UI-SPEC live-preview copy (path.join
-// uses platform separator — not desired for display text).
+// Client-safe display formatting: this component is a "use client" boundary,
+// so importing from @/lib/runtime-adapters/slug (which uses node:path +
+// node:os) would drag Node built-ins into the client bundle (webpack
+// UnhandledSchemeError at build time in Next 15). Because PreviewPanel is
+// pure display — not a source of truth for any on-disk identifier — we
+// inline the display-only formatters below. The authoritative builders in
+// slug.ts remain the write-path source of truth (used by the Server Action
+// and adapters); the strings produced here must match their output.
+//
+// Validation: we use a LOCAL slug regex check that mirrors SLUG_REGEX in
+// slug.ts line 26 (^[a-z][a-z0-9-]{0,63}$). Mid-keystroke invalid slugs
+// render the PLACEHOLDER instead of a malformed preview.
 
 interface Props {
   runtime: Runtime | "";
@@ -27,46 +27,41 @@ interface Props {
 }
 
 const PLACEHOLDER = "—";
+const CLIENT_SLUG_REGEX = /^[a-z][a-z0-9-]{0,63}$/;
 
-function safe<T>(fn: () => T, fallback: T): T {
-  try {
-    return fn();
-  } catch {
-    return fallback;
-  }
+// Client-safe mirror of toBundleDir() — see slug.ts lines 108-118. The
+// server builder uses path.join which emits OS-native separators; we display
+// forward slashes per UI-SPEC line 160.
+function clientBundleDir(runtime: Runtime, slug: string): string {
+  const dirName =
+    runtime === "claude-desktop"
+      ? "routines-local"
+      : runtime === "claude-routines"
+        ? "routines-cloud"
+        : `routines-${runtime}`;
+  return `${dirName}/${slug}`;
 }
 
 function bundlePathDisplay(runtime: Runtime | "", slug: string): string {
   if (!runtime || !slug) return PLACEHOLDER;
-  // toBundleDir throws on invalid slug; we render the same shape using
-  // forward slashes so the preview copy matches UI-SPEC line 160 exactly
-  // (path.join would produce backslashes on Windows — the dashboard is
-  // macOS-targeted but forward-slash display is contract).
-  return safe(() => {
-    const dir = toBundleDir(runtime, slug);
-    return `${dir.replaceAll("\\", "/")}/`;
-  }, PLACEHOLDER);
+  if (!CLIENT_SLUG_REGEX.test(slug)) return PLACEHOLDER;
+  return `${clientBundleDir(runtime, slug)}/`;
 }
 
 function plistPathDisplay(runtime: Runtime | "", slug: string): string | null {
   // Per UI-SPEC line 161: plist only shown for local launchd runtimes.
   if (runtime !== "codex" && runtime !== "gemini") return null;
   if (!slug) return PLACEHOLDER;
-  return safe(() => {
-    const abs = toPlistPath(runtime, slug);
-    // Collapse absolute $HOME path to ~ for readable display.
-    const home = typeof process !== "undefined" ? process.env.HOME : undefined;
-    if (home && abs.startsWith(home)) return `~${abs.slice(home.length)}`;
-    return abs;
-  }, PLACEHOLDER);
+  if (!CLIENT_SLUG_REGEX.test(slug)) return PLACEHOLDER;
+  // UI-SPEC line 161: `~/Library/LaunchAgents/com.sleepwalker.{runtime}.{slug}.plist`
+  return `~/Library/LaunchAgents/com.sleepwalker.${runtime}.${slug}.plist`;
 }
 
-// Marker tag format: [sleepwalker:<runtime>/<slug>] — see UI-SPEC line 162.
-// The toMarkerTag builder (imported above) produces the exact string at
-// runtime. assertValidSlug throws on invalid slug, so we wrap in safe().
+// Marker tag format: [sleepwalker:<runtime>/<slug>] — UI-SPEC line 162.
 function markerTagDisplay(runtime: Runtime | "", slug: string): string {
   if (!runtime || !slug) return PLACEHOLDER;
-  return safe(() => toMarkerTag(runtime, slug), PLACEHOLDER);
+  if (!CLIENT_SLUG_REGEX.test(slug)) return PLACEHOLDER;
+  return `[sleepwalker:${runtime}/${slug}]`;
 }
 
 export function PreviewPanel({
