@@ -73,7 +73,7 @@ Plans:
 - [x] 03-02-PLAN.md -- secret-patterns.ts + scanForSecrets pure utility + 18-block pattern test matrix (EDIT-02) — **completed 2026-04-19** (commits 64fb6ec + 891e2f3; suite 161 → 179 green)
 - [x] 03-03-PLAN.md -- bundles.ts read-side directory enumeration (listBundles/hasBundle/hasBundleAnyRuntime/readBundle) + 18 tests (EDIT-04) — **completed 2026-04-19** (commit 509adb0; suite 179 → 197 green)
 - [x] 03-04-PLAN.md -- atomic-write.ts directory-swap helper + 8-scenario test matrix (EDIT-02) — **completed 2026-04-19** (commit 96690b0; suite 197 → 205 green)
-- [ ] 03-05-PLAN.md -- saveRoutine + checkSlugAvailability Server Actions + 12-block E2E tests (EDIT-02, EDIT-04)
+- [x] 03-05-PLAN.md -- saveRoutine + checkSlugAvailability Server Actions + 16-block E2E tests (EDIT-02, EDIT-04) — **completed 2026-04-19** (commits 5505e32 + 70cc247; suite 205 → 221 green)
 - [ ] 03-06-PLAN.md -- /editor page.tsx shell + 5 presentational subcomponents + 3 jsdom .test.tsx files (EDIT-01)
 - [ ] 03-07-PLAN.md -- EditorClient state machine + autosave + autofill opt-out + secret-scan preview + integration tests (EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05)
 - [ ] 03-08-PLAN.md -- phase exit gate: frozen-surface diff + test suite green + 03-VALIDATION flip + ROADMAP/STATE update
@@ -121,7 +121,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
-| 3. Editor | 4/8 | In Progress (Wave 0 COMPLETE + 03-03 + 03-04 landed; Wave 1 saveRoutine is last) | - |
+| 3. Editor | 5/8 | In Progress (Wave 0 + Wave 1 COMPLETE — all server-side primitives + saveRoutine landed; Wave 2 client components next) | - |
 | 4. Deploy | 0/TBD | Not started | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |

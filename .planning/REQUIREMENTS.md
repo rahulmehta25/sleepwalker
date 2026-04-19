@@ -22,9 +22,9 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 ### Routine Editor (Phase 2 territory)
 
 - [ ] **EDIT-01**: `/editor` route renders a Next.js form with fields for name, prompt, runtime (radio — unavailable runtimes dimmed with fix-tooltip), cron schedule (with `cronstrue` human preview), reversibility radio (green/yellow/red), and budget input
-- [ ] **EDIT-02**: `saveRoutine` Server Action validates via zod, runs a secret-scan (gitleaks-style regex) on the prompt, and writes `config.json` + `prompt.md` to `routines-<runtime>/<slug>/` atomically
+- [x] **EDIT-02**: `saveRoutine` Server Action validates via zod, runs a secret-scan (gitleaks-style regex) on the prompt, and writes `config.json` + `prompt.md` to `routines-<runtime>/<slug>/` atomically — **completed 2026-04-19 (03-05, commits 5505e32 + 70cc247; claude-desktop/claude-routines branch writes SKILL.md instead of config.json + prompt.md)**
 - [ ] **EDIT-03**: Editor auto-saves to `localStorage` (500ms debounce) and intercepts navigation when dirty — no lost work on refresh/back
-- [ ] **EDIT-04**: Slug validation enforces `^[a-z][a-z0-9-]{0,63}$` and rejects collisions with existing `<runtime>/<slug>` pairs anywhere across `routines-*/`
+- [x] **EDIT-04**: Slug validation enforces `^[a-z][a-z0-9-]{0,63}$` and rejects collisions with existing `<runtime>/<slug>` pairs anywhere across `routines-*/` — **completed 2026-04-19 (03-01 zod regex + 03-03 hasBundleAnyRuntime + 03-05 saveRoutine composition, commits 8286db4 + 509adb0 + 5505e32 + 70cc247)**
 - [ ] **EDIT-05**: All editor inputs set `autocomplete="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true"` to prevent password manager / spellcheck corruption of prompts
 
 ### Deploy & Runtime Control (Phase 3 territory)
@@ -115,9 +115,9 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | ADPT-08 | Phase 2 | Complete (02-08 gemini adapter + 7 Vitest blocks, commit 72c6f69, 2026-04-19) |
 | ADPT-09 | Phase 2 | Complete (02-09 registry swap + HealthStatus.warning amendment + adapter-registry.test.ts, commits db1e65d + a2f0563 + fc2b84a + 78eaaf7, 2026-04-19) |
 | EDIT-01 | Phase 3 | Pending |
-| EDIT-02 | Phase 3 | Pending |
+| EDIT-02 | Phase 3 | Complete (03-05 saveRoutine + 12 E2E test blocks covering secret-blocks-write + atomic-write + SKILL.md branch, commits 5505e32 + 70cc247, 2026-04-19) |
 | EDIT-03 | Phase 3 | Pending |
-| EDIT-04 | Phase 3 | Pending |
+| EDIT-04 | Phase 3 | Complete (03-01 zod slug regex + 03-03 hasBundleAnyRuntime + 03-05 saveRoutine/checkSlugAvailability cross-runtime composition, commits 8286db4 + 509adb0 + 5505e32 + 70cc247, 2026-04-19) |
 | EDIT-05 | Phase 3 | Pending |
 | DEPL-01 | Phase 4 | Pending |
 | DEPL-02 | Phase 4 | Pending |

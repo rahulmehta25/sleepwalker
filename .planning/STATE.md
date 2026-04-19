@@ -1,7 +1,9 @@
 # State: Sleepwalker v0.2
 
 **Initialized:** 2026-04-18
-**Last updated:** 2026-04-19 after Phase 3 Plan 04 sequential execution (atomic-write.ts directory-swap helper landed: `dashboard/lib/atomic-write.ts` (85 lines) exports 2 public symbols — `atomicWriteBundle(finalDir, files)` + `AtomicWriteResult` discriminated result type. Directory-swap algorithm: pre-flight `fs.existsSync(finalDir)` collision check (no tmp creation on collision) → `fs.mkdirSync(parent, recursive)` with EACCES/EPERM→permission mapping → `fs.mkdtempSync(path.join(parent, ".${base}.tmp-"))` sibling-of-final invariant guarantees same-FS rename → `fs.writeFileSync` each entry with utf8 encoding → single `fs.renameSync(tmpDir, finalDir)` atomic swap. Mid-write errors trigger best-effort `fs.rmSync(tmpDir, recursive, force)` inside try/catch so cleanup never throws. APFS Pitfall #6 handled: EEXIST/ENOTEMPTY during rename → errorCode:collision; all other → io. `dashboard/tests/atomic-write.test.ts` (157 lines) adds 8 `it()` blocks: happy path (2 files + content roundtrip), utf8 multibyte + newlines, pre-existing collision (no `.<base>.tmp-*` leakage), auto-created nested parent, mid-write io failure via null-byte filename (cleanup verified + finalDir absent), permission error via chmod 0o555 parent, error-string-populated, mode bits non-executable. Suite 197 → 205 green, typecheck exit 0. Single commit `96690b0`. 03-VALIDATION row 6 flips to `3-04-01 ✅ green`. Plan 03-05 saveRoutine now fully dep-cleared — atomic-write + secret-scan + zod schema + hasBundleAnyRuntime all live.)
+**Last updated:** 2026-04-19 after Phase 3 Plan 05 sequential execution (saveRoutine + checkSlugAvailability Server Actions landed: `dashboard/app/editor/actions.ts` (242 lines) exports 4 public symbols — `saveRoutine(prevState, formData)` React 19 useActionState-compatible Server Action + `checkSlugAvailability(runtime, slug)` async on-blur probe + `SaveRoutineState` discriminated union + `SlugAvailability` discriminated union. Algorithm composes Wave 0/1 primitives in LOCKED order: zod (`RoutineBundleInput.safeParse(Object.fromEntries(formData))`) → authoritative secret scan (`scanForSecrets(prompt)`) → cross-runtime collision pre-flight (`hasBundleAnyRuntime(slug)`) → atomic directory-swap (`atomicWriteBundle(finalDir, files)`). Any secret pattern match BLOCKS the write — atomicWriteBundle is never called, disk is never touched (verified via `fs.existsSync` assertion in test). Claude-desktop success path returns a Phase-2-Q1-smoke-informed `warning` field ("Claude Desktop does not auto-detect routines. Open Desktop → Schedule → Add and paste the generated SKILL.md content.") so the Plan 03-08 EditorClient can display the manual-add instruction in the save-success UI. File-set builder branches on runtime: claude-desktop/claude-routines write `SKILL.md` via gray-matter frontmatter; codex/gemini write `config.json` + `prompt.md`. TOCTOU backstop: atomic-write errorCode:collision maps to the same same-runtime message as the hasBundleAnyRuntime path. `dashboard/tests/save-routine-action.test.ts` (319 lines) adds 16 it() blocks across 2 describe groups (12-block minimum exceeded): codex happy path + claude-desktop SKILL.md happy path + Q1-smoke warning field + zod name-empty failure + invalid slug regex + AWS-key secret block + Stripe-key secret block + same-runtime collision + cross-runtime collision + gemini happy path + claude-routines happy path + FormData budget coercion + 4 checkSlugAvailability cases. One ancillary commit: `refactor(03-05)` added `export` keyword to `RUNTIME_ROOT` in bundles.ts (one-char diff; bundles.test.ts 18/18 still green). Suite 205 → 221 green (+16); typecheck exit 0. Two commits `5505e32` + `70cc247`. 03-VALIDATION rows 7, 8, 9, 18, 19, 21 all flip to `3-05-02 ✅ green`. EDIT-02 + EDIT-04 now code complete. Wave 1 sealed — Wave 2 client components (03-06 editor shell + 03-07 state machine) is the next critical path.)
+
+**Previous update:** 2026-04-19 after Phase 3 Plan 04 sequential execution (atomic-write.ts directory-swap helper landed: `dashboard/lib/atomic-write.ts` (85 lines) exports 2 public symbols — `atomicWriteBundle(finalDir, files)` + `AtomicWriteResult` discriminated result type. Directory-swap algorithm: pre-flight `fs.existsSync(finalDir)` collision check (no tmp creation on collision) → `fs.mkdirSync(parent, recursive)` with EACCES/EPERM→permission mapping → `fs.mkdtempSync(path.join(parent, ".${base}.tmp-"))` sibling-of-final invariant guarantees same-FS rename → `fs.writeFileSync` each entry with utf8 encoding → single `fs.renameSync(tmpDir, finalDir)` atomic swap. Mid-write errors trigger best-effort `fs.rmSync(tmpDir, recursive, force)` inside try/catch so cleanup never throws. APFS Pitfall #6 handled: EEXIST/ENOTEMPTY during rename → errorCode:collision; all other → io. `dashboard/tests/atomic-write.test.ts` (157 lines) adds 8 `it()` blocks: happy path (2 files + content roundtrip), utf8 multibyte + newlines, pre-existing collision (no `.<base>.tmp-*` leakage), auto-created nested parent, mid-write io failure via null-byte filename (cleanup verified + finalDir absent), permission error via chmod 0o555 parent, error-string-populated, mode bits non-executable. Suite 197 → 205 green, typecheck exit 0. Single commit `96690b0`. 03-VALIDATION row 6 flips to `3-04-01 ✅ green`. Plan 03-05 saveRoutine now fully dep-cleared — atomic-write + secret-scan + zod schema + hasBundleAnyRuntime all live.)
 
 ## Project Reference
 
@@ -12,9 +14,9 @@
 ## Current Position
 
 **Milestone:** v0.2 — Multi-Runtime Agent Deployment
-**Phase:** 3 — Editor (IN PROGRESS: Wave 0 fully sealed + 03-03 landed 2026-04-19; 5 plans remain)
-**Plan:** 03-04 complete (commit `96690b0` feat atomic-write.ts directory-swap + 8-block test matrix). Next: 03-05 (saveRoutine + checkSlugAvailability Server Action — ALL deps now live: atomic-write + secret-scan + zod schema + hasBundleAnyRuntime).
-**Status:** Phase 3 execution in progress — 4/8 plans done (50%). Wave 0 COMPLETE (03-01 + 03-02). Wave 1 almost done (03-03 + 03-04 landed; only 03-05 remains). All atomic primitives for saveRoutine are now on disk.
+**Phase:** 3 — Editor (IN PROGRESS: Waves 0 + 1 fully sealed; 3 plans remain)
+**Plan:** 03-05 complete (commits `5505e32` refactor RUNTIME_ROOT export + `70cc247` feat saveRoutine + checkSlugAvailability + 16-block test matrix). Next: 03-06 (/editor page.tsx shell + 5 presentational subcomponents + 3 jsdom .test.tsx files — Wave 2 client work begins).
+**Status:** Phase 3 execution in progress — 5/8 plans done (62.5%). Waves 0 + 1 COMPLETE. All server-side primitives + the composing Server Actions are on disk; EDIT-02 and EDIT-04 are code complete. Wave 2 client components is the next critical path.
 
 **Milestone progress:**
 ```
@@ -33,7 +35,7 @@
 
 **Phase 3 progress:**
 ```
-[####----] 4/8 plans complete (03-01 done 2026-04-19 — zod schema + jsdom test env; 03-02 done 2026-04-19 — 11-pattern shared secret scanner; 03-03 done 2026-04-19 — bundles.ts read-side enumeration + 18 tests; 03-04 done 2026-04-19 — atomic-write.ts directory-swap + 8 tests)
+[#####---] 5/8 plans complete (03-01 done 2026-04-19 — zod schema + jsdom test env; 03-02 done 2026-04-19 — 11-pattern shared secret scanner; 03-03 done 2026-04-19 — bundles.ts read-side enumeration + 18 tests; 03-04 done 2026-04-19 — atomic-write.ts directory-swap + 8 tests; 03-05 done 2026-04-19 — saveRoutine + checkSlugAvailability Server Actions + 16 tests; Waves 0 + 1 COMPLETE)
 ```
 
 ## Performance Metrics
@@ -45,9 +47,9 @@
 | Phases complete | 2/6 (Phase 1 Foundation sealed 2026-04-18; Phase 2 Adapters code-complete 2026-04-19 with 2 manual smokes deferred to user) |
 | Plans authored | 14 (Phase 1: 4, Phase 2: 10) |
 | Plans complete | 14 (01-01..04 + 02-01..10 — 02-10 automated portion shipped, 2 manual smokes deferred) |
-| Requirements complete | 10/32 — code complete: ADPT-01, ADPT-02, ADPT-03, ADPT-04, ADPT-05, ADPT-06, ADPT-07, ADPT-08, ADPT-09, SAFE-02 (ADPT-03/06/07 tagged "manual smoke pending" in REQUIREMENTS.md traceability — contracts at test/manual/codex-adapter-smoke.md + test/manual/claude-desktop-smoke.md) |
+| Requirements complete | 12/32 — code complete: ADPT-01, ADPT-02, ADPT-03, ADPT-04, ADPT-05, ADPT-06, ADPT-07, ADPT-08, ADPT-09, SAFE-02, EDIT-02, EDIT-04 (ADPT-03/06/07 tagged "manual smoke pending" in REQUIREMENTS.md traceability — contracts at test/manual/codex-adapter-smoke.md + test/manual/claude-desktop-smoke.md; EDIT-02 + EDIT-04 sealed by Plan 03-05 saveRoutine + checkSlugAvailability Server Actions) |
 | v0.1 surface frozen | Yes — byte-identical vs PHASE1_BASE 03d063d (2026-04-18) AND PHASE2_BASE 0ec59df (parent of e14bbe6; first launchd-writer.ts commit); dynamic resolution via `git log --reverse --diff-filter=A -- dashboard/lib/runtime-adapters/launchd-writer.ts | head -1`; frozen-surface diff 0 lines after 02-10 automated gate (20 enumerated v0.1 paths checked) |
-| Dashboard test suite | 205/205 green after Phase 3 Plan 04 (Phase 3 plan-03 closed at 197/197; +8 new from atomic-write.test.ts happy/utf8/collision/auto-parent/io-cleanup/permission/error-populated/mode-bits matrix) |
+| Dashboard test suite | 221/221 green after Phase 3 Plan 05 (Phase 3 plan-04 closed at 205/205; +16 new from save-routine-action.test.ts — 12 saveRoutine blocks covering codex/claude-desktop/claude-routines/gemini happy paths + Q1-smoke warning field + zod failures + AWS + Stripe secret blocks + same-runtime + cross-runtime collisions + FormData coercion, plus 4 checkSlugAvailability blocks) |
 | Supervisor harness | 24 PASS / 0 FAIL / exit 0 (`bash hooks/tests/supervisor-tests.sh` → `all supervisor tests passed`) |
 
 | Plan | Duration | Tasks | Files | Commit |
@@ -70,6 +72,7 @@
 | 03-02 | ~5 min | 2 | 3 | 64fb6ec (secret-patterns.ts) + 891e2f3 (secret-scan.ts + tests) |
 | 03-03 | ~5 min | 1 | 2 | 509adb0 (bundles.ts + bundles.test.ts) |
 | 03-04 | ~4 min | 1 | 2 | 96690b0 (atomic-write.ts + atomic-write.test.ts) |
+| 03-05 | ~6 min | 2 | 3 | 5505e32 (refactor RUNTIME_ROOT export) + 70cc247 (feat actions.ts + save-routine-action.test.ts) |
 
 ## Accumulated Context
 

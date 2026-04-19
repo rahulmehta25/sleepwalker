@@ -376,3 +376,22 @@
 - Updated `.planning/ROADMAP.md` — ticked plan 03-01 box with commit hashes and suite delta
 - Updated `.planning/STATE.md` — Current Position flipped Phase 2 → Phase 3 (1/9 plans), Phase 3 progress bar added, suite-size line bumped 104 → 161, new Decision entry, new Plan 03-01 row in metrics table, flipped Phase 3 open todo to in-progress, refreshed Last session / Stopped at / Resume file
 - 03-VALIDATION.md rows 4 (EDIT-02 accept/reject) + 14/15/16/17 (EDIT-04 slug regex + traversal + spaces + uppercase) now satisfied by Task ID `3-01-02`
+
+## 2026-04-19 04:35 EST
+
+### User Prompt
+"Execute Phase 3 Plan 03-05 (saveRoutine + checkSlugAvailability Server Actions + 12-block E2E test matrix) for Sleepwalker v0.2."
+
+### Actions Taken
+- Modified `dashboard/lib/bundles.ts` — added `export` keyword to `const RUNTIME_ROOT` (one-char diff); bundles.test.ts 18/18 still green
+- Committed Task 1 as `5505e32` (`refactor(03-05): export RUNTIME_ROOT from bundles.ts for actions.ts consumption`)
+- Created `dashboard/tests/save-routine-action.test.ts` (319 lines) — TDD RED first; 16 it() blocks across 2 describe groups (12-block minimum exceeded). saveRoutine: codex + claude-desktop + gemini + claude-routines happy paths, Q1-smoke warning field, zod name-empty failure, invalid slug regex rejection, AWS + Stripe secret blocks, same-runtime + cross-runtime collisions with no-partial-write assertion, FormData budget coercion. checkSlugAvailability: available + empty-permissive + same-runtime + cross-runtime
+- Created `dashboard/app/editor/actions.ts` (242 lines) — `"use server"` directive on line 1; exports `saveRoutine(prevState, formData)` + `checkSlugAvailability(runtime, slug)` + `SaveRoutineState` + `SlugAvailability`; composes Wave 0/1 primitives in LOCKED order (zod → scanForSecrets → hasBundleAnyRuntime → atomicWriteBundle); any secret pattern match BLOCKS the write (disk never touched); claude-desktop success returns Q1-smoke-informed `warning` field pointing to Desktop Schedule tab; file-set builder branches runtime → SKILL.md (gray-matter frontmatter) or config.json + prompt.md
+- Fixed Rule-3 blocker: original JSDoc contained `routines-*/` in backticks; the `*/` closed the JSDoc block mid-comment causing `TS1160 Unterminated template literal`. Rewrote to plain prose `routines-* directories`; no semantic change
+- `pnpm test save-routine-action.test.ts` went from FAIL (RED) to 16/16 pass (GREEN); full suite 205 → 221 green; `pnpm typecheck` exit 0
+- Committed Task 2 as `70cc247` (`feat(03-05): add saveRoutine + checkSlugAvailability Server Actions + E2E tests`) — explicit paths used to avoid the pre-existing uncommitted changes in cloud-cache.ts / codex.ts / gemini.ts / cloud-cache.test.ts from a parallel session
+- Created `.planning/phases/03-editor/03-05-SUMMARY.md` — 2 commits / 16 test blocks / UI-SPEC copy fidelity / self-check PASSED
+- Updated `.planning/phases/03-editor/03-VALIDATION.md` — 6 rows flipped to `3-05-02 ✅ green 2026-04-19` (rows 7 + 8 + 9 EDIT-02; rows 18 + 19 + 21 EDIT-04)
+- Updated `.planning/ROADMAP.md` — ticked plan 03-05 box with both commit hashes; Phase 3 progress table row 4/8 → 5/8
+- Updated `.planning/STATE.md` — Last updated note + Current Position flipped 4/8 → 5/8 with Waves 0+1 COMPLETE; Phase 3 progress bar; test suite line 205 → 221; Requirements complete 10/32 → 12/32 (EDIT-02 + EDIT-04 added); new Plan 03-05 row in metrics table
+- Updated `.planning/REQUIREMENTS.md` — EDIT-02 + EDIT-04 checkbox flipped to [x]; traceability table rows updated from Pending to Complete with commit hashes
