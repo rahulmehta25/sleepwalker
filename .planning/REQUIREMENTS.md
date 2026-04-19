@@ -13,7 +13,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 - [x] **ADPT-02**: Slug namespacing convention is enforced everywhere: internal key `<runtime>/<slug>`, launchd label `com.sleepwalker.<runtime>.<slug>`, audit marker `[sleepwalker:<runtime>/<slug>]`, branch prefix `claude/sleepwalker/<runtime>/<slug>/*` — **completed 2026-04-18 (01-02 directory scaffolding, commit b38416c; 01-03 slug.ts validator + 7 identifier builders + 13 it() / 28 expect() unit coverage, commits 313bf62 + fbe8adc + 8b73e0f)**
 - [ ] **ADPT-03**: `launchd-writer.ts` produces a valid plist, installs via `launchctl bootstrap gui/$UID`, uninstalls via `launchctl bootout`, and validates with `plutil -lint` before bootstrap
 - [x] **ADPT-04**: `bin/sleepwalker-run-cli` supervisor resolves absolute CLI path via login shell, enforces sleep-window + reversibility + char-budget gates, strips ANSI, and emits normalized `audit.jsonl` entries — **completed 2026-04-19 (02-03, commit 39f7eb3)**
-- [ ] **ADPT-05**: Runtime adapter **Claude Code Routines** (`claude-routines.ts`) — `deploy()` returns `{handoffUrl}` for `/schedule create` + pre-filled browser; `runNow()` wraps existing `fire-routine.ts`; `healthCheck()` probes beta-header + `claude` CLI availability
+- [x] **ADPT-05**: Runtime adapter **Claude Code Routines** (`claude-routines.ts`) — `deploy()` returns `{handoffUrl}` for `/schedule create` + pre-filled browser; `runNow()` wraps existing `fire-routine.ts`; `healthCheck()` probes beta-header + `claude` CLI availability — **completed 2026-04-19 (02-05, commits 62bdaa7 + d7223a8)**
 - [ ] **ADPT-06**: Runtime adapter **Claude Code Desktop Scheduled Tasks** (`claude-desktop.ts`) — `deploy()` copies SKILL.md to `~/.claude/scheduled-tasks/<slug>/` and returns a handoff URL for Desktop's Schedule page; `healthCheck()` probes for `~/.claude/` and Desktop binary
 - [ ] **ADPT-07**: Runtime adapter **Codex Pro** (`codex.ts`) — `deploy()` writes `~/Library/LaunchAgents/com.sleepwalker.codex.<slug>.plist` invoking the supervisor; `healthCheck()` probes `codex --version`, active auth mode, and absolute binary path
 - [ ] **ADPT-08**: Runtime adapter **Gemini CLI Pro** (`gemini.ts`) — `deploy()` writes plist with explicit `GOOGLE_CLOUD_PROJECT` env var invoking the supervisor; `healthCheck()` probes `gemini --version` + auth + quota project
@@ -109,7 +109,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | ADPT-02 | Phase 1 | Complete (01-02 scaffolding b38416c; 01-03 slug.ts + tests 313bf62/fbe8adc/8b73e0f; 01-04 exit gate verified b924c9a, 2026-04-18) |
 | ADPT-03 | Phase 2 | Pending |
 | ADPT-04 | Phase 2 | Complete (02-03 bin/sleepwalker-run-cli supervisor, commit 39f7eb3, 2026-04-19) |
-| ADPT-05 | Phase 2 | Pending |
+| ADPT-05 | Phase 2 | Complete (02-05 claude-routines adapter + 7 Vitest blocks, commits 62bdaa7 + d7223a8, 2026-04-19) |
 | ADPT-06 | Phase 2 | Pending |
 | ADPT-07 | Phase 2 | Pending |
 | ADPT-08 | Phase 2 | Pending |

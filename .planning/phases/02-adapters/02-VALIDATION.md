@@ -48,9 +48,9 @@ created: 2026-04-18
 | 2-03-04 | 03 | 1 | ADPT-04 | — | Char-budget SIGTERM on exceed; `budget_exceeded` event emitted | integration | same | ❌ W0 | ⬜ pending |
 | 2-03-05 | 03 | 1 | SAFE-02 | V14 output encoding | `NO_COLOR=1 TERM=dumb CI=true` set; ANSI stripped from `audit.jsonl` via `perl -pe 's/\e\[[0-9;]*m//g'` | integration | same (assert no `\e[` bytes in audit output) | ❌ W0 | ⬜ pending |
 | 2-03-06 | 03 | 1 | ADPT-04 | — | `started` + exactly one terminal event (`completed`/`failed`/`budget_exceeded`) per run | integration | same (grep audit.jsonl) | ❌ W0 | ⬜ pending |
-| 2-04-01 | 04 | 2 | ADPT-05 | — | `claude-routines.runNow` wraps `fire-routine.ts` correctly | unit | `pnpm test -- claude-routines.test.ts` (mock fetch) | ❌ W0 | ⬜ pending |
-| 2-04-02 | 04 | 2 | ADPT-05 | — | `claude-routines.deploy` returns `{ok: true, handoffUrl}` with `/schedule create` pre-filled | unit | same | ❌ W0 | ⬜ pending |
-| 2-04-03 | 04 | 2 | ADPT-05 | — | `claude-routines.healthCheck` probes `claude --version` + beta-header constant | unit | same (mock execFile) | ❌ W0 | ⬜ pending |
+| 2-04-01 | 04 | 2 | ADPT-05 | — | `claude-routines.runNow` wraps `fire-routine.ts` correctly | unit | `pnpm test -- claude-routines.test.ts` (mock fetch) | ✅ W2 | ✅ green (2026-04-19, commit 62bdaa7; runNow happy-path + no-cred test block) |
+| 2-04-02 | 04 | 2 | ADPT-05 | — | `claude-routines.deploy` returns `{ok: true, handoffUrl}` with `/schedule create` pre-filled | unit | same | ✅ W2 | ✅ green (2026-04-19, commit 62bdaa7; deploy URL-encoding test block) |
+| 2-04-03 | 04 | 2 | ADPT-05 | — | `claude-routines.healthCheck` probes `claude --version` + beta-header constant | unit | same (mock execFile) | ✅ W2 | ✅ green (2026-04-19, commit 62bdaa7; healthCheck happy + failure + CC_ROUTINE_BETA equality test blocks) |
 | 2-05-01 | 05 | 2 | ADPT-06 | V12 | `claude-desktop.deploy` writes SKILL.md to `~/.claude/scheduled-tasks/<slug>/` | unit | `pnpm test -- claude-desktop.test.ts` (temp HOME) | ❌ W0 | ⬜ pending |
 | 2-05-02 | 05 | 2 | ADPT-06 | — | `deploy()` returns `{handoffUrl: "claude://scheduled-tasks?slug=<slug>"}` | unit | same | ❌ W0 | ⬜ pending |
 | 2-05-03 | 05 | 2 | ADPT-06 | — | `undeploy()` removes SKILL.md directory | unit | same | ❌ W0 | ⬜ pending |
