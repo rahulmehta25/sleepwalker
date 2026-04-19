@@ -21,11 +21,11 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 
 ### Routine Editor (Phase 2 territory)
 
-- [ ] **EDIT-01**: `/editor` route renders a Next.js form with fields for name, prompt, runtime (radio — unavailable runtimes dimmed with fix-tooltip), cron schedule (with `cronstrue` human preview), reversibility radio (green/yellow/red), and budget input
+- [x] **EDIT-01**: `/editor` route renders a Next.js form with fields for name, prompt, runtime (radio — unavailable runtimes dimmed with fix-tooltip), cron schedule (with `cronstrue` human preview), reversibility radio (green/yellow/red), and budget input — **completed 2026-04-19 (03-06 shell + 03-08 full state machine, commits f343478 + 92e8313 + f302d3d + 5e7d125)**
 - [x] **EDIT-02**: `saveRoutine` Server Action validates via zod, runs a secret-scan (gitleaks-style regex) on the prompt, and writes `config.json` + `prompt.md` to `routines-<runtime>/<slug>/` atomically — **completed 2026-04-19 (03-05, commits 5505e32 + 70cc247; claude-desktop/claude-routines branch writes SKILL.md instead of config.json + prompt.md)**
-- [ ] **EDIT-03**: Editor auto-saves to `localStorage` (500ms debounce) and intercepts navigation when dirty — no lost work on refresh/back
+- [x] **EDIT-03**: Editor auto-saves to `localStorage` (500ms debounce) and intercepts navigation when dirty — no lost work on refresh/back — **completed 2026-04-19 (03-07 DraftRecoveryBanner + 03-08 autosave + beforeunload + save-clears-draft state machine, commits 9742c56 + 5e7d125)**
 - [x] **EDIT-04**: Slug validation enforces `^[a-z][a-z0-9-]{0,63}$` and rejects collisions with existing `<runtime>/<slug>` pairs anywhere across `routines-*/` — **completed 2026-04-19 (03-01 zod regex + 03-03 hasBundleAnyRuntime + 03-05 saveRoutine composition, commits 8286db4 + 509adb0 + 5505e32 + 70cc247)**
-- [ ] **EDIT-05**: All editor inputs set `autocomplete="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true"` to prevent password manager / spellcheck corruption of prompts
+- [x] **EDIT-05**: All editor inputs set `autocomplete="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true"` to prevent password manager / spellcheck corruption of prompts — **completed 2026-04-19 (03-08 INPUT_OPT_OUT const spread applies all 8 autofill opt-out attrs to every input + prompt textarea rows=30; commit 5e7d125)**
 
 ### Deploy & Runtime Control (Phase 3 territory)
 
@@ -114,11 +114,11 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | ADPT-07 | Phase 2 | Complete (02-07 codex adapter + 6 Vitest blocks, commit fbda124, 2026-04-19; real-Mac launchctl/audit smoke pending — test/manual/codex-adapter-smoke.md) |
 | ADPT-08 | Phase 2 | Complete (02-08 gemini adapter + 7 Vitest blocks, commit 72c6f69, 2026-04-19) |
 | ADPT-09 | Phase 2 | Complete (02-09 registry swap + HealthStatus.warning amendment + adapter-registry.test.ts, commits db1e65d + a2f0563 + fc2b84a + 78eaaf7, 2026-04-19) |
-| EDIT-01 | Phase 3 | Partial (03-06 /editor shell + RuntimeRadioGrid + CronPreview landed 2026-04-19, commits f343478 + 92e8313 + f302d3d; 2/4 VALIDATION rows green [unavailable-dimmed 3-06-02, cronstrue-preview 3-06-03]; rows 1 + 4 [7-field form render + autosave integration] depend on 03-08 full EditorClient state machine) |
+| EDIT-01 | Phase 3 | Complete (03-06 /editor shell + RuntimeRadioGrid + CronPreview + 03-08 full EditorClient state machine renders 7-field form + 4 runtime cards + UI-SPEC placeholders, commits f343478 + 92e8313 + f302d3d + 5e7d125, 2026-04-19) |
 | EDIT-02 | Phase 3 | Complete (03-05 saveRoutine + 12 E2E test blocks covering secret-blocks-write + atomic-write + SKILL.md branch, commits 5505e32 + 70cc247, 2026-04-19) |
-| EDIT-03 | Phase 3 | Pending |
+| EDIT-03 | Phase 3 | Complete (03-07 DraftRecoveryBanner + 03-08 500ms autosave + beforeunload-when-dirty + save-clears-draft.v1 state machine, commits 9742c56 + 5e7d125, 2026-04-19) |
 | EDIT-04 | Phase 3 | Complete (03-01 zod slug regex + 03-03 hasBundleAnyRuntime + 03-05 saveRoutine/checkSlugAvailability cross-runtime composition, commits 8286db4 + 509adb0 + 5505e32 + 70cc247, 2026-04-19) |
-| EDIT-05 | Phase 3 | Pending |
+| EDIT-05 | Phase 3 | Complete (03-08 INPUT_OPT_OUT const spread applies autocomplete/autocorrect/autocapitalize/spellcheck=false/data-1p-ignore/data-lpignore/data-form-type/data-bwignore to every input + prompt textarea rows=30, commit 5e7d125, 2026-04-19) |
 | DEPL-01 | Phase 4 | Pending |
 | DEPL-02 | Phase 4 | Pending |
 | DEPL-03 | Phase 4 | Pending |
