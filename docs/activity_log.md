@@ -221,3 +221,13 @@
 - Dashboard suite: 98 → 104 passing tests (+6 new adapter-registry). `pnpm typecheck` exit 0. Frozen-surface diff against HEAD~5 (`af8ffa3` 02-08) returns 0 lines across routines-local/ routines-cloud/ hooks/sleepwalker-*.sh install.sh bin/sleepwalker-execute.
 - Four atomic commits: `db1e65d` (feat types.ts warning field), `a2f0563` (refactor codex+gemini healthCheck migration), `fc2b84a` (feat index.ts registry swap), `78eaaf7` (test adapter-registry).
 - ADPT-09 sealed. VALIDATION.md rows 2-08-01..02 can be marked green. Wave 3 registry swap complete — Phase 2 exit gate (Plan 10) is the only remaining task.
+
+## 2026-04-19 03:00 EST
+
+### User Prompt
+"Execute Phase 2 Plan 10 — phase exit gate + manual smoke tests + closeout (Tasks 1+2 only; Task 3 manual smoke run deferred to orchestrator handoff)."
+
+### Actions Taken
+- Created `test/manual/codex-adapter-smoke.md` (118 lines): 11-step real-Mac contract for codex deploy → kickstart → bootout cycle. Steps 1-11 cover: REPO_ROOT setup, fixture bundle creation, deploy via adapter Node invocation, `launchctl print` verification, plist mode-0644 check, `plutil -lint` pass, `launchctl kickstart -k` trigger, audit.jsonl `started`/`completed` event assertion with `SMOKE_OK` preview, stdout log inspection, undeploy via adapter, and cleanup verification (`launchctl print` must report "could not find", plist removed, fixture bundle `rm -rf`). Pass criteria require steps 4/5/6/8/9/11 match + no `failed`/`budget_exceeded` events.
+- Created `test/manual/claude-desktop-smoke.md` (87 lines): Q1 resolution contract for Research Question "does Claude Code Desktop pick up a fresh SKILL.md dropped into ~/.claude/scheduled-tasks/<slug>/ without Schedule-tab action?" Step 5 captures one of three outcomes: YES (auto-pickup) / NO but visible after refresh (Schedule-tab visit required — deeplink in handoffUrl resolves) / NO never visible without manual add (Desktop doesn't watch directory — Phase 6 docs implication). Step 7 verifies the timestamp-writer routine actually fired.
+- Both files are documentation-only (no executable code); will be run on real Mac by the orchestrator in Task 3 of Plan 02-10 (checkpoint:human-action; requires launchctl bootstrap which cannot be mocked).
