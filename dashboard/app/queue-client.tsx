@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, ChevronLeft, ChevronRight, Clock, Bot, ExternalLink, EyeOff, Cloud, HardDrive } from "lucide-react";
-import type { QueueEntry } from "@/lib/queue";
+import { Check, X, ChevronLeft, ChevronRight, Clock, Bot, ExternalLink, EyeOff, Cloud, HardDrive, Terminal, Sparkles } from "lucide-react";
+import type { QueueEntry, QueueSource } from "@/lib/queue";
 
 export function QueueClient({
   initialPending,
@@ -68,6 +68,7 @@ export function QueueClient({
   }
 
   const isCloud = current.source === "cloud";
+  const isSupervisorRun = current.kind === "supervisor-run";
 
   return (
     <motion.div
@@ -97,13 +98,11 @@ export function QueueClient({
           </div>
 
           <div className="flex items-center gap-2.5 mb-5 flex-wrap">
-            {isCloud
-              ? <span className="flex items-center gap-1.5 text-moon-50"><Cloud className="w-4 h-4 text-aurora-400" /><span className="font-medium tracking-tight">{current.fleet}</span></span>
-              : <span className="flex items-center gap-1.5 text-moon-50"><HardDrive className="w-4 h-4 text-dawn-400" /><span className="font-medium tracking-tight">{current.fleet}</span></span>
-            }
-            <span className={isCloud ? "pill-aurora" : "pill bg-signal-green/10 text-signal-green border border-signal-green/20"}>
-              {isCloud ? "cloud" : "local"}
+            <span className="flex items-center gap-1.5 text-moon-50">
+              <SourceIcon source={current.source ?? "local"} />
+              <span className="font-medium tracking-tight">{current.fleet}</span>
             </span>
+            <SourcePill source={current.source ?? "local"} />
             {current.reversibility && <ReversibilityPill r={current.reversibility} />}
           </div>
 
@@ -130,7 +129,18 @@ export function QueueClient({
             </div>
 
             <div className="flex gap-2">
-              {isCloud ? (
+              {isSupervisorRun ? (
+                <div className="text-xs text-moon-400">
+                  Terminal state — no action required. View full audit at{" "}
+                  <a
+                    className="text-dawn-400 underline underline-offset-4 decoration-dawn-400/40 hover:decoration-dawn-400"
+                    href={`/audit?fleet=${encodeURIComponent(current.fleet)}`}
+                  >
+                    /audit
+                  </a>
+                  .
+                </div>
+              ) : isCloud ? (
                 <>
                   <button className="btn-ghost border border-ink-600" onClick={() => decide("dismiss")} disabled={busy} title="Hide from this view (PR stays open in GitHub)">
                     <EyeOff className="w-4 h-4 mr-1.5" /> Dismiss
@@ -166,7 +176,33 @@ export function QueueClient({
   );
 }
 
-function ActionDetail({ entry }: { entry: QueueEntry }) {
+export function SourceIcon({ source }: { source: QueueSource }) {
+  switch (source) {
+    case "cloud":
+      return <Cloud className="w-4 h-4 text-aurora-400" />;
+    case "codex":
+      return <Terminal className="w-4 h-4 text-aurora-500" />;
+    case "gemini":
+      return <Sparkles className="w-4 h-4 text-dawn-400" />;
+    default:
+      return <HardDrive className="w-4 h-4 text-dawn-400" />;
+  }
+}
+
+export function SourcePill({ source }: { source: QueueSource }) {
+  switch (source) {
+    case "cloud":
+      return <span className="pill-aurora">cloud</span>;
+    case "codex":
+      return <span className="pill-codex">codex</span>;
+    case "gemini":
+      return <span className="pill-gemini">gemini</span>;
+    default:
+      return <span className="pill bg-signal-green/10 text-signal-green border border-signal-green/20">local</span>;
+  }
+}
+
+export function ActionDetail({ entry }: { entry: QueueEntry }) {
   if (entry.source === "cloud" && entry.payload) {
     const { title, body, repo, branch, author, additions, deletions, changed_files } = entry.payload as Record<string, string | number | undefined>;
     return (
@@ -211,6 +247,49 @@ function ActionDetail({ entry }: { entry: QueueEntry }) {
     );
   }
 
+  if (entry.kind === "supervisor-run" && entry.payload) {
+    const p = entry.payload as {
+      event?: string;
+      preview?: string;
+      chars_consumed?: number;
+      chars_limit?: number;
+      exit_code?: number;
+      reason?: string;
+    };
+    const isBudget = p.event === "budget_exceeded";
+    return (
+      <div className="space-y-3">
+        <div>
+          <div className="label mb-1">Event</div>
+          <div className="data text-sm text-moon-50">{p.event ?? "unknown"}</div>
+        </div>
+        {isBudget && p.chars_consumed !== undefined && p.chars_limit !== undefined && (
+          <div className="text-sm text-moon-200">
+            Stopped at <span className="data">{p.chars_consumed.toLocaleString()}</span> chars (budget: <span className="data">{p.chars_limit.toLocaleString()}</span>, approximate).
+          </div>
+        )}
+        {p.preview && (
+          <div>
+            <div className="label mb-1">Preview</div>
+            <pre className="data text-xs text-moon-200 bg-ink-900/60 border border-ink-600/60 rounded-lg p-4 overflow-x-auto whitespace-pre-wrap leading-relaxed">{p.preview}</pre>
+          </div>
+        )}
+        {p.reason && (
+          <div>
+            <div className="label mb-1">Reason</div>
+            <div className="data text-sm text-moon-50">{p.reason}</div>
+          </div>
+        )}
+        {p.exit_code !== undefined && (
+          <div>
+            <div className="label mb-1">Exit code</div>
+            <div className="data text-sm text-moon-50 tabular-nums">{p.exit_code}</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (entry.kind && entry.payload) {
     return (
       <div className="space-y-3">
@@ -235,6 +314,23 @@ function ReversibilityPill({ r }: { r: "green" | "yellow" | "red" }) {
   return <span className={cls}>{label}</span>;
 }
 
+function statusPillClass(status: QueueEntry["status"]): string {
+  // Widened QueueStatus (Plan 05-01) adds "complete" + "failed" for supervisor-runs.
+  // approved + complete are success states (green). rejected + failed are failure
+  // states (red). pending is the only non-terminal value and should not appear in
+  // RecentList, but fall through to muted just in case.
+  switch (status) {
+    case "approved":
+    case "complete":
+      return "pill-green";
+    case "rejected":
+    case "failed":
+      return "pill-red";
+    default:
+      return "pill-muted";
+  }
+}
+
 function RecentList({ recent }: { recent: QueueEntry[] }) {
   return (
     <section>
@@ -242,8 +338,8 @@ function RecentList({ recent }: { recent: QueueEntry[] }) {
       <div className="space-y-1">
         {recent.map((e) => (
           <div key={e.id} className="panel p-3 flex items-center gap-3 text-sm">
-            <span className={e.status === "approved" ? "pill-green" : "pill-red"}>{e.status}</span>
-            <span className="text-moon-600 text-[10px] data uppercase tracking-wider">{e.source ?? "local"}</span>
+            <span className={statusPillClass(e.status)}>{e.status}</span>
+            <SourcePill source={e.source ?? "local"} />
             <span className="text-moon-200 tracking-tight">{e.fleet}</span>
             <span className="data text-moon-600 text-xs truncate">{e.tool ?? e.kind}</span>
             <span className="data text-moon-600 text-xs ml-auto whitespace-nowrap tabular-nums">{new Date(e.ts).toLocaleTimeString()}</span>
