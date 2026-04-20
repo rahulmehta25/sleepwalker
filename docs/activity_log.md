@@ -1,5 +1,20 @@
 # Activity Log
 
+## 2026-04-20 21:34 EST
+
+### User Prompt
+"Execute Plan 04-05 of phase 04-deploy — extend `dashboard/app/routines/actions.ts` with saveToRepoAction wrapping 04-02's save-to-repo.ts library. Sequential on main. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md at closeout."
+
+### Actions Taken
+- Appended 71 lines to `dashboard/app/routines/actions.ts` below the 4 existing Plan 04-04 Server Actions: `previewSaveToRepoAction({runtime, slug})` → `previewSaveToRepo(runtime, slug)`, `commitSaveToRepoAction({lockToken, message})` → `commitSaveToRepo(args)`, `releaseSaveLockAction({lockToken})` → `releaseSaveLock(args)`. Each wrapper is 5 lines of pure delegation — no inline git logic, no error reshape, no module-local state. `PreviewActionResult = PreviewResult | SaveToRepoError` type alias mirrors the library's discriminated union verbatim. Import block uses no aliasing — the `Action` suffix is the sole disambiguation from identically-named lib exports. `Runtime` type reused from existing line 59 import. Commit `1ae5398`.
+- Created `dashboard/tests/save-to-repo-action.test.ts` (136 lines, 4 `it()` blocks): real `mkdtempSync` git repo + `git init -q` + seed README commit + seed `routines-codex/x/` bundle + `SLEEPWALKER_REPO_ROOT` env override + `makeTempHome()` for ~/.sleepwalker isolation per block. Blocks: (1) preview returns ok with hex lockToken `/^[0-9a-f]{32}$/` + files.length > 0; (2) preview→commit round-trip produces sha `/^[0-9a-f]{7,40}$/` + shortSha.length === 7 verified via `git log --oneline -1`; (3) preview→release→preview re-allows second preview (flock freed); (4) preview→preview without release returns `{ok:false, kind:"lock-busy"}`. Zero vi.doMock — real-git coverage proves wrapper boundary preserves lib fidelity. Commit `659ef16`.
+- Updated `.planning/STATE.md` top-line "Last updated" + Current Position (Phase 4 Plan → 04-05 complete) + Status block + Phase 4 progress bar `[####-----] → [#####----]` + Plans complete metric (27 → 28) + Dashboard test suite metric (318 → 322 green across 35 files) + Plans table row for 04-05 + new Decisions entry + Session Continuity (Last session + Stopped at + Resume file).
+- Updated `.planning/ROADMAP.md` Phase 4 plans list (04-05 flipped `[ ] → [x]`) + Progress table (4/9 → 5/9) + Last updated footer.
+- Created `.planning/phases/04-deploy/04-05-SUMMARY.md` — frontmatter with dependency graph + decisions + metrics; body covers implementation (3 Action wrappers + 4-block integration test) + suite count delta + commits + never-push invariant propagation confirmation + self-check PASSED.
+- Two atomic commits on `main`: `1ae5398` feat wrappers + `659ef16` test integration. Closeout docs commit folds the 4 planning files + this activity log entry.
+- Gate re-run: `pnpm run typecheck` exit 0; `pnpm test` 322/322 green across 35 files. Pre-existing uncommitted parallel-session paths (`dashboard/lib/cloud-cache.ts`, `dashboard/tests/cloud-cache.test.ts`) + untracked `CLAUDE.md` + 2 screenshot PNGs preserved untouched — every `git add` used explicit paths.
+- Phase 4 Deploy now 5/9 plans complete (56%); Wave 2 partial (04-05 done; 04-06 HealthBadgeRow + 04-07 DeployProgressDrawer remain parallel-safe with each other). REPO-01 Server Action surface code-complete — Plan 04-08 SaveToRepoModal fully dep-cleared.
+
 ## 2026-04-20 21:22 EST
 
 ### User Prompt
