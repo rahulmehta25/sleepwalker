@@ -43,18 +43,18 @@ source: derived from 04-RESEARCH.md §Validation Architecture
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | 0 | DEPL-01 | — | Deploy advances state machine `planning → writing → loading → verified` writing state file each transition | unit | `pnpm test tests/deploy-state.test.ts -t "state machine transitions"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | DEPL-01 | — | `getDeployState` Server Action returns parsed state-file object | unit | `pnpm test tests/deploy-state.test.ts -t "readDeployState parses JSON"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | DEPL-01 | — | State file is atomic (crash mid-write leaves no partial JSON) | unit | `pnpm test tests/deploy-state.test.ts -t "atomic write"` | ❌ Wave 0 | ⬜ pending |
+| 4-01-02 | 04-01 | 0 | DEPL-01 | — | Deploy advances state machine `planning → writing → loading → verified` writing state file each transition | unit | `pnpm test tests/deploy-state.test.ts -t "state machine transitions"` | ✓ dashboard/tests/deploy-state.test.ts | ✅ green 2026-04-20 |
+| 4-01-02 | 04-01 | 0 | DEPL-01 | — | `getDeployState` Server Action returns parsed state-file object | unit | `pnpm test tests/deploy-state.test.ts -t "readDeployState parses JSON"` | ✓ dashboard/tests/deploy-state.test.ts | ✅ green 2026-04-20 |
+| 4-01-02 | 04-01 | 0 | DEPL-01 | — | State file is atomic (crash mid-write leaves no partial JSON) | unit | `pnpm test tests/deploy-state.test.ts -t "atomic write"` | ✓ dashboard/tests/deploy-state.test.ts | ✅ green 2026-04-20 |
 | TBD | TBD | 0 | DEPL-01 | — | Polling stops on terminal state | integration (jsdom) | `pnpm test tests/deploy-progress-drawer.test.tsx -t "stops polling"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-02 | — | Rollback runs adapter.undeploy + deleteDeployState on ANY step failure | unit | `pnpm test tests/deploy-routine-action.test.ts -t "rollback on writing failure"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-02 | — | Rollback captures nested errors in rollbackActions array | unit | `pnpm test tests/deploy-routine-action.test.ts -t "nested error captured"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-02 | — | Zero orphaned state files after rollback | integration | `pnpm test tests/deploy-routine-action.test.ts -t "no orphaned state"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-02 | — | 10s bootout timeout surfaces as `rolled-back` state with timeout reason | unit | `pnpm test tests/deploy-routine-action.test.ts -t "bootout timeout"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | DEPL-03 | — | `mtime(bundle) > verifiedAt` returns status=drift | unit | `pnpm test tests/deploy-state.test.ts -t "drift detection"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | DEPL-03 | — | `mtime(bundle) < verifiedAt` returns status=deployed | unit | `pnpm test tests/deploy-state.test.ts -t "deployed — no drift"` | ❌ Wave 0 | ⬜ pending |
+| 4-01-02 | 04-01 | 0 | DEPL-03 | — | `mtime(bundle) > verifiedAt` returns status=drift | unit | `pnpm test tests/deploy-state.test.ts -t "drift detection"` | ✓ dashboard/tests/deploy-state.test.ts | ✅ green 2026-04-20 |
+| 4-01-02 | 04-01 | 0 | DEPL-03 | — | `mtime(bundle) < verifiedAt` returns status=deployed | unit | `pnpm test tests/deploy-state.test.ts -t "deployed — no drift"` | ✓ dashboard/tests/deploy-state.test.ts | ✅ green 2026-04-20 |
 | TBD | TBD | 0 | DEPL-03 | — | `listRoutines` attaches `status` per bundle | integration | `pnpm test tests/routines-page.test.ts -t "status per bundle"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | DEPL-03 | — | bundleMtime picks max across dir contents (not dir mtime alone) | unit | `pnpm test tests/deploy-state.test.ts -t "bundleMtime across files"` | ❌ Wave 0 | ⬜ pending |
+| 4-01-02 | 04-01 | 0 | DEPL-03 | — | bundleMtime picks max across dir contents (not dir mtime alone) | unit | `pnpm test tests/deploy-state.test.ts -t "bundleMtime across files"` | ✓ dashboard/tests/deploy-state.test.ts | ✅ green 2026-04-20 |
 | TBD | TBD | 0 | DEPL-04 | — | claude-routines runNow returns handoffUrl | unit | `pnpm test tests/run-now-action.test.ts -t "claude-routines"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-04 | — | claude-desktop runNow invokes `claude -p` | unit | `pnpm test tests/run-now-action.test.ts -t "claude-desktop"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-04 | — | codex runNow spawns supervisor detached+unref | unit | `pnpm test tests/run-now-action.test.ts -t "codex detached"` | ❌ Wave 0 | ⬜ pending |

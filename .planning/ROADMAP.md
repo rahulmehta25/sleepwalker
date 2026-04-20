@@ -93,7 +93,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01-PLAN.md -- deps (simple-git + proper-lockfile) + deploy-state.ts atomic I/O + drift math + 10 it() blocks (DEPL-01 + DEPL-03)
+- [x] 04-01-PLAN.md -- deps (simple-git + proper-lockfile) + deploy-state.ts atomic I/O + drift math + 11 it() blocks (DEPL-01 + DEPL-03 primitives) — **completed 2026-04-20** (commits `8707433` chore deps + scaffold + `e3526c1` feat impl + 11 it() blocks; suite 272 → 283 green; 6/36 VALIDATION rows green — rows 1 + 2 + 3 + 9 + 10 + 12)
 - [ ] 04-02-PLAN.md -- save-to-repo.ts simple-git + proper-lockfile wrapper + never-push + real-git-repo tests (REPO-01)
 - [ ] 04-03-PLAN.md -- /api/health/all Route Handler with 2s per-adapter timeout + Promise.allSettled (HLTH-01 server)
 - [ ] 04-04-PLAN.md -- routines/actions.ts 4 deploy-family Server Actions (deploy state machine + rollback + runNow + setEnabled) (DEPL-01..05)
@@ -134,10 +134,10 @@ Plans:
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
 | 3. Editor | 9/9 | Complete | 2026-04-19 |
-| 4. Deploy | 0/TBD | Not started | - |
+| 4. Deploy | 1/9 | In Progress | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 3 Plan 09 execution (Phase 3 Editor SEALED — 9/9 plans complete; dashboard suite 250/250 green across 26 files; typecheck exit 0; supervisor bash harness 24/24 — no Phase 3 regression on Phase 2 bash tests; frozen-surface diff 0 lines vs dynamic PHASE3_BASE `104547f` across 20 v0.1 + Phase 2 paths (resolved via sentinel-file idiom on `dashboard/lib/bundle-schema.ts`); 03-VALIDATION.md approved (all 25 Task IDs filled, nyquist_compliant=true, wave_0_complete=true); EDIT-01 through EDIT-05 all code-complete (4 manual-only verifications deferred to user per VALIDATION.md §Manual-Only); Milestone progress 3/6 phases complete (Phase 1 Foundation + Phase 2 Adapters code-complete + Phase 3 Editor); Next critical path: Phase 4 Deploy — `/gsd-plan-phase 4`)*
+*Last updated: 2026-04-20 after Phase 4 Plan 01 execution (Wave 0 first brick — deploy-state atomic I/O + drift math landed; commits `8707433` chore deps + scaffold + `e3526c1` feat impl + 11 it() blocks; dashboard suite 272 → 283 green across 29 files; typecheck exit 0; simple-git@3.36.0 + proper-lockfile@4.1.2 + @types/proper-lockfile installed; 04-VALIDATION rows 1 + 2 + 3 + 9 + 10 + 12 green; Phase 4 now 1/9 plans complete; Wave 0 siblings 04-02 + 04-03 unblocked and parallel-safe — either is a valid continuation point)*

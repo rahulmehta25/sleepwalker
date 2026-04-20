@@ -1,5 +1,22 @@
 # Activity Log
 
+## 2026-04-20 20:40 EST
+
+### User Prompt
+"Execute Plan 04-01 of phase 04-deploy. Sequential on main branch. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md yourself as the final task."
+
+### Actions Taken
+- Installed three net-new Phase 4 dependencies in `dashboard/`: `pnpm add simple-git@3.36.0 proper-lockfile@4.1.2` (runtime) + `pnpm add -D @types/proper-lockfile@4.1.4` (dev). Updated `dashboard/package.json` + `dashboard/pnpm-lock.yaml`.
+- Created `dashboard/lib/deploy-state.ts` (202 lines) exporting 4 types (DeployStep, DeployPhase, DeployState, RoutineStatus) and 5 functions (writeDeployState atomic tmp+rename, readDeployState ENOENT→null, deleteDeployState idempotent, bundleMtime Math.max across dir+children, computeStatus draft/drift/disabled/deployed derivation).
+- Created `dashboard/tests/deploy-state.test.ts` (274 lines, 11 it() blocks) — block names match 04-VALIDATION.md row anchors 1, 2, 3, 9, 10, 12 so the exit-gate `-t "..."` queries each resolve to exactly 1 passing test.
+- TDD flow: RED (11/11 failing with "unimplemented"), GREEN (10/11 pass + 1 bundleMtime test failure), Rule-1 auto-fix (pinned directory mtime as final utimesSync call — macOS child utimesSync re-bumps parent dir mtime forward), GREEN (11/11 pass).
+- Two atomic commits: `8707433` chore(04-01) deps + scaffold (3 files, +201 insertions) + `e3526c1` feat(04-01) fill bodies + 11-block test matrix (2 files, +385 / -22). Each commit scoped via explicit `git add <paths>` — no `git add .` / `git add -A`. Pre-existing uncommitted paths (`cloud-cache.ts`, `cloud-cache.test.ts`, untracked `CLAUDE.md` + 2 screenshot PNGs) preserved untouched.
+- `pnpm run typecheck` exit 0; `pnpm test` 272 → 283 green (+11) across 28 → 29 files.
+- Created `.planning/phases/04-deploy/04-01-SUMMARY.md` with full frontmatter (requires/provides/affects/tech-stack/key-files/decisions/metrics), Files + Commits + Test Count Delta tables, VALIDATION row flip table (rows 1/2/3/9/10/12 → 4-01-02 green), plan success-criteria checklist (5/5 met), verification commands run, Deviations (1 Rule-1 test fix documented), Architectural Notes, Known Stubs (none), Dependencies for Downstream Plans, and Self-Check: PASSED footer.
+- Updated `.planning/STATE.md`: new "Last updated" narrative for Plan 04-01; previous Phase 3 Plan 08 narrative demoted to "Older update"; Current Position + Current focus rewritten; added Phase 4 progress bar `[#--------] 1/9`; Performance Metrics (Plans authored 23→32, Plans complete 23→24, Dashboard test suite 250 → 283, unchanged requirement count with DEPL-01/DEPL-03 partial note, frozen-surface unchanged note, Supervisor harness unchanged note); added Plan 04-01 Decisions entry; added Plan 04-01 row to per-plan table; flipped the Phase 4 execution todo from unchecked to in-progress; rewrote Session Continuity Last session / Stopped at / Resume file; updated footer to 2026-04-20.
+- Updated `.planning/ROADMAP.md`: Plan 04-01 row checkbox flipped `[ ] → [x]` with commit SHAs + test delta + VALIDATION row flip note; Progress table row `4. Deploy: 0/TBD Not started` → `1/9 In Progress`; footer Last updated line rewritten for 2026-04-20 Plan 04-01 execution.
+- Files modified: `dashboard/package.json`, `dashboard/pnpm-lock.yaml`, `dashboard/lib/deploy-state.ts` (new), `dashboard/tests/deploy-state.test.ts` (new), `.planning/phases/04-deploy/04-01-SUMMARY.md` (new), `.planning/STATE.md`, `.planning/ROADMAP.md`, `docs/activity_log.md`.
+
 ## 2026-04-19 19:43 EST
 
 ### User Prompt
