@@ -53,7 +53,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 
 ### Runtime Health (Phase 1/3 territory)
 
-- [ ] **HLTH-01**: Dashboard landing page shows four runtime health badges (Claude Routines / Claude Desktop / Codex / Gemini) following the `brew doctor` pattern — green when ready, grey with fix-instructions link when not
+- [ ] **HLTH-01**: Dashboard landing page shows four runtime health badges (Claude Routines / Claude Desktop / Codex / Gemini) following the `brew doctor` pattern — green when ready, grey with fix-instructions link when not — **code-complete end-to-end 2026-04-20 (Route Handler 04-03 + client components 04-06); landing-page mount deferred to 04-09 for formal Complete status**
 
 ### Docs & OSS Polish (Phase 5 territory)
 
@@ -131,7 +131,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | SAFE-01 | Phase 5 | Pending |
 | SAFE-02 | Phase 2 | Complete (02-03 bin/sleepwalker-run-cli supervisor, commit 39f7eb3, 2026-04-19) |
 | REPO-01 | Phase 4 | Pending |
-| HLTH-01 | Phase 4 | Pending |
+| HLTH-01 | Phase 4 | Partial (04-03 ships the /api/health/all Route Handler with 2s Promise.race per-adapter timeout + Promise.allSettled; 04-06 ships the client HealthBadgeRow + HealthBadge with 60s sessionStorage cache + window-focus stale refetch + per-badge manual refresh — code-complete end-to-end; 04-09 mounts HealthBadgeRow in the landing page header for formal Complete status at the phase exit gate; commits `22b3740` + `de000a6` + `e3492ea` + `df2c279` + `d016d98`) |
 | DOCS-01 | Phase 6 | Pending |
 | DOCS-02 | Phase 6 | Pending |
 | DOCS-03 | Phase 6 | Pending |
@@ -153,4 +153,4 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 
 ---
 *Requirements defined: 2026-04-18*
-*Last updated: 2026-04-20 after Phase 4 Plan 04 execution (Wave 1 sealed; DEPL-01 + DEPL-02 + DEPL-04 + DEPL-05 flipped from Pending to Partial — Server Action surfaces now code-complete with state machine + rollback + runNow dispatch + enable/disable toggle all living in `dashboard/app/routines/actions.ts`; UI consumer plans 04-07/08/09 complete the surface for formal Complete status at the phase exit gate. 15/32 requirements fully Complete unchanged; 4 new Partials added)*
+*Last updated: 2026-04-20 after Phase 4 Plan 06 execution (Wave 2 second ship sealed; HLTH-01 flipped from Pending to Partial/code-complete end-to-end — Route Handler 04-03 + client HealthBadgeRow + HealthBadge components 04-06 now live; landing-page mount deferred to 04-09 for formal Complete status at the phase exit gate. 15/32 requirements fully Complete unchanged; 5 Partials now tracked — DEPL-01 + DEPL-02 + DEPL-04 + DEPL-05 + HLTH-01)*
