@@ -119,11 +119,11 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | EDIT-03 | Phase 3 | Complete (03-07 DraftRecoveryBanner + 03-08 500ms autosave + beforeunload-when-dirty + save-clears-draft.v1 state machine, commits 9742c56 + 5e7d125, 2026-04-19) |
 | EDIT-04 | Phase 3 | Complete (03-01 zod slug regex + 03-03 hasBundleAnyRuntime + 03-05 saveRoutine/checkSlugAvailability cross-runtime composition, commits 8286db4 + 509adb0 + 5505e32 + 70cc247, 2026-04-19) |
 | EDIT-05 | Phase 3 | Complete (03-08 INPUT_OPT_OUT const spread applies autocomplete/autocorrect/autocapitalize/spellcheck=false/data-1p-ignore/data-lpignore/data-form-type/data-bwignore to every input + prompt textarea rows=30, commit 5e7d125, 2026-04-19) |
-| DEPL-01 | Phase 4 | Pending |
-| DEPL-02 | Phase 4 | Pending |
+| DEPL-01 | Phase 4 | Partial (04-01 deploy-state persistence primitives + 04-04 deployRoutine Server Action 4-stage state machine with atomic writes + per-step elapsedMs; UI drawer consumer in 04-07 completes the surface; commits `8707433` + `e3526c1` + `d06d22b`) |
+| DEPL-02 | Phase 4 | Partial (04-04 rollback orchestrator with 10s Promise.race resolves-never-rejects timeout wrapping adapter.undeploy + deleteDeployState zero-orphan invariant + rollbackActions forensic array on DeployActionResult ok:false branch; UI drawer error banner in 04-07 completes the surface; commit `d06d22b`) |
 | DEPL-03 | Phase 4 | Pending |
-| DEPL-04 | Phase 4 | Pending |
-| DEPL-05 | Phase 4 | Pending |
+| DEPL-04 | Phase 4 | Partial (04-04 runNowRoutine Server Action dispatching via getAdapter(runtime).runNow; claude-routines watchUrl→handoffUrl shim for consistent UI semantics; UI RunNowButton consumer in 04-08 completes the surface; commit `d06d22b`) |
+| DEPL-05 | Phase 4 | Partial (04-04 setRoutineEnabled Server Action with launchctl bootstrap/bootout for codex/gemini + per-runtime persistEnabledFlag — codex/gemini rewrite config.json, claude-desktop delegates to v0.1 setEnabled, claude-routines flips archived_fleets with inverse semantics — and first-enable invariant refusing non-succeeded state; UI action-bar consumer in 04-09 completes the surface; commit `d06d22b`) |
 | QUEU-01 | Phase 5 | Pending |
 | QUEU-02 | Phase 5 | Pending |
 | QUEU-03 | Phase 5 | Pending |
@@ -153,4 +153,4 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 
 ---
 *Requirements defined: 2026-04-18*
-*Last updated: 2026-04-19 after Phase 3 Plan 09 execution (Phase 3 Editor SEALED; EDIT-01..05 all Complete — previously flipped by Plan 03-08; no traceability delta in 03-09 — exit gate is verification + documentation only; 15/32 requirements now complete: ADPT-01/02/03/04/05/06/07/08/09 + SAFE-02 + EDIT-01/02/03/04/05; Phase 4 Deploy requirements DEPL-01..05 + REPO-01 + HLTH-01 remain pending)*
+*Last updated: 2026-04-20 after Phase 4 Plan 04 execution (Wave 1 sealed; DEPL-01 + DEPL-02 + DEPL-04 + DEPL-05 flipped from Pending to Partial — Server Action surfaces now code-complete with state machine + rollback + runNow dispatch + enable/disable toggle all living in `dashboard/app/routines/actions.ts`; UI consumer plans 04-07/08/09 complete the surface for formal Complete status at the phase exit gate. 15/32 requirements fully Complete unchanged; 4 new Partials added)*
