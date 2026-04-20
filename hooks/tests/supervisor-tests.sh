@@ -295,6 +295,101 @@ set -e
 assert_eq "s7b: supervisor exits 66 (EX_NOINPUT) when derived bundle missing" "66" "$SCEN7B_EXIT"
 
 # =============================================================================
+# Scenario 8: flock serializes concurrent audit writes (QUEU-04)
+# =============================================================================
+# Per RESEARCH §1.7, 8 writers at 5KB lines produced 78% corruption without
+# flock. Plan 05-04 wraps audit_emit in an FD-form flock -w 5 -x 200 on
+# ~/.sleepwalker/audit.jsonl.lock. This scenario asserts 4 concurrent
+# supervisors produce exactly 8 lines (4 runs × started + completed events),
+# every line valid JSON via jq -e . — the "zero corruption" invariant.
+echo ""
+echo "==> scenario 8: flock serializes 4 concurrent supervisor audit writes"
+reset_state
+make_bundle "codex"  "s8-a" "yellow" 40000
+make_bundle "codex"  "s8-b" "yellow" 40000
+make_bundle "gemini" "s8-c" "yellow" 40000
+make_bundle "gemini" "s8-d" "yellow" 40000
+
+# Ensure the lock file sidecar is ready before the fan-out (supervisor's
+# own `touch "$LOCK_FILE"` also covers this, but we pre-create here to keep
+# the test independent of supervisor boot ordering).
+S8_LOCK_FILE="$TEST_HOME/.sleepwalker/audit.jsonl.lock"
+mkdir -p "$(dirname "$S8_LOCK_FILE")"
+touch "$S8_LOCK_FILE"
+
+# Fire all 4 in parallel. Each supervisor emits: started + completed = 2 lines.
+for pair in "codex s8-a" "codex s8-b" "gemini s8-c" "gemini s8-d"; do
+  SLEEPWALKER_MODE=overnight "$SUPERVISOR" $pair >/dev/null 2>&1 &
+done
+wait
+
+# Count: 4 runs × 2 events each = 8 lines exactly. flock serialization
+# prevents the interleaving RESEARCH §1.7 observed. Even at small line
+# sizes, interleaved appends show up as drifted line counts under wc -l
+# because embedded partial writes break lines in half.
+assert_file_lines "s8: audit has exactly 8 lines (4 runs × 2 events)" "8" "$TEST_HOME/.sleepwalker/audit.jsonl"
+
+# Every line must round-trip through jq -e . cleanly — this is the
+# "zero corruption" invariant the flock closes.
+PARSE_FAIL=0
+while IFS= read -r line; do
+  printf '%s' "$line" | jq -e . >/dev/null 2>&1 || PARSE_FAIL=$((PARSE_FAIL+1))
+done < "$TEST_HOME/.sleepwalker/audit.jsonl"
+assert_eq "s8: zero malformed audit lines" "0" "$PARSE_FAIL"
+
+# Each of the 4 bundles should appear in at least one fleet field
+assert_contains "s8: codex/s8-a fleet observed"  '"fleet":"codex/s8-a"'  "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl")"
+assert_contains "s8: codex/s8-b fleet observed"  '"fleet":"codex/s8-b"'  "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl")"
+assert_contains "s8: gemini/s8-c fleet observed" '"fleet":"gemini/s8-c"' "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl")"
+assert_contains "s8: gemini/s8-d fleet observed" '"fleet":"gemini/s8-d"' "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl")"
+
+# =============================================================================
+# Scenario 9: flock -w 5 times out gracefully (supervisor degrades safely)
+# =============================================================================
+# Per RESEARCH §1.6, the supervisor chooses "option 2" on flock timeout:
+# fall through to unlocked append (|| true). Preserves the audit entry
+# (critical path for the supervisor) at the cost of re-introducing the
+# v0.1 race for that one entry — better than killing the run.
+echo ""
+echo "==> scenario 9: flock -w 5 times out gracefully when lock is held"
+reset_state
+S9_LOCK_FILE="$TEST_HOME/.sleepwalker/audit.jsonl.lock"
+mkdir -p "$(dirname "$S9_LOCK_FILE")"
+touch "$S9_LOCK_FILE"
+
+# Hold the lock for 6 seconds in a background subshell. The supervisor's
+# flock -w 5 should give up after 5s and fall through to unlocked append
+# per RESEARCH §1.6 "option 2" for supervisor failure mode.
+( flock -x "$S9_LOCK_FILE" -c 'sleep 6' ) &
+HOLDER=$!
+sleep 0.3  # Let the holder actually grab the lock before the contender starts
+
+make_bundle "codex" "s9-blocked" "yellow" 40000
+
+set +e
+SLEEPWALKER_MODE=overnight "$SUPERVISOR" codex s9-blocked >/dev/null 2>&1
+S9_EXIT=$?
+set -e
+
+# Clean up the holder (may have already exited)
+wait "$HOLDER" 2>/dev/null || true
+
+# Supervisor must not crash on flock timeout. Via the || true fallthrough
+# in audit_emit, the unlocked append still runs and exit stays 0.
+assert_eq "s9: supervisor exits 0 even on flock timeout" "0" "$S9_EXIT"
+
+# Expect at least the started + completed events (2 lines). If the
+# unlocked-fallback introduced corruption under extreme contention, line
+# count could differ — we accept >=1 as proof the graceful fallthrough ran.
+AUDIT_LINES=$(wc -l < "$TEST_HOME/.sleepwalker/audit.jsonl" 2>/dev/null | tr -d ' ' || echo 0)
+if [ "$AUDIT_LINES" -lt 1 ]; then
+  FAIL=$((FAIL+1)); FAILURES+=("s9: no audit lines landed after flock timeout fallthrough")
+  echo "  FAIL  s9: audit empty after timeout (expected >=1 line via unlocked fallthrough)"
+else
+  PASS=$((PASS+1)); echo "  PASS  s9: audit captured $AUDIT_LINES line(s) via graceful fallthrough"
+fi
+
+# =============================================================================
 # Summary
 # =============================================================================
 echo ""

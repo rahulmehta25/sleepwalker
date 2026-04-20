@@ -52,19 +52,30 @@ fi
 PROMPT_FILE="${BUNDLE_DIR}/prompt.md"
 CONFIG_FILE="${BUNDLE_DIR}/config.json"
 AUDIT_FILE="${HOME}/.sleepwalker/audit.jsonl"
+LOCK_FILE="${HOME}/.sleepwalker/audit.jsonl.lock"
 SETTINGS_FILE="${HOME}/.sleepwalker/settings.json"
 STATE_DIR="${HOME}/.sleepwalker"
 FLEET="${RUNTIME}/${SLUG}"
 
 mkdir -p "$STATE_DIR" "${STATE_DIR}/logs"
 touch "$AUDIT_FILE"
+touch "$LOCK_FILE"
 
 # --- Safety envs (SAFE-02 — re-export defensively; plist already sets these) ---
 export NO_COLOR=1
 export TERM=dumb
 export CI=true
 
-# --- Helper: audit emit ---
+# --- Helper: audit emit (QUEU-04: flock-wrapped to eliminate concurrent-write race) ---
+# Per v0.1 CONCERNS.md §concurrent JSONL race + RESEARCH §1.7 live synthetic.
+# Uses POSIX flock(1) FD form on ${LOCK_FILE} sidecar with 5s timeout.
+# The lock file is a separate sidecar (BashFAQ/045); never locks the data file
+# itself. Kernel auto-releases advisory locks on process death — no stale-lock
+# cleanup required. Lock path is shared byte-identical with hooks/sleepwalker-
+# audit-log.sh (Plan 05-05) so writers across both paths serialize on one mutex.
+# Supervisor chooses graceful fallthrough (|| true) on flock timeout/absence:
+# the audit line is the supervisor's only record of the run, so we prefer
+# reintroducing the narrow v0.1 race for that one entry over dropping the line.
 # $1 = event name; $2 = extra JSON fragment (already-formed key:value pairs, no leading/trailing comma)
 audit_emit() {
   local ts event extra
@@ -72,11 +83,17 @@ audit_emit() {
   event="$1"
   extra="${2:-}"
   if [ -n "$extra" ]; then
-    printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s",%s}\n' \
-      "$ts" "$FLEET" "$RUNTIME" "$event" "$extra" >> "$AUDIT_FILE"
+    (
+      flock -w 5 -x 200 || true
+      printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s",%s}\n' \
+        "$ts" "$FLEET" "$RUNTIME" "$event" "$extra" >> "$AUDIT_FILE"
+    ) 200>"$LOCK_FILE"
   else
-    printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s"}\n' \
-      "$ts" "$FLEET" "$RUNTIME" "$event" >> "$AUDIT_FILE"
+    (
+      flock -w 5 -x 200 || true
+      printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s"}\n' \
+        "$ts" "$FLEET" "$RUNTIME" "$event" >> "$AUDIT_FILE"
+    ) 200>"$LOCK_FILE"
   fi
 }
 
