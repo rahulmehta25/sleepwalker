@@ -142,7 +142,11 @@ audit_emit "started" "\"cli\":\"$CLI_ABS\",\"budget\":$BUDGET"
 # --- CLI argv dispatch (per-runtime; NO user text in argv ever) ---
 case "$RUNTIME" in
   codex)
-    CLI_ARGS=(exec - --json)
+    # --skip-git-repo-check: the staged bundle ~/.sleepwalker/staged-bundles/<runtime>/<slug>/
+    # is not a git repo, so codex's default trusted-directory check would refuse to run.
+    # Plan 02-12 put the supervisor's CWD in the staged bundle to escape TCC; this flag
+    # tells codex that's expected and safe.
+    CLI_ARGS=(exec - --json --skip-git-repo-check)
     ;;
   gemini)
     CLI_ARGS=(-p - --output-format stream-json --yolo)
