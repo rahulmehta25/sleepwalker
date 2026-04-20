@@ -63,13 +63,13 @@ source: derived from 04-RESEARCH.md §Validation Architecture
 | TBD | TBD | 0 | DEPL-05 | — | setRoutineEnabled(enabled=true) calls launchctl bootstrap | unit | `pnpm test tests/set-enabled-action.test.ts -t "enable bootstrap"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-05 | — | enabled flag persists in config.json | unit | `pnpm test tests/set-enabled-action.test.ts -t "persist flag"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | DEPL-05 | — | Enable on Draft returns error ("Not deployed yet") | unit | `pnpm test tests/set-enabled-action.test.ts -t "enable draft error"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | REPO-01 | — | `previewSaveToRepo` stages only `routines-<runtime>/<slug>/*` | unit (real tmp git repo) | `pnpm test tests/save-to-repo.test.ts -t "stages only subpath"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | REPO-01 | — | `previewSaveToRepo` returns `git diff --stat`-shaped `DiffSummary` | unit | `pnpm test tests/save-to-repo.test.ts -t "diff shape"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | REPO-01 | — | Second concurrent `previewSaveToRepo` returns `lock-busy` immediately | unit | `pnpm test tests/save-to-repo.test.ts -t "lock-busy"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | REPO-01 | — | `commitSaveToRepo` NEVER calls `git.push` | unit | `pnpm test tests/save-to-repo.test.ts -t "never pushes"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | REPO-01 | — | `releaseSaveLock` runs `git reset` on subpath + releases lock | unit | `pnpm test tests/save-to-repo.test.ts -t "release resets"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | REPO-01 | — | Stale lock (>30s) is reclaimable | unit | `pnpm test tests/save-to-repo.test.ts -t "stale lock reclaim"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | REPO-01 | — | Never-sweep: uncommitted file outside subpath stays unstaged | unit | `pnpm test tests/save-to-repo.test.ts -t "never sweeps"` | ❌ Wave 0 | ⬜ pending |
+| 4-02-02 | 04-02 | 0 | REPO-01 | — | `previewSaveToRepo` stages only `routines-<runtime>/<slug>/*` | unit (real tmp git repo) | `pnpm test tests/save-to-repo.test.ts -t "stages only subpath"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
+| 4-02-02 | 04-02 | 0 | REPO-01 | — | `previewSaveToRepo` returns `git diff --stat`-shaped `DiffSummary` | unit | `pnpm test tests/save-to-repo.test.ts -t "diff shape"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
+| 4-02-02 | 04-02 | 0 | REPO-01 | — | Second concurrent `previewSaveToRepo` returns `lock-busy` immediately | unit | `pnpm test tests/save-to-repo.test.ts -t "lock-busy"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
+| 4-02-02 | 04-02 | 0 | REPO-01 | — | `commitSaveToRepo` NEVER calls `git.push` | unit | `pnpm test tests/save-to-repo.test.ts -t "never pushes"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
+| 4-02-02 | 04-02 | 0 | REPO-01 | — | `releaseSaveLock` runs `git reset` on subpath + releases lock | unit | `pnpm test tests/save-to-repo.test.ts -t "release resets"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
+| 4-02-02 | 04-02 | 0 | REPO-01 | — | Stale lock (>30s) is reclaimable | unit | `pnpm test tests/save-to-repo.test.ts -t "stale lock reclaim"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
+| 4-02-02 | 04-02 | 0 | REPO-01 | — | Never-sweep: uncommitted file outside subpath stays unstaged | unit | `pnpm test tests/save-to-repo.test.ts -t "never sweeps"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
 | TBD | TBD | 0 | HLTH-01 | — | `/api/health/all` returns `{statuses, checkedAt}` | integration | `pnpm test tests/health-route.test.ts -t "shape"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | HLTH-01 | — | Timeout per adapter is 2000ms, never hangs response | unit | `pnpm test tests/health-route.test.ts -t "timeout"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | HLTH-01 | — | Promise.allSettled catches throwing adapter | unit | `pnpm test tests/health-route.test.ts -t "adapter throws"` | ❌ Wave 0 | ⬜ pending |

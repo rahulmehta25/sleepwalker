@@ -1,5 +1,22 @@
 # Activity Log
 
+## 2026-04-20 20:55 EST
+
+### User Prompt
+"Execute Plan 04-02 of phase 04-deploy — `dashboard/lib/save-to-repo.ts` (git ops from Next.js server). Sequential on main. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md at closeout."
+
+### Actions Taken
+- Created `dashboard/lib/save-to-repo.ts` (331 lines): 3 function exports (`previewSaveToRepo`, `commitSaveToRepo`, `releaseSaveLock`) + 3 result types (`PreviewResult`, `SaveToRepoError`, `CommitResult`) + module-scope `LOCK_REGISTRY` Map. Uses `simple-git@3.36.0` + `proper-lockfile@4.1.2` with `{retries: 0, stale: 30_000}`. Explicit-path staging via `git add ["--", subpath]`. `releaseSaveLock` runs BOTH `git rm --cached --ignore-unmatch -r` (Pitfall #7 newly-added paths) AND `git reset HEAD --`. Zero references to simple-git push API — never-push invariant grep-verifiable. `SLEEPWALKER_REPO_ROOT` env override for test harness.
+- Created `dashboard/tests/save-to-repo.test.ts` (352 lines, 8 it() blocks across 2 describe groups): `save-to-repo (real git repo)` uses mkdtempSync tmp repo + `SLEEPWALKER_REPO_ROOT` env override (5 tests — stages-only-subpath, diff-shape, lock-busy, never-sweeps, no-changes); `save-to-repo (mocked simple-git)` uses `vi.doMock("simple-git")` + `vi.doMock("proper-lockfile")` (3 tests — never-pushes, release-resets, stale-lock-reclaim). Block names match 04-VALIDATION.md row anchors 21-27 verbatim.
+- Two atomic commits on `main`: `55740f8` `feat(04-02): save-to-repo.ts simple-git + proper-lockfile wrapper` (1 file / +331) + `7279030` `test(04-02): save-to-repo matrix — real git repo + mocked simple-git` (1 file / +352). All commits used explicit `git add <paths>` — pre-existing uncommitted `cloud-cache.ts` / `cloud-cache.test.ts` + untracked `CLAUDE.md` + 2 screenshot PNGs preserved untouched.
+- Verified: `pnpm run typecheck` exit 0; `pnpm test` 291/291 green (+8 from 283); every 04-VALIDATION anchor query (`-t "stages only subpath"` / `-t "diff shape"` / `-t "lock-busy"` / `-t "never pushes"` / `-t "release resets"` / `-t "stale lock reclaim"` / `-t "never sweeps"`) resolves to exactly 1 passing test.
+- One Rule-1 auto-fix: initial module doc comment said "future docs/AUTHORING.md documents the manual git push step" — literal "git push" phrase tripped the hard invariant grep `grep -cE "\\.push\\(|git push" == 0`. Rephrased to "manual upload-to-remote step users run from their own terminal" (same intent, different words). Module behavior unchanged. Fix applied before the single Task-1 commit — no separate fix-commit needed.
+- Created `.planning/phases/04-deploy/04-02-SUMMARY.md` with frontmatter (requires/provides/affects/tech-stack/key-files/decisions/metrics), files table, 2-commit log, test count delta (283→291), 7 VALIDATION rows flipped table, success-criteria checklist, per-anchor pnpm query results, deviations (1 Rule-1 auto-fix), architectural notes, downstream dependency clears, Self-Check PASSED.
+- Updated `.planning/phases/04-deploy/04-VALIDATION.md`: rows 21-27 flipped from `TBD / ⬜ pending` to `4-02-02 / ✅ green 2026-04-20`; Task ID + Plan + File Exists + Status columns all filled; 13/36 VALIDATION rows now green.
+- Updated `.planning/ROADMAP.md`: 04-02-PLAN row flipped to `[x] ... completed 2026-04-20 (commits 55740f8 + 7279030; suite 283→291; rows 21-27 green)`; Phase 4 progress counter `1/9 → 2/9`; "Last updated" footer extended.
+- Updated `.planning/STATE.md`: prepended Phase 4 Plan 02 detail to "Last updated" banner with full technical narrative (exports, test matrix, invariants, commits, deviations); Phase 4 progress bar `[#--------] 1/9 → [##-------] 2/9`; Current Position section updated (Phase row 2/9, Plan row 04-02 complete, Status paragraph 2/9 done / 22%); Performance Metrics table: Plans complete `24 → 25`, Requirements complete note REPO-01 partial, v0.1 surface frozen note Plan 04-02 additive, Dashboard test suite `283/283 → 291/291 green across 30 files`; per-plan metrics table gained 04-02 row with duration + task count + file list + commit hashes.
+- Appended this activity log entry at the top of `docs/activity_log.md`.
+
 ## 2026-04-20 20:40 EST
 
 ### User Prompt
