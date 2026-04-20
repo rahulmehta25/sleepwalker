@@ -7,10 +7,12 @@
 set -euo pipefail
 
 AUDIT_FILE="${HOME}/.sleepwalker/audit.jsonl"
+LOCK_FILE="${HOME}/.sleepwalker/audit.jsonl.lock"
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p "${HOME}/.sleepwalker"
 touch "$AUDIT_FILE"
+touch "$LOCK_FILE"
 
 INPUT="$(cat)"
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // ""')
@@ -42,6 +44,16 @@ ENTRY=$(jq -nc \
   --argjson out_len "$OUTPUT_LEN" \
   '{ts:$ts,fleet:$fleet,session:$session,tool:$tool,input:$input,output_preview:$out_preview,output_length:$out_len}')
 
-echo "$ENTRY" >> "$AUDIT_FILE"
+# QUEU-04: flock-wrap the append — serializes against bin/sleepwalker-run-cli's
+# audit_emit writing to the same ~/.sleepwalker/audit.jsonl. Shared sidecar
+# at $LOCK_FILE makes this ONE mutex across both writers. See
+# .planning/codebase/CONCERNS.md §concurrent JSONL race for the v0.1
+# background the flock closes. Hook uses STRICT failure (no || true) per
+# RESEARCH §1.6: a dropped audit line is recoverable — the next PostToolUse
+# call emits a fresh entry; a race-corrupted line is not.
+(
+  flock -w 5 -x 200
+  echo "$ENTRY" >> "$AUDIT_FILE"
+) 200>"$LOCK_FILE"
 
 printf '{}\n'

@@ -245,6 +245,44 @@ echo "  test: caches result per session"
 fleet=$("$HOOKS_DIR/_detect_fleet.sh" "session-d3" "/nonexistent")
 assert_eq "cache hit returns fleet" "calendar-prep" "$fleet"
 
+# =============================================================================
+# Scenario: sleepwalker-audit-log.sh serializes concurrent audit writes (QUEU-04)
+# =============================================================================
+echo
+echo "==> scenario: sleepwalker-audit-log.sh serializes 4 concurrent audit writes"
+reset_state
+TR=$(make_transcript "inbox-triage")
+
+# Ensure lock sidecar ready. The hook also touches it, but pre-creating keeps
+# this scenario's assertions focused on the serialization contract.
+LOCK_FILE="$TEST_HOME/.sleepwalker/audit.jsonl.lock"
+mkdir -p "$(dirname "$LOCK_FILE")"
+touch "$LOCK_FILE"
+
+# Fire 4 parallel PostToolUse hook invocations. Each writes 1 audit line.
+# Without flock, the echo "$ENTRY" >> $AUDIT_FILE appends could interleave
+# (RESEARCH §1.7 measured 78% corruption at realistic payload sizes).
+# With flock on the shared sidecar, exactly 4 lines land and every line is
+# valid JSON.
+for i in 1 2 3 4; do
+  in=$(hook_input "PostToolUse" "Read" '{}' "sess-$i" "$TR" "output payload $i")
+  echo "$in" | "$HOOKS_DIR/sleepwalker-audit-log.sh" >/dev/null 2>&1 &
+done
+wait
+
+assert_file_lines "4 concurrent audit: exactly 4 lines landed" "4" "$TEST_HOME/.sleepwalker/audit.jsonl"
+
+# Every line valid JSON
+PARSE_FAIL=0
+while IFS= read -r line; do
+  printf '%s' "$line" | jq -e . >/dev/null 2>&1 || PARSE_FAIL=$((PARSE_FAIL+1))
+done < "$TEST_HOME/.sleepwalker/audit.jsonl"
+assert_eq "concurrent audit: zero malformed lines" "0" "$PARSE_FAIL"
+
+# Every line carries the expected fleet tag
+FLEET_COUNT=$(grep -c '"fleet":"inbox-triage"' "$TEST_HOME/.sleepwalker/audit.jsonl" || true)
+assert_eq "concurrent audit: 4 entries tagged with inbox-triage fleet" "4" "$FLEET_COUNT"
+
 # Summary
 echo
 echo "──────────────────────────────────────"
