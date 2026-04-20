@@ -793,3 +793,22 @@
 - Single `docs(05)` commit `381dc29` staging all 9 files.
 - Planning artifacts only — no code changes. All work deferred to plan-execution time.
 - Next action: user runs `/gsd-execute-phase 5` when ready to execute.
+
+## 2026-04-21 03:42 EST
+
+### User Prompt
+"Execute Plan 05-04 of phase 05-queue — wrap `bin/sleepwalker-run-cli` audit_emit writes with FD-form flock `-w 5 -x 200` on `~/.sleepwalker/audit.jsonl.lock`; graceful fallthrough on timeout; add Scenario 9 concurrency test to `hooks/tests/supervisor-tests.sh`. Sequential on main. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md at closeout."
+
+### Actions Taken
+- Amended `bin/sleepwalker-run-cli`: added `LOCK_FILE="${HOME}/.sleepwalker/audit.jsonl.lock"` declaration alongside `AUDIT_FILE=`; added `touch "$LOCK_FILE"` alongside `touch "$AUDIT_FILE"`; wrapped both printf branches of `audit_emit` in FD-form flock subshell `( flock -w 5 -x 200 || true ; printf ... >> "$AUDIT_FILE" ) 200>"$LOCK_FILE"`; preserved both printf format strings byte-identical to Phase 2; expanded docblock to document QUEU-04 contract + shared sidecar invariant + supervisor graceful-fallthrough rationale per RESEARCH §1.6.
+- Extended `hooks/tests/supervisor-tests.sh` (+105 lines before Summary block): Scenario 8 seeds 4 bundles (2 codex + 2 gemini), fires all 4 supervisors in parallel via `for pair in ...; do ... & done; wait`, asserts 8 audit lines + jq -e . per-line round-trip (PARSE_FAIL=0) + 4 fleet literals observed; Scenario 9 holds lock 6s via `( flock -x "$LOCK_FILE" -c 'sleep 6' ) &`, asserts supervisor's 5s-waiter times out with `|| true` graceful fallthrough preserving both events + exit 0.
+- Verified syntax: `bash -n bin/sleepwalker-run-cli` exit 0, `bash -n hooks/tests/supervisor-tests.sh` exit 0.
+- Verified regression: all 28 Phase 2 supervisor-tests still pass after Task 1 flock wrap; 30 total scenarios + 36/36 assertions pass after Task 2.
+- Verified no TS impact: `pnpm run typecheck` exit 0, `pnpm run test` 352/352 green across 39 files (unchanged from pre-plan baseline).
+- Staged explicitly with `git add bin/sleepwalker-run-cli hooks/tests/supervisor-tests.sh`; committed atomically as `c139354` `feat(05-04): flock-wrap supervisor audit_emit + concurrency tests` (2 files, +117/-5).
+- Authored `.planning/phases/05-queue/05-04-SUMMARY.md` with frontmatter (requires/provides/affects dependency graph; patterns + decisions; QUEU-04 requirements-completed), live evidence sections (acceptance greps, harness results, JSON-shape preservation proof via git diff), threat-model dispositions table (T-05-01/T-05-03 mitigated, T-05-02/T-05-04 accepted, T-05-05 deferred), and Self-Check: PASSED footer.
+- Updated `.planning/ROADMAP.md`: flipped Plan 05-04 checkbox to `[x]`, bumped Phase 5 progress row to 4/8, prepended "Last updated" entry describing the 05-04 seal.
+- Updated `.planning/STATE.md`: refreshed Last updated + Phase + Plan + Status fields, bumped Phase 5 progress bar to 4/8 (Wave 1 COMPLETE), updated Plans complete count to 36, updated Supervisor harness row to 36 PASS / 0 FAIL across 30 scenarios, inserted Plan 05-04 row into Plans table, rewrote Stopped at + Resume file pointers to target Plan 05-05 (hook writer on shared sidecar) or Plan 05-06 (SAFE-01 + install preflight), rewrote Last session block with 05-04 execution narrative.
+- Files modified: `bin/sleepwalker-run-cli`, `hooks/tests/supervisor-tests.sh`, `.planning/phases/05-queue/05-04-SUMMARY.md` (new), `.planning/ROADMAP.md`, `.planning/STATE.md`, `docs/activity_log.md` (this entry).
+- Pre-existing untracked files (`CLAUDE.md`, `docs/screenshots/cloud-expanded.png`, `docs/screenshots/cloud-test-zen-expanded.png`) preserved untouched — zero scope bleed.
+- Plan executed exactly as written. Zero Rule 1/2/3 auto-fixes. Zero architectural deviations. Zero Rule-4 checkpoints. Zero auth gates.
