@@ -57,6 +57,7 @@ function prToQueueEntry(repo: string, pr: GitHubPR): QueueEntry {
     },
     reversibility: "green",
     status: "pending",
+    source: "cloud",
   };
 }
 

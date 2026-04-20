@@ -78,7 +78,7 @@ describe("cloud-cache lib", () => {
     // Fleet name is extracted from the second segment of the branch.
     // Routines push to short, friendly names like "deps" rather than full ids.
     expect(entries[0].fleet).toBe("deps");
-    expect(entries[0].source).toBeUndefined(); // queue-aggregator tags this
+    expect(entries[0].source).toBe("cloud");
     expect(entries[0].kind).toBe("cloud-pr");
     expect(entries[0].payload?.pr_url).toContain("/pull/142");
 
