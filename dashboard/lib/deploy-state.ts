@@ -70,6 +70,16 @@ export interface DeployState {
   artifact?: string;
   /** ms epoch when phase transitioned to succeeded. Feeds drift detection. */
   verifiedAt?: number;
+  /**
+   * Non-blocking advisory copied from `adapter.deploy()`'s `warning` field
+   * on the verified transition. Populated ONLY when the underlying adapter
+   * returned a warning (primarily claude-desktop's manual-add instruction;
+   * codex/gemini TCC-protected bundlePath warnings). DeployProgressDrawer
+   * surfaces this in the success toast alongside the "Close" + "Run now"
+   * CTAs so the user is never left wondering why their routine is not
+   * firing despite verified state.
+   */
+  warning?: string;
 }
 
 /** Aggregate status the routine card renders. */
