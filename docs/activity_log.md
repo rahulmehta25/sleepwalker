@@ -543,3 +543,21 @@
 - Extended `dashboard/tests/codex.test.ts` + `dashboard/tests/gemini.test.ts` happy-path assertions: plist XML must contain `<string>codex|gemini</string>` AND `<string>…/routines-<runtime>/<slug></string>` byte-on-disk.
 - Extended `hooks/tests/supervisor-tests.sh`: added scenarios 7 (explicit `$3` bundle_dir resolves bundle outside derived REPO_ROOT) and 7b (missing `$3` with non-derivable bundle → exit 66 EX_NOINPUT). Harness grows 24 → 28 passes.
 - `pnpm typecheck` exit 0; `pnpm test` 262/262 green (no regressions); `bash hooks/tests/supervisor-tests.sh` 28/0; frozen-surface diff stays 0.
+
+## 2026-04-19 20:27 EST
+
+### User Prompt
+"I have provided you full access. You can now run the commands that you are asking me to run"
+
+### Actions Taken
+- Executed `test/manual/codex-adapter-smoke.md` Steps 1-11 on real Mac from `/Users/rahulmehta/Desktop/Projects/sleepwalker/` (TCC-protected).
+- Preflight cleanup: uninstalled any prior smoke-test-abc123 plist, removed staged bundle, removed fixture.
+- Step 3 deploy via `codexAdapter.deploy(...)` invoked through `npx tsx smoke-deploy.ts` — returned `ok:true` with TCC warning and plist artifact. Step 4 `launchctl print` confirmed `program = ~/.sleepwalker/bin/sleepwalker-run-cli-<hash>`, `working directory = ~/.sleepwalker/staged-bundles/codex/smoke-test-abc123`.
+- First kickstart surfaced a NEW failure: codex exec refused to run from non-git-repo cwd with message "Not inside a trusted directory and --skip-git-repo-check was not specified." Added `--skip-git-repo-check` to the codex argv in `bin/sleepwalker-run-cli` (Plan 02-12 completeness fix). Commit `633a07a`.
+- Undeployed (Plan 02-12 removeStagedBundle cleaned `~/.sleepwalker/staged-bundles/codex/smoke-test-abc123/`), redeployed with fresh content-hashed supervisor at `~/.sleepwalker/bin/sleepwalker-run-cli-bbf33e83`, re-kickstarted.
+- Step 8 audit.jsonl now shows `"event":"completed"` with `preview` containing `SMOKE_OK` at timestamp `2026-04-20T00:24:18Z` — AFTER both the Plan 02-12 feat commit `4cbb5bb` and the --skip-git-repo-check fix `633a07a`. No `Operation not permitted`. No `getcwd: cannot access parent directories`.
+- Step 10 undeploy `ok:true`. Step 11 cleanup verified: launchctl service gone, plist file gone, staged bundle dir gone.
+- Updated `.planning/phases/02-adapters/02-SUMMARY.md`: flipped frontmatter `status` to `sealed`, `plans_total: 12`, `manual_smokes_pending: 0`; rewrote Manual Smoke Test Results section to document the full 5-cycle journey (NaN bug → bundle-dir regression → bundle-read TCC → trusted-directory gate → SMOKE_OK) with timestamp and audit.jsonl evidence; added Gap-closure plans 02-11 + 02-12 section to rollup.
+- Updated `.planning/REQUIREMENTS.md`: flipped ADPT-03 + ADPT-04 from "code complete" to "SEALED 2026-04-20" with commit chain and smoke-run timestamp.
+- Cleaned up smoke helper scripts (`dashboard/smoke-deploy.ts`, `dashboard/smoke-undeploy.ts`) — not committed; were scratch-only.
+- Full automated gate re-run post-fix: `pnpm typecheck` exit 0; `pnpm test` 272/272; `bash hooks/tests/supervisor-tests.sh` 28/28.
