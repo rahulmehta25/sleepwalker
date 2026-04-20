@@ -1,5 +1,22 @@
 # Activity Log
 
+## 2026-04-20 22:55 EST
+
+### User Prompt
+"Execute Plan 05-01 of phase 05-queue — widen `QueueSource` union in `dashboard/lib/queue.ts`. Sequential on main. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md at closeout."
+
+### Actions Taken
+- Widened `dashboard/lib/queue.ts` line 10-11: `QueueStatus` union expanded from 3 alternatives (`"pending" | "approved" | "rejected"`) to 5 (adds `"complete"` + `"failed"` terminal states for v0.2 supervisor runs); `QueueSource` union expanded from 2 alternatives (`"local" | "cloud"`) to 4 (adds `"codex"` + `"gemini"`). Change is strictly additive — `Reversibility`, `QueueEntry`, `queueFile`, `ensureFile`, `parseLines`, `readLocalQueue`, `appendQueueEntry`, `updateLocalStatus`, `pendingCount` all byte-identical. RESEARCH §3.2 grep-audit prediction validated: `pnpm run typecheck` exited 0 with zero edits outside the 2 plan files.
+- Appended 3 new `it()` blocks to `dashboard/tests/queue.test.ts` (plan target `>=2`): (1) `round-trips source:'codex' and status:'complete' through append + read` — proves widened status literal survives JSON round-trip; inline comment documents that v0.1's `readLocalQueue` eagerly re-tags source to `"local"` at queue.ts:58 (Plan 05-03's `readSupervisorRuns` is the proper reader for codex/gemini entries); (2) `round-trips status:'failed' with source:'gemini' through parseLines`; (3) `appendQueueEntry accepts source:'gemini' with status:'complete' combined` — smoke test confirming the two widened unions compose.
+- Single atomic commit `a545f0b` `feat(05-01): widen QueueSource + QueueStatus for codex/gemini` covering both Task 1 (lib edit) and Task 2 (tests + commit) per plan's explicit instruction to `git add dashboard/lib/queue.ts dashboard/tests/queue.test.ts` then a single `git commit -m "feat(05-01): ..."`.
+- Verified full suite: dashboard 336 → 339 green across 38 files (queue.test.ts 7 → 10 blocks); `pnpm run typecheck` exit 0. VALIDATION rows 1-4 (05-01 Per-Task Verification Map) all pass — `pnpm test tests/queue.test.ts -t "codex" | "gemini" | "complete"` return 1, 2, and 2 matching blocks respectively.
+- Created `.planning/phases/05-queue/05-01-SUMMARY.md` with frontmatter (dependency graph + provides + key-decisions + tech-stack patterns) + body (per-task implementation walkthrough + Consumer-Site Audit Confirmation + suite delta table + acceptance-criteria greps + VALIDATION rows 1-4 flipped + Deviations "None" + Self-Check: PASSED footer).
+- Updated `.planning/STATE.md` top-line "Last updated" block, `**Phase:**` line (4 Deploy → 5 Queue IN PROGRESS), new `**Phase 5 progress:**` bar `[#-------] 1/8`, Performance Metrics row `Plans complete` (32 → 33) + `Dashboard test suite` (336 → 339), new 05-01 row appended to the per-plan Performance Metrics table, new Decisions-section entry for 05-01, new Session Continuity "Last session" prefix, updated "Stopped at" + "Resume file" to point at Plan 05-02 / 05-03 candidates.
+- Updated `.planning/ROADMAP.md` Phase 5 `**Plans**: TBD` → explicit 8-plan checkbox list with 05-01 marked `[x]`; Progress table `5. Queue` row `0/TBD Not started` → `1/8 In progress`; Last updated footer.
+- Updated `.planning/REQUIREMENTS.md` QUEU-01 row from Pending to Partial (type surface code-complete; end-to-end consumer surface pending Plan 05-03 + 05-07); Last updated footer.
+- Files modified: dashboard/lib/queue.ts, dashboard/tests/queue.test.ts, .planning/phases/05-queue/05-01-SUMMARY.md (new), .planning/STATE.md, .planning/ROADMAP.md, .planning/REQUIREMENTS.md, docs/activity_log.md.
+- Pre-existing untracked files (`CLAUDE.md`, `docs/screenshots/cloud-expanded.png`, `docs/screenshots/cloud-test-zen-expanded.png`) preserved untouched via explicit staging. Zero Rule 1/2/3 auto-fixes. Zero architectural deviations. Zero auth gates. Plan executed exactly as written.
+
 ## 2026-04-20 22:12 EST
 
 ### User Prompt
