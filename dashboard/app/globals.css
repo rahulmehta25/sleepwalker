@@ -75,6 +75,8 @@ body::after {
   .pill-amber  { @apply pill bg-signal-amber/10 text-signal-amber border border-signal-amber/20; }
   .pill-red    { @apply pill bg-signal-red/10   text-signal-red   border border-signal-red/20; }
   .pill-aurora { @apply pill bg-aurora-400/10   text-aurora-400   border border-aurora-400/20; }
+  .pill-codex  { @apply pill bg-aurora-500/10   text-aurora-400   border border-aurora-500/30; }
+  .pill-gemini { @apply pill bg-dawn-400/10     text-dawn-400     border border-dawn-400/30; }
   .pill-muted  { @apply pill bg-ink-600/50      text-moon-400     border border-ink-600; }
   .pill-yellow { @apply pill-amber; }
   .pill-stone  { @apply pill-muted; }
