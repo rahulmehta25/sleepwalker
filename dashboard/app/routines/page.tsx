@@ -1,21 +1,21 @@
-import { listRoutines } from "@/lib/routines";
+import { listRoutinesAsync } from "@/lib/routines";
 import { RoutinesClient } from "./routines-client";
 import { PageHeader } from "../_components/page-header";
 
 export const dynamic = "force-dynamic";
 
-export default function RoutinesPage() {
-  const routines = listRoutines();
+export default async function RoutinesPage() {
+  const routines = await listRoutinesAsync();
   const installed = routines.filter((r) => r.installed).length;
 
   return (
     <>
       <PageHeader
-        eyebrow="Tier B / Desktop"
-        title="Local Routines"
+        eyebrow="Fleet / Multi-runtime"
+        title="Routines"
         subtitle={
           <>
-            {routines.length} fleet member{routines.length === 1 ? "" : "s"} — {installed} installed in <code className="data text-moon-200">~/.claude/scheduled-tasks/</code>. Toggle a routine to enable it for scheduled runs.
+            {routines.length} fleet member{routines.length === 1 ? "" : "s"} — {installed} installed. Deploy, run, and save each routine from its card.
           </>
         }
       />
