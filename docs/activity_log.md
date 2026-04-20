@@ -1,5 +1,19 @@
 # Activity Log
 
+## 2026-04-20 23:05 EST
+
+### User Prompt
+"Execute Plan 05-02 of phase 05-queue — `pill-codex` + `pill-gemini` utility classes in `dashboard/app/globals.css`. Sequential on main. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md at closeout."
+
+### Actions Taken
+- Inserted two new Tailwind utility class declarations into `dashboard/app/globals.css` inside the `@layer components` block at lines 78-79, immediately after `.pill-aurora` (line 77) and before `.pill-muted` (line 80) so the four canonical color pills (green / amber / red / aurora / codex / gemini) remain contiguous before the muted + legacy-alias block. `.pill-codex` resolves to `@apply pill bg-aurora-500/10 text-aurora-400 border border-aurora-500/30` (deeper blue than cloud's aurora-400 — effective contrast ~7.8:1 on ink-900 per RESEARCH §4.3). `.pill-gemini` resolves to `@apply pill bg-dawn-400/10 text-dawn-400 border border-dawn-400/30` (warm highlight — effective contrast ~11.0:1 on ink-900). Indentation and column alignment mirror the existing four `.pill-*` rules verbatim.
+- Palette audit confirmed `aurora.500` (#5a82f5) and `dawn.400` (#f3c282) both pre-exist in `dashboard/tailwind.config.js:24+29`; zero changes to the Tailwind config (grep `pill-codex|pill-gemini` over tailwind.config.js returns 0 hits post-commit).
+- Verification gate green: `cd dashboard && pnpm run build` exits 0 (Tailwind JIT compiles the new `@apply` directives without warnings; `/editor` stays at 13.2 kB / 154 kB, `/routines` stays at 10.2 kB / 151 kB, `/` stays at 6.91 kB / 148 kB — no bundle delta because no consumer uses the classes yet); `pnpm run typecheck` exits 0; `pnpm test` 339/339 green across 38 files (no test file change in this plan by design; Wave 3 Plan 05-07 adds the jsdom assertion).
+- Single atomic commit `548d432` `feat(05-02): add pill-codex + pill-gemini utility classes` — 1 file changed, 2 insertions(+).
+- Acceptance criteria replay: `grep -c "\\.pill-codex" dashboard/app/globals.css` = 1, `grep -c "\\.pill-gemini" dashboard/app/globals.css` = 1, `grep -q "bg-aurora-500/10"` and `grep -q "bg-dawn-400/10"` both exit 0, `grep -c "pill-codex\\|pill-gemini" dashboard/tailwind.config.js` = 0, awk ordering guard (`aurora < codex < gemini < muted` → 77 < 78 < 79 < 80) returns ORDER_OK, commit matches `^feat\\(05-02\\)`.
+- Files modified: `dashboard/app/globals.css` (2 line delta).
+- Pre-existing untracked files (`CLAUDE.md`, `docs/screenshots/cloud-expanded.png`, `docs/screenshots/cloud-test-zen-expanded.png`) preserved untouched via explicit staging of `dashboard/app/globals.css` only. Zero Rule 1/2/3 auto-fixes. Zero architectural deviations. Zero auth gates. Plan executed exactly as written.
+
 ## 2026-04-20 22:55 EST
 
 ### User Prompt

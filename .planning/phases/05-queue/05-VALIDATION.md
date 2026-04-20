@@ -50,9 +50,9 @@ source: derived from 05-RESEARCH.md §Validation Architecture + 05-CONTEXT.md de
 | 2 | 5-01-02 | 05-01 | 0 | QUEU-01 | unit (type+round-trip) | `pnpm test tests/queue.test.ts -t "gemini"` | ✓ dashboard/tests/queue.test.ts | ⬜ pending |
 | 3 | 5-01-01 | 05-01 | 0 | QUEU-01 | unit (status widen) | `pnpm test tests/queue.test.ts -t "complete"` | ✓ dashboard/tests/queue.test.ts | ⬜ pending |
 | 4 | 5-01-01 | 05-01 | 0 | QUEU-01 | typecheck | `cd dashboard && pnpm run typecheck` | - | ⬜ pending |
-| 5 | 5-02-01 | 05-02 | 0 | QUEU-02 | grep (producer) | `grep -q "\.pill-codex" dashboard/app/globals.css && grep -q "bg-aurora-500/10" dashboard/app/globals.css` | ✓ dashboard/app/globals.css | ⬜ pending |
-| 6 | 5-02-01 | 05-02 | 0 | QUEU-02 | grep (producer) | `grep -q "\.pill-gemini" dashboard/app/globals.css && grep -q "bg-dawn-400/10" dashboard/app/globals.css` | ✓ dashboard/app/globals.css | ⬜ pending |
-| 7 | 5-02-01 | 05-02 | 0 | QUEU-02 | build | `cd dashboard && pnpm run build` exits 0 | - | ⬜ pending |
+| 5 | 5-02-01 | 05-02 | 0 | QUEU-02 | grep (producer) | `grep -q "\.pill-codex" dashboard/app/globals.css && grep -q "bg-aurora-500/10" dashboard/app/globals.css` | ✓ dashboard/app/globals.css | ✅ 5-02-01 green 2026-04-20 |
+| 6 | 5-02-01 | 05-02 | 0 | QUEU-02 | grep (producer) | `grep -q "\.pill-gemini" dashboard/app/globals.css && grep -q "bg-dawn-400/10" dashboard/app/globals.css` | ✓ dashboard/app/globals.css | ✅ 5-02-01 green 2026-04-20 |
+| 7 | 5-02-01 | 05-02 | 0 | QUEU-02 | build | `cd dashboard && pnpm run build` exits 0 | - | ✅ 5-02-01 green 2026-04-20 |
 | 8 | 5-03-01 | 05-03 | 1 | QUEU-03 | unit | `pnpm test tests/supervisor-runs.test.ts -t "empty when audit.jsonl"` | ✓ dashboard/tests/supervisor-runs.test.ts | ⬜ pending |
 | 9 | 5-03-01 | 05-03 | 1 | QUEU-03 | unit | `pnpm test tests/supervisor-runs.test.ts -t "codex.*gemini runtime"` | ✓ dashboard/tests/supervisor-runs.test.ts | ⬜ pending |
 | 10 | 5-03-01 | 05-03 | 1 | QUEU-03 | unit | `pnpm test tests/supervisor-runs.test.ts -t "filters out 'started'"` | ✓ dashboard/tests/supervisor-runs.test.ts | ⬜ pending |
