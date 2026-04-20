@@ -595,3 +595,20 @@
 - Updated `.planning/REQUIREMENTS.md`: flipped ADPT-03 + ADPT-04 from "code complete" to "SEALED 2026-04-20" with commit chain and smoke-run timestamp.
 - Cleaned up smoke helper scripts (`dashboard/smoke-deploy.ts`, `dashboard/smoke-undeploy.ts`) — not committed; were scratch-only.
 - Full automated gate re-run post-fix: `pnpm typecheck` exit 0; `pnpm test` 272/272; `bash hooks/tests/supervisor-tests.sh` 28/28.
+
+## 2026-04-20 21:05 EST
+
+### User Prompt
+"Execute Plan 04-03 of phase 04-deploy — `dashboard/app/api/health/all/route.ts` aggregated health endpoint. Sequential on main. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md at closeout."
+
+### Actions Taken
+- Created `dashboard/app/api/health/all/route.ts` (67 lines) — GET Route Handler wrapping every adapter's `healthCheck()` in a 2000ms `Promise.race` timeout + `Promise.allSettled` so no hung or throwing adapter can delay or crash the aggregate response. Exports `dynamic = "force-dynamic"` + `revalidate = 0` for defense-in-depth no-cache posture; response shape `{statuses: HealthStatus[] (length 4), checkedAt: ISO 8601}`.
+- Created `dashboard/tests/health-route.test.ts` (164 lines, 6 `it()` blocks) covering 04-VALIDATION.md rows 28 (shape), 29 (timeout), 30 (adapter throws) plus runtime-set coverage, pass-through invariant, and caching invariant. Uses `vi.doMock("@/lib/runtime-adapters", ...)` + `vi.resetModules()` per beforeEach + direct `GET()` invocation; fake-timers + `advanceTimersByTimeAsync(2100)` for the timeout block.
+- One Rule-1 auto-fix during Task 1 verification: initial header doc comment included the literal string `Promise.allSettled` in prose, giving grep 2 matches and failing the hard `grep -c "Promise.allSettled" == 1` AC. Rephrased the comment to "settled-array mapper" — same intent, single code-level reference preserved on line 50.
+- Updated `.planning/phases/04-deploy/04-VALIDATION.md` rows 28 + 29 + 30 from `⬜ pending` to `4-03-02 ✅ green 2026-04-20`.
+- Updated `.planning/ROADMAP.md` Phase 4 plan list (04-03 flipped `[ ]` → `[x]` with commit hashes), Progress table (Phase 4: `2/9 In Progress` → `3/9 In Progress (Wave 0 complete)`), footer "Last updated" rewritten to reflect Plan 04-03 landing.
+- Updated `.planning/STATE.md` top-line "Last updated" + Current focus + Current Position (Phase 4 Plan → 04-03 complete) + Status block + Phase 4 progress bar `[##-------] → [###------]` + Plans complete metric (25 → 26) + Requirements complete metric (HLTH-01 partial added) + v0.1-frozen-surface metric (Plan 04-03 additive note) + Dashboard test suite metric (291 → 297 green across 31 files) + Plans table row for 04-03.
+- Created `.planning/phases/04-deploy/04-03-SUMMARY.md` — frontmatter with dependency graph + tech-stack patterns + decisions + metrics; body covers files / commits / test delta / VALIDATION rows flipped / success criteria / verification commands / deviations / deployment notes / architectural notes / known stubs (none) / threat flags (none) / dependencies / self-check.
+- Two atomic commits on `main`: `22b3740` feat Route Handler + `de000a6` test matrix. Closeout docs commit folded the 4 planning files + this activity log entry.
+- Gate re-run: `pnpm run typecheck` exit 0; `pnpm test` 297/297 green across 31 files; `pnpm run build` compiles `ƒ /api/health/all 152 B / 105 kB first-load`. Pre-existing uncommitted parallel-session paths (`dashboard/lib/cloud-cache.ts`, `dashboard/tests/cloud-cache.test.ts`) + untracked `CLAUDE.md` + 2 screenshot PNGs preserved untouched — every `git add` used explicit paths.
+- Phase 4 Deploy now 3/9 plans complete; Wave 0 COMPLETE (all three parallel-safe bricks shipped). Wave 1 (Plan 04-04 deploy Server Actions) unblocked next.

@@ -70,9 +70,9 @@ source: derived from 04-RESEARCH.md §Validation Architecture
 | 4-02-02 | 04-02 | 0 | REPO-01 | — | `releaseSaveLock` runs `git reset` on subpath + releases lock | unit | `pnpm test tests/save-to-repo.test.ts -t "release resets"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
 | 4-02-02 | 04-02 | 0 | REPO-01 | — | Stale lock (>30s) is reclaimable | unit | `pnpm test tests/save-to-repo.test.ts -t "stale lock reclaim"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
 | 4-02-02 | 04-02 | 0 | REPO-01 | — | Never-sweep: uncommitted file outside subpath stays unstaged | unit | `pnpm test tests/save-to-repo.test.ts -t "never sweeps"` | ✓ dashboard/tests/save-to-repo.test.ts | ✅ green 2026-04-20 |
-| TBD | TBD | 0 | HLTH-01 | — | `/api/health/all` returns `{statuses, checkedAt}` | integration | `pnpm test tests/health-route.test.ts -t "shape"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | HLTH-01 | — | Timeout per adapter is 2000ms, never hangs response | unit | `pnpm test tests/health-route.test.ts -t "timeout"` | ❌ Wave 0 | ⬜ pending |
-| TBD | TBD | 0 | HLTH-01 | — | Promise.allSettled catches throwing adapter | unit | `pnpm test tests/health-route.test.ts -t "adapter throws"` | ❌ Wave 0 | ⬜ pending |
+| 4-03-02 | 04-03 | 0 | HLTH-01 | — | `/api/health/all` returns `{statuses, checkedAt}` | integration | `pnpm test tests/health-route.test.ts -t "shape"` | ✓ dashboard/tests/health-route.test.ts | ✅ green 2026-04-20 |
+| 4-03-02 | 04-03 | 0 | HLTH-01 | — | Timeout per adapter is 2000ms, never hangs response | unit | `pnpm test tests/health-route.test.ts -t "timeout"` | ✓ dashboard/tests/health-route.test.ts | ✅ green 2026-04-20 |
+| 4-03-02 | 04-03 | 0 | HLTH-01 | — | Promise.allSettled catches throwing adapter | unit | `pnpm test tests/health-route.test.ts -t "adapter throws"` | ✓ dashboard/tests/health-route.test.ts | ✅ green 2026-04-20 |
 | TBD | TBD | 0 | HLTH-01 | — | Client component renders green/amber/grey/loading pills | integration (jsdom) | `pnpm test tests/health-badge-row.test.tsx -t "render states"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | HLTH-01 | — | sessionStorage cache hit on second mount within 60s | integration (jsdom) | `pnpm test tests/health-badge-row.test.tsx -t "cache hit"` | ❌ Wave 0 | ⬜ pending |
 | TBD | TBD | 0 | HLTH-01 | — | Cache expires after 60s | integration (jsdom) | `pnpm test tests/health-badge-row.test.tsx -t "cache expiry"` | ❌ Wave 0 | ⬜ pending |

@@ -95,7 +95,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md -- deps (simple-git + proper-lockfile) + deploy-state.ts atomic I/O + drift math + 11 it() blocks (DEPL-01 + DEPL-03 primitives) — **completed 2026-04-20** (commits `8707433` chore deps + scaffold + `e3526c1` feat impl + 11 it() blocks; suite 272 → 283 green; 6/36 VALIDATION rows green — rows 1 + 2 + 3 + 9 + 10 + 12)
 - [x] 04-02-PLAN.md -- save-to-repo.ts simple-git + proper-lockfile wrapper + never-push + real-git-repo tests (REPO-01) — **completed 2026-04-20** (commits `55740f8` feat module + `7279030` test matrix; suite 283 → 291 green; 13/36 VALIDATION rows green — rows 21-27 all green; never-push + never-sweep invariants grep-verifiable)
-- [ ] 04-03-PLAN.md -- /api/health/all Route Handler with 2s per-adapter timeout + Promise.allSettled (HLTH-01 server)
+- [x] 04-03-PLAN.md -- /api/health/all Route Handler with 2s per-adapter timeout + Promise.allSettled (HLTH-01 server) — **completed 2026-04-20** (commits `22b3740` feat Route Handler + `de000a6` test matrix; suite 291 → 297 green; 16/36 VALIDATION rows green — rows 28+29+30 flipped 4-03-02; Wave 0 COMPLETE)
 - [ ] 04-04-PLAN.md -- routines/actions.ts 4 deploy-family Server Actions (deploy state machine + rollback + runNow + setEnabled) (DEPL-01..05)
 - [ ] 04-05-PLAN.md -- routines/actions.ts 3 save-to-repo Server Action wrappers + integration round-trip (REPO-01)
 - [ ] 04-06-PLAN.md -- HealthBadgeRow + HealthBadge client components with 60s cache + focus refetch + manual refresh (HLTH-01 client)
@@ -134,10 +134,10 @@ Plans:
 | 1. Foundation | 4/4 | Complete | 2026-04-18 |
 | 2. Adapters | 10/10 | Code Complete (manual smokes pending) | 2026-04-19 |
 | 3. Editor | 9/9 | Complete | 2026-04-19 |
-| 4. Deploy | 2/9 | In Progress | - |
+| 4. Deploy | 3/9 | In Progress (Wave 0 complete) | - |
 | 5. Queue | 0/TBD | Not started | - |
 | 6. Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-18*
-*Last updated: 2026-04-20 after Phase 4 Plan 02 execution (Wave 0 second brick — save-to-repo.ts simple-git + proper-lockfile wrapper landed; commits `55740f8` feat module + `7279030` test matrix; dashboard suite 283 → 291 green across 30 files; typecheck exit 0; REPO-01 rows 21-27 all green; never-push + never-sweep invariants grep-verifiable at module boundary; LOCK_REGISTRY module-scope Map pattern holds release closure between preview/commit stages; Pitfall #7 two-pronged release uses `git rm --cached --ignore-unmatch -r` + `git reset HEAD --`; Phase 4 now 2/9 plans complete — 13/36 VALIDATION rows green; Wave 0 third parallel-safe brick 04-03 (/api/health/all Route Handler) remains unblocked)*
+*Last updated: 2026-04-20 after Phase 4 Plan 03 execution (Wave 0 third and final brick — /api/health/all Route Handler landed; commits `22b3740` feat Route Handler + `de000a6` test matrix; dashboard suite 291 → 297 green across 31 files; typecheck + build both exit 0; route compiles as `ƒ /api/health/all 152 B / 105 kB`; HLTH-01 server rows 28+29+30 all flipped `4-03-02 green`; 2000ms per-adapter Promise.race timeout + Promise.allSettled boundary verified via 6 it() blocks (shape / runtime-set / timeout / adapter-throws / pass-through / caching-invariant); never-cache invariant via `dynamic='force-dynamic'` + `revalidate=0` exports preserved by grep `== 1` AC after pre-commit doc-comment rephrase. Wave 0 COMPLETE — all three parallel-safe bricks (04-01 deploy-state + 04-02 save-to-repo + 04-03 health route) landed; Phase 4 now 3/9 plans complete — 16/36 VALIDATION rows green; Wave 1 (04-04 deploy Server Actions) unblocked next)*
