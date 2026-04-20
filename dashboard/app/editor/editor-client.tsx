@@ -477,6 +477,9 @@ export function EditorClient({ healthStatuses }: Props) {
                     {fieldErr.budget[0]}
                   </span>
                 )}
+                <p className="text-xs text-moon-400">
+                  Approximate character cap. Tokens vary by ±40% depending on output format.
+                </p>
               </label>
             </div>
           </Section>

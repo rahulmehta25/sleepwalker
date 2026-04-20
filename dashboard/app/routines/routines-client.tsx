@@ -59,7 +59,7 @@ export function RoutinesClient({ initial }: { initial: ListedRoutine[] }) {
                   <p className="text-sm text-moon-400">{r.description}</p>
                 )}
                 <div className="text-xs text-moon-400 mt-2 font-mono">
-                  budget: {r.defaultBudget.toLocaleString()} tokens
+                  budget: {r.defaultBudget.toLocaleString()} chars (approximate)
                 </div>
               </div>
             </div>
