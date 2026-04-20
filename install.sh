@@ -29,6 +29,13 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v flock >/dev/null 2>&1; then
+  echo "ERROR: flock is required but not installed. Install with: brew install flock"
+  echo "    (Sleepwalker v0.2 uses flock to serialize audit.jsonl writes across"
+  echo "     supervisor + PostToolUse hook so concurrent runs don't corrupt the log.)"
+  exit 1
+fi
+
 # 1. Initialize state directory
 mkdir -p "$STATE_DIR"
 touch "$STATE_DIR/queue.jsonl"
