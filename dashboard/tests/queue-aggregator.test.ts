@@ -89,4 +89,85 @@ describe("queue aggregator", () => {
 
     globalThis.fetch = originalFetch;
   });
+
+  it("aggregateQueue merges all 4 sources: local + cloud + codex + gemini", async () => {
+    // 1. Seed local queue.jsonl with one approved (recent) entry
+    fs.writeFileSync(
+      path.join(dir, "queue.jsonl"),
+      JSON.stringify({
+        id: "q_local_1",
+        ts: "2026-04-21T00:00:00Z",
+        fleet: "inbox-triage",
+        tool: "Read",
+        status: "approved",
+      }) + "\n"
+    );
+
+    // 2. Seed cloud-cache.json with one pending PR entry
+    fs.writeFileSync(
+      path.join(dir, "cloud-cache.json"),
+      JSON.stringify({
+        fetchedAt: new Date().toISOString(),
+        entries: [
+          {
+            id: "q_cloud_1",
+            ts: "2026-04-21T00:01:00Z",
+            fleet: "cloud/pr-review",
+            kind: "cloud-pr",
+            status: "pending",
+            source: "cloud",
+          },
+        ],
+      })
+    );
+
+    // 3. Seed audit.jsonl with a codex (completed) + a gemini (failed)
+    //    terminal event — both within the 24h cutoff.
+    const nowIso = new Date().toISOString();
+    fs.writeFileSync(
+      path.join(dir, "audit.jsonl"),
+      [
+        JSON.stringify({
+          ts: nowIso,
+          fleet: "codex/daily-brief",
+          runtime: "codex",
+          event: "completed",
+          chars_consumed: 500,
+          preview: "done",
+          exit_code: 0,
+        }),
+        JSON.stringify({
+          ts: nowIso,
+          fleet: "gemini/news",
+          runtime: "gemini",
+          event: "failed",
+          exit_code: 1,
+          reason: "cli crash",
+        }),
+      ].join("\n") + "\n"
+    );
+
+    const { aggregateQueue } = await import("@/lib/queue-aggregator");
+    const q = await aggregateQueue({ fetchCloud: false });
+
+    expect(q.localCount).toBe(1);
+    expect(q.cloudCount).toBe(1);
+    expect(q.supervisorCount).toBe(2);
+
+    // Cloud pending -> q.pending; local approved + codex complete + gemini
+    // failed -> q.recent. Every one of the 4 source literals surfaces.
+    const allSources = new Set(
+      [...q.pending, ...q.recent].map((e) => e.source ?? "local")
+    );
+    expect(allSources.has("local")).toBe(true);
+    expect(allSources.has("cloud")).toBe(true);
+    expect(allSources.has("codex")).toBe(true);
+    expect(allSources.has("gemini")).toBe(true);
+
+    // Supervisor-run entries carry kind:"supervisor-run"
+    const supervisorEntries = q.recent.filter(
+      (e) => e.kind === "supervisor-run"
+    );
+    expect(supervisorEntries).toHaveLength(2);
+  });
 });
