@@ -7,8 +7,13 @@ function queueFile(): string {
 }
 
 export type Reversibility = "green" | "yellow" | "red";
-export type QueueStatus = "pending" | "approved" | "rejected";
-export type QueueSource = "local" | "cloud";
+export type QueueStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "complete"
+  | "failed";
+export type QueueSource = "local" | "cloud" | "codex" | "gemini";
 
 export interface QueueEntry {
   id: string;

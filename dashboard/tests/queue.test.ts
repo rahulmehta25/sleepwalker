@@ -81,4 +81,53 @@ describe("queue lib", () => {
       ])
     ).toBe(2);
   });
+
+  it("round-trips source:'codex' and status:'complete' through append + read", async () => {
+    const { appendQueueEntry, readLocalQueue } = await import("@/lib/queue");
+    appendQueueEntry({
+      id: "q_codex_test_1",
+      ts: "2026-04-21T00:00:00Z",
+      fleet: "codex/daily-brief",
+      status: "complete",
+      source: "codex",
+      kind: "supervisor-run",
+      payload: { event: "completed" },
+    });
+    const found = readLocalQueue().find((e) => e.id === "q_codex_test_1");
+    // readLocalQueue eagerly re-tags source:"local" (queue.ts:58) — that is v0.1
+    // behavior preserved by this widen plan. This assertion proves the widened
+    // status literal survives the JSON round-trip; source:"codex" entries flow
+    // through readSupervisorRuns in Plan 05-03, not readLocalQueue.
+    expect(found?.status).toBe("complete");
+    expect(found?.kind).toBe("supervisor-run");
+  });
+
+  it("round-trips status:'failed' with source:'gemini' through parseLines", async () => {
+    const { appendQueueEntry, readLocalQueue } = await import("@/lib/queue");
+    appendQueueEntry({
+      id: "q_gemini_test_1",
+      ts: "2026-04-21T00:01:00Z",
+      fleet: "gemini/news",
+      status: "failed",
+      source: "gemini",
+      payload: { event: "failed", exit_code: 1 },
+    });
+    const found = readLocalQueue().find((e) => e.id === "q_gemini_test_1");
+    expect(found?.status).toBe("failed");
+  });
+
+  it("appendQueueEntry accepts source:'gemini' with status:'complete' combined", async () => {
+    const { appendQueueEntry, readLocalQueue } = await import("@/lib/queue");
+    appendQueueEntry({
+      id: "q_combo_1",
+      ts: "2026-04-21T00:02:00Z",
+      fleet: "gemini/triage",
+      status: "complete",
+      source: "gemini",
+      kind: "supervisor-run",
+    });
+    const found = readLocalQueue().find((e) => e.id === "q_combo_1");
+    expect(found?.status).toBe("complete");
+    expect(found?.fleet).toBe("gemini/triage");
+  });
 });
