@@ -858,3 +858,74 @@ export type { DeployState } from "@/lib/deploy-state";
 // RUNTIME_ROOT re-exported so the drawer/action bar can build "edit bundle"
 // links without importing @/lib/bundles directly.
 export { RUNTIME_ROOT };
+
+// ---------------------------------------------------------------------------
+// save-to-repo Server Action wrappers (Plan 04-05)
+// ---------------------------------------------------------------------------
+//
+// Thin pass-through dispatchers to dashboard/lib/save-to-repo. All real logic
+// (git staging, flock acquisition, diff summary, commit, never-push invariant)
+// lives in @/lib/save-to-repo. Keeping the wrappers dumb preserves the
+// never-push / never-sweep invariants of Plan 04-02 at the Server Action
+// boundary — no inline git work in this file, no error transformation, no
+// behavioral drift from the lib-level tests.
+//
+// Naming: UI-SPEC line 538-544 names the Server Actions exactly
+// `previewSaveToRepo`, `commitSaveToRepo`, `releaseSaveLock` — but Plan 04-02
+// already claims those names for the library exports. To disambiguate the
+// client-side import site (Plan 04-08 SaveToRepoModal), the Server Actions
+// carry an `Action` suffix. The library names and Action names are one-to-one
+// and pass through identical argument shapes.
+
+import {
+  previewSaveToRepo,
+  commitSaveToRepo,
+  releaseSaveLock,
+  type PreviewResult,
+  type SaveToRepoError,
+  type CommitResult,
+} from "@/lib/save-to-repo";
+
+/**
+ * Discriminated union returned to the SaveToRepoModal client. Mirrors the
+ * library's `PreviewResult | SaveToRepoError` shape exactly — no shape
+ * transformation — so the UI's `result.ok` narrowing + `result.kind` switch
+ * works without an adapter layer.
+ */
+export type PreviewActionResult = PreviewResult | SaveToRepoError;
+
+/**
+ * Preview the diff for `routines-<runtime>/<slug>/` and acquire the git.lock
+ * flock. Returns `{ok:true, files, totals, suggestedMessage, lockToken}` or a
+ * discriminated failure (`lock-busy` | `no-changes` | `git-error`).
+ */
+export async function previewSaveToRepoAction(args: {
+  runtime: Runtime;
+  slug: string;
+}): Promise<PreviewActionResult> {
+  return previewSaveToRepo(args.runtime, args.slug);
+}
+
+/**
+ * Commit the staged subpath with the user-authored message. Consumes the
+ * `lockToken` from a prior `previewSaveToRepoAction` call. Releases the
+ * flock on success; on failure leaves the lock held so the caller may retry
+ * (or explicitly call `releaseSaveLockAction` to bail).
+ */
+export async function commitSaveToRepoAction(args: {
+  lockToken: string;
+  message: string;
+}): Promise<CommitResult | { ok: false; error: string }> {
+  return commitSaveToRepo(args);
+}
+
+/**
+ * Cancel a prior preview. Unstages the subpath (reset + rm --cached) and
+ * releases the flock. Idempotent — calling with an unknown token is a no-op
+ * `{ok:true}`.
+ */
+export async function releaseSaveLockAction(args: {
+  lockToken: string;
+}): Promise<{ ok: true }> {
+  return releaseSaveLock(args);
+}
