@@ -2,6 +2,7 @@ import { aggregateQueue } from "@/lib/queue-aggregator";
 import { hasGithubConfig } from "@/lib/settings";
 import { QueueClient } from "./queue-client";
 import { PageHeader } from "./_components/page-header";
+import { HealthBadgeRow } from "./_components/health-badge-row";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,9 @@ export default async function MorningQueuePage() {
       ? "Inbox zero. Sleep well."
       : `${queue.pending.length} pending action${queue.pending.length === 1 ? "" : "s"} from overnight — ${queue.localCount} local, ${queue.cloudCount} cloud.`;
 
-  const meta: React.ReactNode[] = [];
+  const meta: React.ReactNode[] = [
+    <HealthBadgeRow key="health" />,
+  ];
   if (!githubConfigured) {
     meta.push(<span key="cloud-off" className="pill-amber">cloud queue inactive · configure GitHub in Settings</span>);
   }
