@@ -170,7 +170,7 @@ export async function previewSaveToRepo(
 
   try {
     const git: SimpleGit = simpleGit(repoRoot());
-    const subpath = `${RUNTIME_ROOT[runtime]}/${slug}/`;
+    const subpath = `${path.relative(repoRoot(), RUNTIME_ROOT[runtime])}/${slug}/`;
 
     // Explicit-path staging. The -- separator prevents path-vs-flag ambiguity
     // and the trailing slash scopes the add to that subtree only.
@@ -306,7 +306,7 @@ export async function releaseSaveLock(args: {
   if (!entry) return { ok: true };
   try {
     const git = simpleGit(repoRoot());
-    const subpath = `${RUNTIME_ROOT[entry.runtime]}/${entry.slug}/`;
+    const subpath = `${path.relative(repoRoot(), RUNTIME_ROOT[entry.runtime])}/${entry.slug}/`;
     // Pitfall #7: git rm --cached handles newly-added-but-never-tracked
     // paths. --ignore-unmatch makes it a no-op if nothing matches.
     try {

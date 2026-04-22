@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import type { ListedRoutine } from "@/lib/routines";
 import { RoutineActionBar } from "./_components/routine-action-bar";
@@ -13,12 +13,7 @@ const POLICY_DESC: Record<ListedRoutine["defaultPolicy"], string> = {
 };
 
 export function RoutinesClient({ initial }: { initial: ListedRoutine[] }) {
-  // Phase 4 amendment: each routine renders the existing upper metadata row
-  // PLUS a hairline-separated RoutineActionBar below it per 04-UI-SPEC
-  // §Routine card. The static `not installed` amber pill is replaced by a
-  // dynamic `<StatusPill />` (DRAFT / DEPLOYED / DRIFT / DISABLED) driven by
-  // the widened lib/routines.ts::computeStatus result.
-  const [nonce, setNonce] = useState(0);
+  const router = useRouter();
 
   if (initial.length === 0) {
     return (
@@ -30,7 +25,7 @@ export function RoutinesClient({ initial }: { initial: ListedRoutine[] }) {
   }
 
   return (
-    <div className="space-y-3" key={nonce}>
+    <div className="space-y-3">
       {initial.map((r) => {
         // claude-desktop v0.1 ids carry the sleepwalker- prefix; strip it for
         // display continuity with v0.1. Other runtimes use the raw slug.
@@ -66,7 +61,7 @@ export function RoutinesClient({ initial }: { initial: ListedRoutine[] }) {
 
             <RoutineActionBar
               routine={r}
-              onChange={() => setNonce((n) => n + 1)}
+              onChange={() => router.refresh()}
             />
 
             {r.runtime === "claude-desktop" && !r.installed && (

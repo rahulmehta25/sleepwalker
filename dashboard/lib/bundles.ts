@@ -20,12 +20,34 @@ import matter from "gray-matter";
 import type { Runtime, Reversibility } from "./runtime-adapters/types";
 import { RUNTIMES } from "./runtime-adapters/slug";
 
-export const RUNTIME_ROOT: Record<Runtime, string> = {
+// Directory names relative to the repo root, used for bundleDir return values.
+const RUNTIME_DIR: Record<Runtime, string> = {
   "claude-routines": "routines-cloud",
   "claude-desktop": "routines-local",
   codex: "routines-codex",
   gemini: "routines-gemini",
 };
+
+// In production Next.js runs with CWD = dashboard/; routine dirs live one level
+// up. Tests override via SLEEPWALKER_REPO_ROOT (matches save-to-repo.ts pattern).
+// Otherwise: if CWD is the dashboard/ subdir, go up one level to the repo root.
+function getRepoRoot(): string {
+  if (process.env.SLEEPWALKER_REPO_ROOT) return process.env.SLEEPWALKER_REPO_ROOT;
+  const cwd = process.cwd();
+  return path.basename(cwd) === "dashboard" ? path.resolve(cwd, "..") : cwd;
+}
+
+// Lazily evaluated via Proxy so tests can override CWD with process.chdir().
+export const RUNTIME_ROOT: Record<Runtime, string> = new Proxy(
+  {} as Record<Runtime, string>,
+  {
+    get(_: Record<Runtime, string>, prop: string) {
+      const dirName = RUNTIME_DIR[prop as Runtime];
+      if (!dirName) return undefined;
+      return path.join(getRepoRoot(), dirName);
+    },
+  },
+);
 
 export interface BundleDescriptor {
   runtime: Runtime;
@@ -71,7 +93,7 @@ export function listBundles(): BundleDescriptor[] {
         continue;
       }
       if (!isDir) continue;
-      out.push({ runtime, slug: entry, bundleDir: `${root}/${entry}` });
+      out.push({ runtime, slug: entry, bundleDir: `${RUNTIME_DIR[runtime]}/${entry}` });
     }
   }
   return out;
@@ -136,7 +158,7 @@ export function readBundle(
           ? data.reversibility
           : undefined,
         budget: typeof data.budget === "number" ? data.budget : undefined,
-        bundleDir: `${root}/${slug}`,
+        bundleDir: `${RUNTIME_DIR[runtime]}/${slug}`,
       };
     } catch {
       return null;
@@ -168,7 +190,7 @@ export function readBundle(
       ? cfg.reversibility
       : undefined,
     budget: typeof cfg.budget === "number" ? cfg.budget : undefined,
-    bundleDir: `${root}/${slug}`,
+    bundleDir: `${RUNTIME_DIR[runtime]}/${slug}`,
   };
 }
 

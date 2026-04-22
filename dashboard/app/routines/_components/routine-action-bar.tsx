@@ -62,7 +62,6 @@ export function RoutineActionBar({ routine, onChange }: RoutineActionBarProps) {
   const [busy, setBusy] = useState(false);
 
   const handleDeployComplete = useCallback(() => {
-    setDeployOpen(false);
     onChange?.();
   }, [onChange]);
 
