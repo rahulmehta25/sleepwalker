@@ -38,12 +38,12 @@ created: 2026-04-22
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 06-01-* | 01 DOCS-01 | 1 | DOCS-01 | manual-doc | `test -f docs/AUTHORING.md && wc -l docs/AUTHORING.md` | ❌ W0 | ⬜ pending |
-| 06-02-* | 02 DOCS-02 | 1 | DOCS-02 | integration | `node -e "const m=require('gray-matter');['claude-routines','claude-desktop','codex','gemini'].forEach(r=>m.read('templates/routine-'+r+'.md'))"` | ❌ W0 | ⬜ pending |
-| 06-03-* | 03 DOCS-03 | 2 | DOCS-03 | unit + manual | `cd dashboard && pnpm test -- --run diagnostics` + visit `/diagnostics` | ❌ W0 | ⬜ pending |
-| 06-04-* | 04 COMP-01 | 3 | COMP-01 | integration | `bash tests/compat/v01-routines.sh && cd dashboard && pnpm test -- --run v01-queue-integration` | ❌ W0 | ⬜ pending |
-| 06-05-* | 05 COMP-02 | 3 | COMP-02 | integration | `bash tests/compat/frozen-surface.sh` | ❌ W0 | ⬜ pending |
-| 06-06-* | 06 CI   | 4 | DOCS/COMP support | integration | Push to branch → GitHub Actions green on `ci.yml` | ❌ W0 | ⬜ pending |
+| 06-01-* | 01 DOCS-02 | 0 | DOCS-02 | integration | `node -e "const m=require('gray-matter');['claude-routines','claude-desktop','codex','gemini'].forEach(r=>m.read('templates/routine-'+r+'.md'))"` + `cd dashboard && pnpm test -- --run templates` | ❌ W0 | ⬜ pending |
+| 06-02-* | 02 DOCS-03 | 0 | DOCS-03 | unit + manual | `cd dashboard && pnpm test -- --run diagnostics` + visit `/diagnostics` | ❌ W0 | ⬜ pending |
+| 06-03-* | 03 DOCS-01 | 1 | DOCS-01 | manual-doc | `test -f docs/AUTHORING.md && wc -l docs/AUTHORING.md` (≥600 lines) + section grep | ❌ W0 | ⬜ pending |
+| 06-04-* | 04 COMP-01 | 2 | COMP-01 | integration | `bash tests/compat/v01-routines.sh && cd dashboard && pnpm test -- --run v01-queue-integration` | ❌ W0 | ⬜ pending |
+| 06-05-* | 05 COMP-02 | 2 | COMP-02 | integration | `bash tests/compat/frozen-surface.sh` | ❌ W0 | ⬜ pending |
+| 06-06-* | 06 CI   | 3 | supports DOCS-01..03 + COMP-01..02 | integration | Push to branch → GitHub Actions green on `ci.yml` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

@@ -1381,21 +1381,21 @@ No `[ASSUMED]` claims in this research. Every claim above is either [VERIFIED] a
 
 - None. All claims have either Primary or Secondary verification.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should ci.yml also run against forks' PRs with elevated permissions?**
    - What we know: default `permissions: contents: read` lets forks' PRs run CI.
    - What's unclear: if a future OSS contributor adds a PR that writes to a secret, should CI reject it or just run read-only?
-   - Recommendation: start with `contents: read` only; add `pull-requests: write` only if a bot (like a release assistant) needs it later.
+   - RESOLVED: start with `contents: read` only; add `pull-requests: write` only if a bot (like a release assistant) needs it later. Plan 06 implements this.
 
 2. **Should AUTHORING.md gain a "Contributing" section pointing at the CI workflow?**
    - What we know: OSS users who want to contribute will expect `CONTRIBUTING.md` or a section in README.
    - What's unclear: CONTEXT.md's 7-section structure doesn't have a Contributing slot.
-   - Recommendation: add a brief 2-line note at the end of §7 "Going Further" pointing to `.github/workflows/ci.yml` and `docs/ARCHITECTURE.md`. Full `CONTRIBUTING.md` deferred to v0.2.x or v0.3.
+   - RESOLVED: add a brief 2-line note at the end of §7 "Going Further" pointing to `.github/workflows/ci.yml` and `docs/ARCHITECTURE.md`. Full `CONTRIBUTING.md` deferred to v0.2.x or v0.3. Plan 03 implements this.
 
 3. **Is there a risk of `998455b` being "orphaned" if someone squashes the main branch later?**
    - What we know: git doesn't auto-gc unreferenced commits for 90 days; a tag prevents gc indefinitely.
-   - Recommendation: **Explicitly tag `998455b` as `v0.1.0`** before Phase 6 seal. Makes the baseline ref-stable against any future history manipulation.
+   - RESOLVED: **Explicitly tag `998455b` as `v0.1.0`** before Phase 6 seal. Makes the baseline ref-stable against any future history manipulation. Plan 05 §verification recommends this tag.
 
 ## Metadata
 
