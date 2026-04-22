@@ -33,6 +33,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Rocket, X } from "lucide-react";
 import {
@@ -177,7 +178,9 @@ export function DeployProgressDrawer({
   };
   const steps = state?.steps ?? {};
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -291,6 +294,7 @@ export function DeployProgressDrawer({
           </motion.aside>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
