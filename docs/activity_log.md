@@ -899,3 +899,28 @@
 - **Phase 5 Queue SEALED 2026-04-21. v0.1 CONCERNS.md §concurrent-JSONL race officially CLOSED.** Next: user runs `/gsd-plan-phase 6` to plan Polish (DOCS-01..03 + COMP-01 + COMP-02).
 - Pre-existing untracked files (`CLAUDE.md`, `docs/screenshots/cloud-expanded.png`, `docs/screenshots/cloud-test-zen-expanded.png`) preserved untouched via explicit per-file staging — zero scope bleed.
 - Plan executed exactly as written outside the documented plan-check #2 filename correction. Zero Rule 1 bugs. Zero Rule 2 missing-critical auto-fixes. Zero Rule 4 architectural decisions. Zero auth gates.
+
+## 2026-04-22 03:20 EDT
+
+### User Prompt
+"Execute Plan 06-01 of phase 06-polish — author 4 runtime templates in `templates/` + gray-matter+zod round-trip test. Sequential on main. Commit atomically. Create SUMMARY.md. Update STATE.md + ROADMAP.md at closeout."
+
+### Actions Taken
+- Authored four runtime templates under `templates/` with lowercase zod frontmatter keys (`name`, `slug`, `runtime`, `schedule`, `reversibility`, `budget`) and v0.2 `[sleepwalker:<runtime>/<slug>]` fleet marker in each body:
+  - `templates/routine-claude-routines.md` — Daily Morning Brief (cloud GitHub+Linear+Slack aggregate); `schedule: "0 7 * * *"`, `reversibility: yellow`, `budget: 40000`.
+  - `templates/routine-claude-desktop.md` — Inbox Triage (Mail.app AppleScript drafts, never sends); includes a prominent Q1 manual-add warning comment block (Desktop 1.3109.0 does NOT watch `~/.claude/scheduled-tasks/`); `schedule: "0 2 * * *"`, `reversibility: yellow`, `budget: 30000`.
+  - `templates/routine-codex.md` — Dependency Update Scan (read-only lock-file walker); references the Phase 2 Plan 02-12 `--skip-git-repo-check` auto-add; `schedule: "0 3 * * *"`, `reversibility: green`, `budget: 60000`.
+  - `templates/routine-gemini.md` — Design Doc Drift Review (1M-token context doc-drift detector); includes a `gemini_quota_project` comment note (Pitfall 3 defense from Phase 2 Plan 02-08); `schedule: "0 6 * * *"`, `reversibility: green`, `budget: 100000`.
+  - Each template opens with a commented `# Change THESE before saving` checklist listing the 6 placeholder fields (RESEARCH §2.4 mitigation).
+- Authored `dashboard/tests/templates.test.ts` with 5 lexical `it()` blocks (4 per-runtime parameterized + 1 negative invariant) that round-trip each template through `gray-matter` + `RoutineBundleInput.safeParse` and assert `parsed.success === true`. Negative invariant asserts no template carries the v0.1 SKILL.md `description` key (would signal regression to v0.1 frontmatter casing).
+- Removed the now-redundant `templates/.gitkeep` placeholder — 4 real templates satisfy the "keep dir tracked" purpose.
+- Ran the test: `pnpm test tests/templates.test.ts` → 5/5 green in 4ms.
+- Ran typecheck: `cd dashboard && pnpm run typecheck` exit 0.
+- Full suite `pnpm test` state: **before** commit 50 failed / 308 passed (358 total); **after** commit 50 failed / 313 passed (363 total). Same 50 pre-existing failures in both runs. Stash-pop-verify confirmed: my +5 tests are fully isolated and cause zero regressions. The 50 failures are caused by in-flight modifications to `dashboard/lib/bundles.ts`, `dashboard/app/routines/actions.ts`, and a series of untracked `routines-*/` directories that arrived on `main` from a parallel session (commits `cfcf0ab` + `e38ffd4` + `82b9c2f` + others pushed main from `1408625` → `82b9c2f` during this plan's execution). Documented as out-of-scope in `.planning/phases/06-polish/deferred-items.md`.
+- Committed the 4 templates + 1 test + `.gitkeep` deletion as a single atomic commit `ce78dc9` `feat(06-01): add 4 runtime templates + gray-matter+zod round-trip test` on main (6 files changed, +361 / -0).
+- Post-commit deletion audit: only `templates/.gitkeep` deleted (intentional, documented in commit body). No unexpected deletions.
+- Scope boundary: workspace contained pre-existing modifications to 6 unrelated dashboard paths and 7 untracked `routines-*/` directories from parallel sessions. Per executor SCOPE BOUNDARY rule, left all of these untouched. Only the 5 Plan 06-01 files (+ `.gitkeep` deletion) were staged.
+- Pre-existing untracked files (`CLAUDE.md`, 2 screenshot PNGs) preserved untouched via explicit per-path `git add`.
+- Sanity-check invariants confirmed pre-commit: each template has `runtime=1`, `marker=1`, `name=1`, `slug=1`, `schedule=1`, `reversibility=1`, `budget=1`, `description=0`. Template line counts within 50-120 bound (59 / 65 / 71 / 75). Fleet marker uses runtime-prefixed form `[sleepwalker:<runtime>/<slug>]` (v0.2), NOT v0.1 slug-only form. `dashboard/tests/templates.test.ts` has 5 lexical `it(` blocks, 2 `RoutineBundleInput.safeParse` calls, 1 `import matter` statement.
+- Files modified: `templates/routine-claude-routines.md` (new), `templates/routine-claude-desktop.md` (new), `templates/routine-codex.md` (new), `templates/routine-gemini.md` (new), `dashboard/tests/templates.test.ts` (new), `templates/.gitkeep` (deleted), `.planning/phases/06-polish/deferred-items.md` (new — out-of-scope audit log).
+- Plan executed exactly as written with one documented mid-execution environmental complication (parallel session advanced `main` by 7 commits during execution, re-materializing `.gitkeep` as a 0-byte file). Zero Rule 1 bugs. Zero Rule 2 missing-critical auto-fixes. Zero Rule 4 architectural decisions. Zero auth gates.
