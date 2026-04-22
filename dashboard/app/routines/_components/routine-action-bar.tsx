@@ -33,13 +33,14 @@
  * shape from dashboard/lib/routines.ts::listRoutinesAsync().
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { GitCommit, RefreshCw, Rocket } from "lucide-react";
 import type { ListedRoutine } from "@/lib/routines";
 import { setRoutineEnabled } from "@/app/routines/actions";
 import { DeployProgressDrawer } from "./deploy-progress-drawer";
 import { SaveToRepoModal } from "./save-to-repo-modal";
-import { RunNowButton } from "./run-now-button";
+import { RunNowButton, type Toast } from "./run-now-button";
 import { ConfirmDialog } from "@/app/_components/confirm-dialog";
 
 interface RoutineActionBarProps {
@@ -60,6 +61,18 @@ export function RoutineActionBar({ routine, onChange }: RoutineActionBarProps) {
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState(enabled);
   const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Portal requires document — gate behind mount to avoid SSR mismatch.
+  useEffect(() => { setMounted(true); }, []);
+
+  const showToast = useCallback((t: Toast) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(t);
+    toastTimer.current = setTimeout(() => setToast(null), t.ttl);
+  }, []);
 
   const handleDeployComplete = useCallback(() => {
     onChange?.();
@@ -145,15 +158,11 @@ export function RoutineActionBar({ routine, onChange }: RoutineActionBarProps) {
               >
                 <RefreshCw className="w-4 h-4" aria-hidden="true" /> Redeploy
               </button>
-              <RunNowButton runtime={runtime} slug={slug} />
+              <RunNowButton runtime={runtime} slug={slug} onToast={showToast} />
             </>
           )}
           {(status === "deployed" || status === "disabled") && (
-            <RunNowButton
-              runtime={runtime}
-              slug={slug}
-              disabled={status === "disabled"}
-            />
+            <RunNowButton runtime={runtime} slug={slug} onToast={showToast} />
           )}
         </div>
 
@@ -197,6 +206,21 @@ export function RoutineActionBar({ routine, onChange }: RoutineActionBarProps) {
         onConfirm={handleConfirmDisable}
         onCancel={() => setConfirmDisableOpen(false)}
       />
+      {mounted && toast && createPortal(
+        <div
+          className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-[9999] text-xs px-4 py-2.5 rounded-lg border shadow-lg ${
+            toast.kind === "aurora"
+              ? "bg-aurora-500/10 text-aurora-300 border-aurora-500/30"
+              : toast.kind === "red"
+                ? "bg-signal-red/10 text-signal-red border-signal-red/30"
+                : "bg-signal-green/10 text-signal-green border-signal-green/30"
+          }`}
+          role="status"
+        >
+          {toast.message}
+        </div>,
+        document.body,
+      )}
     </>
   );
 }

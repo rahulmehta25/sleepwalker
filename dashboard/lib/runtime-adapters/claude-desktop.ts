@@ -16,7 +16,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import type {
   RuntimeAdapter,
@@ -80,14 +80,30 @@ export const claudeDesktopAdapter: RuntimeAdapter = {
 
   async runNow(bundle: RoutineBundle, context?: string): Promise<RunNowResult> {
     try {
-      // execFile array args = no shell interpolation. Prompt enters argv as
-      // a single string argument (no risk of shell expansion). This is
-      // distinct from Codex/Gemini where prompt MUST go via stdin (those
-      // CLIs receive multiple flags + would lose stdin to argv-injection).
+      // Resolve claude via login shell so user-local installs
+      // (/Users/…/.local/bin, /opt/homebrew/bin) are found. Next.js
+      // inherits a stripped PATH that misses those locations — same issue
+      // healthCheck() already works around with /bin/zsh -l -c.
+      const { stdout: whichOut } = await execFileP(
+        "/bin/zsh",
+        ["-l", "-c", "command -v claude"],
+        { timeout: 5_000 },
+      );
+      const claudePath = whichOut.trim();
+      if (!claudePath) {
+        return { ok: false, error: "claude CLI not found on login-shell PATH" };
+      }
       const promptArg = context
         ? `${bundle.prompt}\n\n<context>\n${context}\n</context>`
         : bundle.prompt;
-      await execFileP("claude", ["-p", promptArg]);
+      // spawn + detach: fire-and-forget so the Server Action returns
+      // immediately. Prompt passed as argv arg (no shell interpolation).
+      // stdio: "ignore" decouples the child from this process lifetime.
+      const child = spawn(claudePath, ["-p", promptArg], {
+        detached: true,
+        stdio: "ignore",
+      });
+      child.unref();
       return {
         ok: true,
         runId: `claude-desktop:${bundle.slug}:${Date.now()}`,

@@ -20,14 +20,15 @@ describe("routines lib", () => {
     env.restore();
   });
 
-  it("listRoutines returns the 6 local templates from the repo (uninstalled)", async () => {
+  it("listRoutines returns the 7 local templates from the repo (uninstalled)", async () => {
     const { listRoutines } = await import("@/lib/routines");
     const list = listRoutines();
-    expect(list.length).toBe(6);
+    expect(list.length).toBe(7);
     expect(list.every((r) => !r.installed)).toBe(true);
     expect(list.every((r) => r.source === "repo-template")).toBe(true);
     expect(list.map((r) => r.id).sort()).toEqual([
       "sleepwalker-calendar-prep",
+      "sleepwalker-daily-standup",
       "sleepwalker-disk-cleanup",
       "sleepwalker-downloads-organizer",
       "sleepwalker-inbox-triage",
