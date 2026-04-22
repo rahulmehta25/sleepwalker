@@ -37,6 +37,12 @@ BUNDLE_ARG="${3:-}"  # Optional absolute bundle path; when empty we derive from 
 [ -z "$RUNTIME" ] && { echo "usage: $0 <runtime> <slug> [bundle_dir]" >&2; exit 64; }
 [ -z "$SLUG" ]    && { echo "usage: $0 <runtime> <slug> [bundle_dir]" >&2; exit 64; }
 
+# --- Runtime allowlist (MUST run before PATH resolution to prevent shell injection) ---
+case "$RUNTIME" in
+  codex|gemini) ;;
+  *) echo "error: unknown runtime '$RUNTIME' (expected codex or gemini)" >&2; exit 64 ;;
+esac
+
 # --- Paths ---
 # When bundle_dir is passed as $3 (adapter deploy flow post-staging), use it
 # verbatim. Otherwise fall back to the v0.1-era $(dirname $0)/.. derivation so
@@ -113,11 +119,11 @@ fi
 if command -v "$RUNTIME" >/dev/null 2>&1; then
   CLI_ABS="$(command -v "$RUNTIME")"
 else
-  # Fallback: login-shell PATH via zsh
-  CLI_ABS="$(/bin/zsh -l -c "command -v $RUNTIME" 2>/dev/null || true)"
+  # Fallback: login-shell PATH via zsh (RUNTIME is allowlisted above, safe to interpolate)
+  CLI_ABS="$(/bin/zsh -l -c "command -v '$RUNTIME'" 2>/dev/null || true)"
   if [ -z "$CLI_ABS" ]; then
     # Final fallback: bash login shell (catches users still on bash)
-    CLI_ABS="$(/bin/bash -l -c "command -v $RUNTIME" 2>/dev/null || true)"
+    CLI_ABS="$(/bin/bash -l -c "command -v '$RUNTIME'" 2>/dev/null || true)"
   fi
   if [ -z "$CLI_ABS" ]; then
     audit_emit "failed" "\"reason\":\"$RUNTIME not found on PATH\""
