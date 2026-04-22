@@ -191,7 +191,7 @@ describe("readSupervisorRuns", () => {
   });
 
   it("generates deterministic q_sup_* ids from runtime + fleet + ts + event", async () => {
-    const ts = "2026-04-21T03:00:00Z";
+    const ts = nowIso();
     writeAudit([
       { ts, fleet: "codex/daily-brief", runtime: "codex", event: "completed", chars_consumed: 500, preview: "done", exit_code: 0 },
     ]);
