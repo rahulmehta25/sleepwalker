@@ -79,7 +79,7 @@ describe("EditorClient — rendering (EDIT-01)", () => {
   it("renders all 7 field labels (UI-SPEC §Field labels)", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     expect(screen.getByText("NAME")).toBeTruthy();
     expect(screen.getByText("SLUG")).toBeTruthy();
@@ -93,7 +93,7 @@ describe("EditorClient — rendering (EDIT-01)", () => {
   it("renders the exact UI-SPEC 'Save routine' primary button copy", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     expect(screen.getByRole("button", { name: /Save routine/i })).toBeTruthy();
   });
@@ -101,7 +101,7 @@ describe("EditorClient — rendering (EDIT-01)", () => {
   it("mounts all 4 runtime cards", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     expect(screen.getByText("Claude Routines")).toBeTruthy();
     expect(screen.getByText("Claude Desktop")).toBeTruthy();
@@ -112,7 +112,7 @@ describe("EditorClient — rendering (EDIT-01)", () => {
   it("renders locked UI-SPEC placeholders on name + slug + schedule", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     expect(
       container.querySelector('input[name="name"]')?.getAttribute("placeholder"),
@@ -136,7 +136,7 @@ describe("EditorClient — autofill opt-out attrs (EDIT-05)", () => {
   it("prompt textarea has rows=30 and spellcheck=false", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     const textarea = container.querySelector(
       'textarea[name="prompt"]',
@@ -149,7 +149,7 @@ describe("EditorClient — autofill opt-out attrs (EDIT-05)", () => {
   it("prompt textarea carries all 8 autofill opt-out attributes", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     const textarea = container.querySelector(
       'textarea[name="prompt"]',
@@ -167,7 +167,7 @@ describe("EditorClient — autofill opt-out attrs (EDIT-05)", () => {
   it("every text/number input carries autocomplete=off + 1p + lp + bw attrs", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     const textInputs = container.querySelectorAll(
       'input[type="text"], input[type="number"]',
@@ -200,7 +200,7 @@ describe("EditorClient — autosave (EDIT-03)", () => {
   it("writes sleepwalker.draft.v1 after 500ms debounce", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     const nameInput = container.querySelector(
       'input[name="name"]',
@@ -228,7 +228,7 @@ describe("EditorClient — autosave (EDIT-03)", () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const addSpy = vi.spyOn(window, "addEventListener");
     render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     expect(addSpy).toHaveBeenCalledWith(
       "beforeunload",
@@ -274,7 +274,7 @@ describe("EditorClient — save success clears draft (EDIT-03)", () => {
 
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
 
     const form = container.querySelector("form")!;
@@ -303,7 +303,7 @@ describe("EditorClient — slug auto-derive", () => {
   it("derives slug from name while untouched", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     const nameInput = container.querySelector(
       'input[name="name"]',
@@ -319,7 +319,7 @@ describe("EditorClient — slug auto-derive", () => {
   it("stops deriving slug once user manually edits the slug", async () => {
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
     const nameInput = container.querySelector(
       'input[name="name"]',
@@ -354,7 +354,7 @@ describe("EditorClient — claude-desktop manual-add warning (Q1 smoke)", () => 
 
     const { EditorClient } = await import("@/app/editor/editor-client");
     const { container } = render(
-      <EditorClient healthStatuses={allHealthy} existingSlugs={[]} />,
+      <EditorClient healthStatuses={allHealthy} />,
     );
 
     const form = container.querySelector("form")!;

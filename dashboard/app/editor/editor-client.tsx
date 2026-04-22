@@ -48,7 +48,6 @@ const DRAFT_KEY = "sleepwalker.draft.v1";
 
 interface Props {
   healthStatuses: Record<Runtime, HealthStatus>;
-  existingSlugs: string[];
 }
 
 // Slug derivation mirrors the Phase 1 SLUG_REGEX (^[a-z][a-z0-9-]{0,63}$):

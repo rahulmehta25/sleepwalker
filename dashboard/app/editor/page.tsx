@@ -1,6 +1,5 @@
 import { healthCheckAll } from "@/lib/runtime-adapters";
 import type { HealthStatus, Runtime } from "@/lib/runtime-adapters/types";
-import { listBundles } from "@/lib/bundles";
 import { PageHeader } from "../_components/page-header";
 import { EditorClient } from "./editor-client";
 
@@ -15,8 +14,6 @@ export default async function EditorPage() {
     },
     {} as Record<Runtime, HealthStatus>,
   );
-  const existingSlugs = listBundles().map((b) => `${b.runtime}/${b.slug}`);
-
   return (
     <>
       <PageHeader
@@ -24,7 +21,7 @@ export default async function EditorPage() {
         title="Author a routine"
         subtitle="Write a prompt, pick a runtime, pick a schedule. Save writes a validated bundle to disk."
       />
-      <EditorClient healthStatuses={healthStatuses} existingSlugs={existingSlugs} />
+      <EditorClient healthStatuses={healthStatuses} />
     </>
   );
 }

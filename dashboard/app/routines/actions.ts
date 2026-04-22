@@ -855,9 +855,7 @@ export async function setRoutineEnabled(args: {
 // the actions here and the state type.
 export type { DeployState } from "@/lib/deploy-state";
 
-// RUNTIME_ROOT re-exported so the drawer/action bar can build "edit bundle"
-// links without importing @/lib/bundles directly.
-export { RUNTIME_ROOT };
+// RUNTIME_ROOT: import directly from @/lib/bundles if needed.
 
 // ---------------------------------------------------------------------------
 // save-to-repo Server Action wrappers (Plan 04-05)
