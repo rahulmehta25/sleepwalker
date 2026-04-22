@@ -78,3 +78,39 @@ Before sealing Phase 6 (Plan 06-06 exit gate), either:
 2. Revert them to HEAD cleanly (`git checkout HEAD -- <paths>` + `rm -rf <untracked>`) so the Phase 6 exit gate has a clean `pnpm test` baseline.
 
 Plan 06-01 does not gate on these; the templates + round-trip test are independently green.
+
+---
+
+## 2026-04-22 — Plan 06-02 closeout addendum
+
+### Pre-existing 50-test failure set status at HEAD `72f7b63`
+
+Between Plan 06-01 closeout (HEAD `8428061`) and Plan 06-02 execution start (HEAD `c9ff955`), the parallel session resolved most of the 50 pre-existing failures via:
+- `c9ff955 test(vitest): switch to forks pool to isolate per-file process state`
+- `6b27b83 fix(deploy): keep drawer open after deploy and resolve bundle path root`
+- (and other intervening commits)
+
+At Plan 06-02 execution start the dashboard suite was 363/363 green across 41 files. Plan 06-02 added 10 it() blocks (6 Node + 4 jsdom) bringing the suite to 373/373 across 43 files. **Plan 06-02 caused zero regressions** — full suite remained green throughout the plan.
+
+### One new pre-existing failure introduced post-Plan-06-02 by parallel session
+
+Between the Plan 06-02 feat commit (`72f7b63`) and the Plan 06-02 closeout commit (`089f0dd`), the parallel session committed:
+- `2b9f9ea fix(bundles): support config.json format for claude-routines readBundle`
+
+This commit appears alongside an untracked new local routine directory `routines-local/sleepwalker-daily-standup/` which surfaces a single test failure:
+- `tests/routines.test.ts > listRoutines returns the 6 local templates from the repo (uninstalled)` — `expected 7 to be 6`
+
+**Cause:** the test counts `routines-local/sleepwalker-*` directories on disk; with the new untracked daily-standup dir present, the count is now 7 instead of the hardcoded 6.
+
+**Out of scope for Plan 06-02** per executor SCOPE BOUNDARY rule:
+- Failure is in `tests/routines.test.ts` — not in any Plan 06-02 file
+- Cause is the untracked `routines-local/sleepwalker-daily-standup/` directory which Plan 06-02 explicitly preserved untouched per the orchestrator prompt's "Pre-existing untracked: CLAUDE.md + 2 screenshots. Untouched." constraint
+- The test failure is logically equivalent to the v0.1 catalog-count assumption being out of date; either commit `routines-local/sleepwalker-daily-standup/` as its own plan and update the hardcoded `6` to `7`, or revert/remove the directory
+
+### Recommendation for the session driver (updated)
+
+Before sealing Phase 6 (Plan 06-07 exit gate), reconcile:
+- Commit `routines-local/sleepwalker-daily-standup/` if it's intentional and update `tests/routines.test.ts` (and likely `tests/cloud.test.ts` for any new cloud routines) hardcoded counts, OR
+- Remove the untracked directory cleanly so the v0.1 baseline (6 local + 8 cloud + 1 _test-zen) is preserved
+
+Plan 06-02 itself does not gate on this — the diagnostics page + library + tests are independently green and the lib has zero coupling to the v0.1 routine catalog.
