@@ -142,8 +142,8 @@ export function readBundle(
   const dir = path.join(root, slug);
   if (!fs.existsSync(dir)) return null;
 
-  if (runtime === "claude-desktop" || runtime === "claude-routines") {
-    // v0.1 shape: SKILL.md with YAML frontmatter + markdown body prompt.
+  if (runtime === "claude-desktop") {
+    // Desktop bundles are always SKILL.md (written by launchd-writer.ts).
     const skillPath = path.join(dir, "SKILL.md");
     if (!fs.existsSync(skillPath)) return null;
     try {
@@ -165,7 +165,33 @@ export function readBundle(
     }
   }
 
-  // v0.2 codex / gemini shape: config.json + prompt.md.
+  if (runtime === "claude-routines") {
+    // Cloud bundles may be SKILL.md (v0.1 hand-authored) or config.json (v0.2
+    // editor-written). Try SKILL.md first; fall through to config.json path below.
+    const skillPath = path.join(dir, "SKILL.md");
+    if (fs.existsSync(skillPath)) {
+      try {
+        const { data, content } = matter(fs.readFileSync(skillPath, "utf8"));
+        return {
+          runtime,
+          slug,
+          name: typeof data.name === "string" ? data.name : slug,
+          prompt: content.trim(),
+          schedule: typeof data.schedule === "string" ? data.schedule : undefined,
+          reversibility: isReversibility(data.reversibility)
+            ? data.reversibility
+            : undefined,
+          budget: typeof data.budget === "number" ? data.budget : undefined,
+          bundleDir: `${RUNTIME_DIR[runtime]}/${slug}`,
+        };
+      } catch {
+        return null;
+      }
+    }
+    // Fall through to config.json branch below.
+  }
+
+  // v0.2 shape (codex / gemini / claude-routines config.json): config.json + prompt.md.
   const cfgPath = path.join(dir, "config.json");
   const promptPath = path.join(dir, "prompt.md");
   if (!fs.existsSync(cfgPath)) return null;
