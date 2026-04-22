@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ListChecks, Workflow, Cloud, ScrollText, Settings as SettingsIcon } from "lucide-react";
+import { ListChecks, Workflow, Cloud, ScrollText, Wrench, Settings as SettingsIcon } from "lucide-react";
 import { SleepIndicator } from "./_components/sleep-indicator";
 import { MoonGlyph } from "./_components/moon-glyph";
 
@@ -38,6 +38,7 @@ function Sidebar() {
         <NavLink href="/routines" icon={<Workflow className="w-3.5 h-3.5" />}>Local Routines</NavLink>
         <NavLink href="/cloud" icon={<Cloud className="w-3.5 h-3.5" />}>Cloud Routines</NavLink>
         <NavLink href="/audit" icon={<ScrollText className="w-3.5 h-3.5" />}>Audit Log</NavLink>
+        <NavLink href="/diagnostics" icon={<Wrench className="w-3.5 h-3.5" />}>Diagnostics</NavLink>
         <NavLink href="/settings" icon={<SettingsIcon className="w-3.5 h-3.5" />}>Settings</NavLink>
       </nav>
 
