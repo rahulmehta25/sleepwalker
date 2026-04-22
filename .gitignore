@@ -26,3 +26,6 @@ dashboard/tsconfig.tsbuildinfo
 # Editor
 .idea/
 .vscode/
+
+# Git worktrees
+.worktrees/
