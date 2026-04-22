@@ -18,7 +18,9 @@ set -euo pipefail
 INBOX="${HOME}/.sleepwalker/approved"
 DONE_DIR="${HOME}/.sleepwalker/executed"
 AUDIT="${HOME}/.sleepwalker/audit.jsonl"
+LOCK_FILE="${HOME}/.sleepwalker/audit.jsonl.lock"
 mkdir -p "$INBOX" "$DONE_DIR"
+touch "$LOCK_FILE"
 
 shopt -s nullglob
 TASKS=("$INBOX"/*.task)
@@ -35,6 +37,13 @@ for TASK_FILE in "${TASKS[@]}"; do
   echo "==> Executing $ID"
 
   TASK=$(cat "$TASK_FILE")
+
+  # Validate task JSON has required fields before processing
+  if ! echo "$TASK" | jq -e '.fleet and .tool' >/dev/null 2>&1; then
+    echo "  ✗ skipped (malformed task file — missing fleet or tool)"
+    continue
+  fi
+
   FLEET=$(echo "$TASK" | jq -r '.fleet // "unknown"')
   TOOL=$(echo "$TASK" | jq -r '.tool // ""')
   ARGS=$(echo "$TASK" | jq -c '.args // {}')
@@ -59,8 +68,8 @@ $ARGS
 
   # Run claude -p with SLEEPWALKER_REEXECUTING=1 in env. The defer hook
   # respects this and allows the re-run to proceed without re-deferring.
-  # We can't use --bare because that skips OAuth keychain reads too.
-  if SLEEPWALKER_REEXECUTING=1 claude -p --permission-mode bypassPermissions "$RERUN_PROMPT" < /dev/null > "$RESULT_FILE" 2>&1; then
+  # Uses acceptEdits (not bypassPermissions) so hooks still enforce safety.
+  if SLEEPWALKER_REEXECUTING=1 claude -p --permission-mode acceptEdits "$RERUN_PROMPT" < /dev/null > "$RESULT_FILE" 2>&1; then
     STATUS="executed"
     echo "  ✓ executed (result in $RESULT_FILE)"
   else
@@ -68,11 +77,14 @@ $ARGS
     echo "  ✗ failed (see $RESULT_FILE)"
   fi
 
-  # Audit
-  jq -nc --arg ts "$TS" --arg fleet "$FLEET" --arg tool "$TOOL" --argjson args "$ARGS" \
+  # Audit (flock-wrapped to serialize with other audit.jsonl writers)
+  ENTRY=$(jq -nc --arg ts "$TS" --arg fleet "$FLEET" --arg tool "$TOOL" --argjson args "$ARGS" \
     --arg id "$ID" --arg status "$STATUS" --arg result "$(head -c 500 "$RESULT_FILE" 2>/dev/null)" \
-    '{ts:$ts,fleet:$fleet,event:"reexecuted",tool:$tool,args:$args,entry_id:$id,status:$status,output_preview:$result}' \
-    >> "$AUDIT"
+    '{ts:$ts,fleet:$fleet,event:"reexecuted",tool:$tool,args:$args,entry_id:$id,status:$status,output_preview:$result}')
+  (
+    flock -w 5 -x 200
+    echo "$ENTRY" >> "$AUDIT"
+  ) 200>"$LOCK_FILE"
 
   # Move task to executed dir so we don't re-run
   mv "$TASK_FILE" "$DONE_DIR/${ID}.task"
