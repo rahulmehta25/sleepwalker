@@ -48,7 +48,9 @@ trap cleanup EXIT
 # --- Counters + assertions (pattern from hooks/tests/run-tests.sh) ---
 PASS=0
 FAIL=0
+SKIP=0
 FAILURES=()
+SKIPS=()
 
 assert_eq() {
   local label="$1" expected="$2" actual="$3"
@@ -295,13 +297,25 @@ set -e
 assert_eq "s7b: supervisor exits 66 (EX_NOINPUT) when derived bundle missing" "66" "$SCEN7B_EXIT"
 
 # =============================================================================
-# Scenario 8: flock serializes concurrent audit writes (QUEU-04)
+# Scenarios 8 + 9: flock-backed mutex behavior (QUEU-04)
 # =============================================================================
-# Per RESEARCH §1.7, 8 writers at 5KB lines produced 78% corruption without
-# flock. Plan 05-04 wraps audit_emit in an FD-form flock -w 5 -x 200 on
-# ~/.sleepwalker/audit.jsonl.lock. This scenario asserts 4 concurrent
-# supervisors produce exactly 8 lines (4 runs × started + completed events),
-# every line valid JSON via jq -e . — the "zero corruption" invariant.
+# Both scenarios require flock(1) to actually exercise the feature they
+# claim to test. flock is NOT shipped on stock macOS (users install it via
+# `brew install util-linux`). Without flock, scenario 8 would trivially
+# "pass" under unlocked appends at low contention, and scenario 9 could
+# not hold the artificial lock it depends on — both would report PASS for
+# the wrong reason, masking regressions. Skip with a clear message when
+# absent so the test output is honest about what was verified.
+if ! command -v flock >/dev/null 2>&1; then
+  echo ""
+  echo "==> scenarios 8 + 9: SKIPPED (flock(1) not found on PATH)"
+  echo "    install with: brew install util-linux"
+  echo "    and re-run this harness to verify QUEU-04 mutex behavior."
+  SKIP=$((SKIP+2))
+  SKIPS+=("s8: flock-serialized concurrent audit writes (needs flock(1))")
+  SKIPS+=("s9: flock timeout graceful fallthrough (needs flock(1))")
+else
+
 echo ""
 echo "==> scenario 8: flock serializes 4 concurrent supervisor audit writes"
 reset_state
@@ -389,12 +403,21 @@ else
   PASS=$((PASS+1)); echo "  PASS  s9: audit captured $AUDIT_LINES line(s) via graceful fallthrough"
 fi
 
+fi  # end: flock-available gate for scenarios 8 + 9
+
 # =============================================================================
 # Summary
 # =============================================================================
 echo ""
 echo "──────────────────────────────────────"
-echo "  Results: $PASS pass / $FAIL fail"
+if [ "$SKIP" -gt 0 ]; then
+  echo "  Results: $PASS pass / $FAIL fail / $SKIP skip"
+  for s in "${SKIPS[@]:-}"; do
+    [ -n "$s" ] && echo "    SKIP  $s"
+  done
+else
+  echo "  Results: $PASS pass / $FAIL fail"
+fi
 echo "──────────────────────────────────────"
 if [ "$FAIL" -ne 0 ]; then
   echo ""

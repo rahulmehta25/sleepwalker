@@ -248,6 +248,30 @@ assert_eq "cache hit returns fleet" "calendar-prep" "$fleet"
 # =============================================================================
 # Scenario: sleepwalker-audit-log.sh serializes concurrent audit writes (QUEU-04)
 # =============================================================================
+# Requires flock(1). Without it, the hook's graceful fallthrough (added
+# alongside Fix 1 to keep the hook from silently failing on stock macOS)
+# means 4 unlocked appends at low concurrency might "pass" without
+# actually exercising the mutex — masking regressions. Skip with a clear
+# message when flock is absent. Symmetric with supervisor scenarios 8+9.
+if ! command -v flock >/dev/null 2>&1; then
+  echo
+  echo "==> scenario: serialized audit writes — SKIPPED (flock(1) not on PATH)"
+  echo "    install with: brew install util-linux (or: brew install flock)"
+  echo "──────────────────────────────────────"
+  echo "  Results: $PASS pass / $FAIL fail / 3 skip"
+  echo "    SKIP  4 concurrent audit: exactly 4 lines landed (needs flock)"
+  echo "    SKIP  concurrent audit: zero malformed lines (needs flock)"
+  echo "    SKIP  concurrent audit: 4 entries tagged with inbox-triage fleet (needs flock)"
+  echo "──────────────────────────────────────"
+  if [ $FAIL -gt 0 ]; then
+    echo
+    echo "Failures:"
+    for f in "${FAILURES[@]}"; do echo "  - $f"; done
+    exit 1
+  fi
+  exit 0
+fi
+
 echo
 echo "==> scenario: sleepwalker-audit-log.sh serializes 4 concurrent audit writes"
 reset_state
