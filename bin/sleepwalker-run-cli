@@ -204,9 +204,21 @@ CLI_PID=$!
 ) &
 WATCHDOG_PID=$!
 
-wait "$CLI_PID"
-CLI_EXIT=$?
-kill "$WATCHDOG_PID" 2>/dev/null || true
+# Redirect stderr around `wait` to suppress bash's pipeline-member-status
+# notice. When the watchdog SIGTERMs $CLI_PID (which, as the tail of a
+# backgrounded pipeline, is tee(1)), the other pipeline members die with
+# mixed signals (codex=SIGPIPE/141, strip_ansi=SIGPIPE/141, cat=Done) and
+# bash synthesizes a 4-line status dump to its own stderr — harmless, but
+# it lands in ~/.sleepwalker/logs/<label>.err on every budget-exceeded run
+# ("Terminated: 15 | tee ..." etc.) and looks alarming. The audit event
+# already captures exit code + chars_consumed, so discarding this dump
+# loses no diagnostic signal. Redirect via a group (not a subshell) so
+# $CLI_EXIT remains assignable from the caller's scope.
+{ wait "$CLI_PID"; CLI_EXIT=$?; } 2>/dev/null
+
+# Reap the watchdog silently (kill's ESRCH-if-already-dead + any residual
+# job-control notice from the backgrounded subshell both go to /dev/null).
+{ kill "$WATCHDOG_PID" 2>/dev/null; wait "$WATCHDOG_PID" 2>/dev/null; } || true
 set -e
 
 FINAL_SIZE=$(wc -c < "$OUTPUT_FILE" 2>/dev/null || echo 0)
