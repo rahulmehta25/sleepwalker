@@ -924,3 +924,33 @@
 - Sanity-check invariants confirmed pre-commit: each template has `runtime=1`, `marker=1`, `name=1`, `slug=1`, `schedule=1`, `reversibility=1`, `budget=1`, `description=0`. Template line counts within 50-120 bound (59 / 65 / 71 / 75). Fleet marker uses runtime-prefixed form `[sleepwalker:<runtime>/<slug>]` (v0.2), NOT v0.1 slug-only form. `dashboard/tests/templates.test.ts` has 5 lexical `it(` blocks, 2 `RoutineBundleInput.safeParse` calls, 1 `import matter` statement.
 - Files modified: `templates/routine-claude-routines.md` (new), `templates/routine-claude-desktop.md` (new), `templates/routine-codex.md` (new), `templates/routine-gemini.md` (new), `dashboard/tests/templates.test.ts` (new), `templates/.gitkeep` (deleted), `.planning/phases/06-polish/deferred-items.md` (new — out-of-scope audit log).
 - Plan executed exactly as written with one documented mid-execution environmental complication (parallel session advanced `main` by 7 commits during execution, re-materializing `.gitkeep` as a 0-byte file). Zero Rule 1 bugs. Zero Rule 2 missing-critical auto-fixes. Zero Rule 4 architectural decisions. Zero auth gates.
+
+## 2026-04-22 03:50 EST
+
+### User Prompt
+"[Session continuation — E2E browser testing of the Sleepwalker dashboard]"
+
+### Actions Taken
+- Ran live E2E browser testing via Claude in Chrome against localhost:3000
+- Identified and fixed three bugs surfaced during testing:
+  1. `routine-action-bar.tsx`: removed `setDeployOpen(false)` from `handleDeployComplete` — drawer was auto-closing before user could see success/rollback state
+  2. `routines-client.tsx`: replaced `key={nonce}` + `useState` pattern with `useRouter().refresh()` — key change was unmounting the entire routine list on each onChange, destroying `deployOpen` state mid-deploy and hiding the drawer
+  3. `bundles.ts`: replaced bare relative `RUNTIME_ROOT` paths with a lazy Proxy that computes absolute paths via `getRepoRoot()` (checks `SLEEPWALKER_REPO_ROOT` env var, falls back to `../` when CWD is `dashboard/`) — production was resolving `routines-local` against `dashboard/` and finding nothing
+  4. `save-to-repo.ts`: used `path.relative(repoRoot(), RUNTIME_ROOT[runtime])` for `subpath` so git staging stays relative even though `RUNTIME_ROOT` is now absolute
+- Deleted E2E test artifacts: `routines-local/e2e-test-routine/` and `routines-local/sleepwalker-daily-standup/`
+- Verified all 363 tests pass after fixes
+- Committed as `fix(deploy): keep drawer open after deploy and resolve bundle path root` (commit `6b27b83`)
+- Files modified: `dashboard/app/routines/_components/routine-action-bar.tsx`, `dashboard/app/routines/routines-client.tsx`, `dashboard/lib/bundles.ts`, `dashboard/lib/save-to-repo.ts`
+
+## 2026-04-22 04:00 EST
+
+### User Prompt
+"[Pre-Phase-6-Wave-2 hygiene: the bundles.ts absolute-path fix broke 50 tests across 8 files under the default threads pool — parallel workers shared process.cwd() and process.env, so bundles.test.ts's process.chdir() bled into save-to-repo tests that set SLEEPWALKER_REPO_ROOT, causing cross-file pollution.]"
+
+### Actions Taken
+- Diagnosed root cause: vitest's default `threads` pool runs parallel workers inside a single Node process, so `process.cwd()` (mutated by `process.chdir()` in bundles.test.ts / save-routine-action.test.ts / routines.test.ts / etc.) and `process.env.SLEEPWALKER_REPO_ROOT` (mutated by save-to-repo tests / supervisor-staging tests) leaked across unrelated test files running in parallel.
+- Verified in isolation: each of the 8 failing files passed individually with `pnpm vitest run tests/<file>`. Failures only surfaced during the full `pnpm test` run.
+- Fixed by setting `pool: "forks"` in `dashboard/vitest.config.ts`. Forks give each test file its own Node process (full `process.env` / `process.cwd()` isolation) while preserving file-level parallelism.
+- Suite went from 50 failed / 313 passed → 363 / 363 green. Full-suite duration ~10.6s (vs ~3.6s on threads — acceptable tradeoff for correctness and future-proofing).
+- Zero production code changes required; the uncommitted bundles.ts / routines-client.tsx / routine-action-bar.tsx fixes landed in commit `6b27b83` earlier and are correct. The only remaining diff was a single `pool: "forks"` config addition.
+- Files modified: `dashboard/vitest.config.ts`
