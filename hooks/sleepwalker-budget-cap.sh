@@ -13,9 +13,11 @@ set -euo pipefail
 BUDGETS_FILE="${HOME}/.sleepwalker/budgets.json"
 SETTINGS_FILE="${HOME}/.sleepwalker/settings.json"
 AUDIT_FILE="${HOME}/.sleepwalker/audit.jsonl"
+LOCK_FILE="${HOME}/.sleepwalker/audit.jsonl.lock"
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p "${HOME}/.sleepwalker"
+touch "$LOCK_FILE"
 [ ! -f "$BUDGETS_FILE" ] && echo '{}' > "$BUDGETS_FILE"
 
 INPUT="$(cat)"
@@ -51,7 +53,17 @@ jq --arg k "$KEY" --argjson t "$TOTAL" '.[$k] = $t' "$BUDGETS_FILE" > "$TMP" && 
 
 if [ "$TOTAL" -gt "$BUDGET" ]; then
   TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-  echo "{\"ts\":\"$TS\",\"fleet\":\"$FLEET\",\"event\":\"budget_exceeded\",\"total\":$TOTAL,\"budget\":$BUDGET,\"session\":\"$SESSION_ID\"}" >> "$AUDIT_FILE"
+  ENTRY=$(jq -nc --arg ts "$TS" --arg fleet "$FLEET" --arg session "$SESSION_ID" \
+    --argjson total "$TOTAL" --argjson budget "$BUDGET" \
+    '{ts:$ts,fleet:$fleet,event:"budget_exceeded",total:$total,budget:$budget,session:$session}')
+  # Graceful fallthrough on missing flock(1) — same rationale as
+  # sleepwalker-audit-log.sh: flock is not shipped on stock macOS, so
+  # strict failure would turn a missing binary into a silent Claude Code
+  # hook error every time a fleet crossed its token budget.
+  (
+    flock -w 5 -x 200 || true
+    echo "$ENTRY" >> "$AUDIT_FILE"
+  ) 200>"$LOCK_FILE"
   jq -nc --arg reason "Sleepwalker budget exceeded for $FLEET ($TOTAL/$BUDGET tokens)" \
     '{continue:false, stopReason:$reason}'
   exit 0

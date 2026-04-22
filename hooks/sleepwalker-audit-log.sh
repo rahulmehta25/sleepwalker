@@ -48,11 +48,16 @@ ENTRY=$(jq -nc \
 # audit_emit writing to the same ~/.sleepwalker/audit.jsonl. Shared sidecar
 # at $LOCK_FILE makes this ONE mutex across both writers. See
 # .planning/codebase/CONCERNS.md §concurrent JSONL race for the v0.1
-# background the flock closes. Hook uses STRICT failure (no || true) per
-# RESEARCH §1.6: a dropped audit line is recoverable — the next PostToolUse
-# call emits a fresh entry; a race-corrupted line is not.
+# background the flock closes.
+#
+# Graceful fallthrough (|| true) mirrors bin/sleepwalker-run-cli's audit_emit:
+# flock(1) is not shipped on stock macOS (users get it only via `brew install
+# util-linux`), so strict failure would turn a missing binary into a silent
+# Claude Code hook error on every PostToolUse — worse than the narrow race
+# window the lock was closing. The race is already accepted by the supervisor
+# side of the shared mutex; accepting it here keeps the two writers symmetric.
 (
-  flock -w 5 -x 200
+  flock -w 5 -x 200 || true
   echo "$ENTRY" >> "$AUDIT_FILE"
 ) 200>"$LOCK_FILE"
 

@@ -16,6 +16,7 @@
 set -euo pipefail
 
 QUEUE_FILE="${HOME}/.sleepwalker/queue.jsonl"
+QUEUE_LOCK_FILE="${HOME}/.sleepwalker/queue.jsonl.lock"
 SETTINGS_FILE="${HOME}/.sleepwalker/settings.json"
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -49,7 +50,8 @@ fi
 
 # --- Determine sleep window ---
 mkdir -p "${HOME}/.sleepwalker"
-touch "$QUEUE_FILE"
+  touch "$QUEUE_FILE"
+  touch "$QUEUE_LOCK_FILE"
 SLEEP_START=$(jq -r '.sleep_window.start_hour // 23' "$SETTINGS_FILE" 2>/dev/null || echo 23)
 SLEEP_END=$(jq -r '.sleep_window.end_hour // 7' "$SETTINGS_FILE" 2>/dev/null || echo 7)
 HOUR=$(date +%H | sed 's/^0//'); HOUR=${HOUR:-0}
@@ -107,7 +109,14 @@ if [ "$DECISION" = "defer" ]; then
     --arg id "$ULID" --arg ts "$TS" --arg fleet "$FLEET" --arg tool "$TOOL_NAME" \
     --argjson args "$TOOL_INPUT" --arg rev "$REVERSIBILITY" --arg session "$SESSION_ID" \
     '{id:$id,ts:$ts,fleet:$fleet,tool:$tool,args:$args,reversibility:$rev,session:$session,status:"pending"}')
-  echo "$ENTRY" >> "$QUEUE_FILE"
+  # Graceful fallthrough on missing flock(1) — same rationale as
+  # sleepwalker-audit-log.sh: flock is not shipped on stock macOS, so
+  # strict failure would turn a missing binary into a silent Claude Code
+  # hook error on every deferred tool call. Symmetric with the supervisor.
+  (
+    flock -w 5 -x 200 || true
+    echo "$ENTRY" >> "$QUEUE_FILE"
+  ) 200>"$QUEUE_LOCK_FILE"
   printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"defer"},"reason":"Sleepwalker: queued for morning review"}\n'
 else
   allow
