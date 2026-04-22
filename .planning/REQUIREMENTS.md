@@ -58,7 +58,7 @@ Requirements for the v0.2 milestone. Each maps to a roadmap phase. Derived from 
 ### Docs & OSS Polish (Phase 5 territory)
 
 - [ ] **DOCS-01**: `docs/AUTHORING.md` walks a new user from "just cloned the repo" to "first custom routine running" in under 10 minutes, covering all four runtimes and the Mac-sleep caveat
-- [ ] **DOCS-02**: Four runtime templates at `templates/routine-claude-routines.md`, `templates/routine-claude-desktop.md`, `templates/routine-codex.md`, `templates/routine-gemini.md` — commented frontmatter + skeleton prompt
+- [x] **DOCS-02**: Four runtime templates at `templates/routine-claude-routines.md`, `templates/routine-claude-desktop.md`, `templates/routine-codex.md`, `templates/routine-gemini.md` — commented frontmatter + skeleton prompt — **completed 2026-04-22 (06-01 authored 4 templates with lowercase zod frontmatter keys + v0.2 [sleepwalker:<runtime>/<slug>] fleet marker + per-runtime example prompt (Morning Brief / Inbox Triage / Dependency Update Scan / Design Doc Drift Review) + quirk warning comments (claude-desktop Q1 manual-add; gemini_quota_project); dashboard/tests/templates.test.ts with 5 lexical it() blocks round-trips each template through gray-matter + RoutineBundleInput.safeParse to prevent template rot on schema evolution; zero new deps; commits ce78dc9 + a6c590b)**
 - [ ] **DOCS-03**: Diagnostics page at `/diagnostics` reports macOS version, Homebrew prefix (arm64/x86_64), each CLI's absolute path, active shell, `~/Library/LaunchAgents/` writability — the "copy this into a GitHub issue" panel
 
 ### Backward Compatibility
@@ -133,7 +133,7 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 | REPO-01 | Phase 4 | Complete (04-02 save-to-repo.ts simple-git + proper-lockfile library with never-push / never-sweep invariants grep-verifiable; 04-05 previewSaveToRepoAction + commitSaveToRepoAction + releaseSaveLockAction Server Action wrappers; 04-08 SaveToRepoModal two-stage Review→Confirm client + DiffStatPanel + ConfirmDialog Discard; 04-09 wired into RoutineActionBar; commits 55740f8 + 7279030 + 1ae5398 + 659ef16 + b09ab93 + feadcd6 + 1f1feb6, 2026-04-20) |
 | HLTH-01 | Phase 4 | Complete (04-03 /api/health/all Route Handler with 2s Promise.race per-adapter timeout + Promise.allSettled; 04-06 HealthBadgeRow + HealthBadge with 60s sessionStorage cache + window-focus refetch + per-badge manual refresh; 04-09 mounted on landing page PageHeader meta array as first entry; commits 22b3740 + de000a6 + e3492ea + df2c279 + d016d98 + 71f920d, 2026-04-20) |
 | DOCS-01 | Phase 6 | Pending |
-| DOCS-02 | Phase 6 | Pending |
+| DOCS-02 | Phase 6 | Complete (06-01 authored 4 runtime templates at `templates/routine-<runtime>.md` with lowercase zod frontmatter keys + v0.2 `[sleepwalker:<runtime>/<slug>]` fleet marker; `dashboard/tests/templates.test.ts` round-trips each template through gray-matter + RoutineBundleInput.safeParse; 5/5 green; commits ce78dc9 + a6c590b, 2026-04-22) |
 | DOCS-03 | Phase 6 | Pending |
 | COMP-01 | Phase 6 | Pending |
 | COMP-02 | Phase 6 | Pending |
@@ -142,8 +142,8 @@ Each v1 requirement maps to exactly one phase. Filled during roadmap creation (2
 - v1 requirements: 32 total
 - Mapped to phases: 32 (100%)
 - Unmapped: 0
-- Complete: 27/32 (Phase 1-4 sealed + Phase 5 sealed 2026-04-21 — QUEU-01..04 + SAFE-01 all Complete)
-- Pending: 5/32 (Phase 6 Polish — DOCS-01, DOCS-02, DOCS-03, COMP-01, COMP-02)
+- Complete: 28/32 (Phase 1-5 sealed + Phase 6 Plan 01 — DOCS-02 complete 2026-04-22)
+- Pending: 4/32 (Phase 6 Polish — DOCS-01, DOCS-03, COMP-01, COMP-02)
 
 **Per-phase counts:**
 - Phase 1 (Foundation): 2 requirements
