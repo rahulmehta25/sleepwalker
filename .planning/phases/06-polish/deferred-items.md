@@ -114,3 +114,22 @@ Before sealing Phase 6 (Plan 06-07 exit gate), reconcile:
 - Remove the untracked directory cleanly so the v0.1 baseline (6 local + 8 cloud + 1 _test-zen) is preserved
 
 Plan 06-02 itself does not gate on this — the diagnostics page + library + tests are independently green and the lib has zero coupling to the v0.1 routine catalog.
+
+---
+
+## 2026-04-22 — Plan 06-03 closeout addendum
+
+### Same `tests/routines.test.ts` failure persisted during Plan 06-03
+
+At Plan 06-03 execution time, `pnpm test` reported 372 passed / 1 failed / 373 total. The single failure is the same one the Plan 06-02 addendum above already documents:
+
+- `tests/routines.test.ts > listRoutines returns the 6 local templates from the repo (uninstalled)` — `expected 7 to be 6`
+
+Root cause unchanged: the untracked `routines-local/sleepwalker-daily-standup/` directory (introduced by commit `58e8712` feat(routines-local): add sleepwalker-daily-standup bundle) makes the filesystem enumeration return 7 directories against the test's hardcoded 6.
+
+**Out of scope for Plan 06-03** per executor SCOPE BOUNDARY rule:
+- Plan 06-03's scope is `docs/AUTHORING.md` (new) + `README.md` (single-line link addition) — no dashboard source touched, no test file touched, no bundle enumeration logic touched
+- Failure is in `tests/routines.test.ts`, which does not interact with AUTHORING.md or README.md at all
+- The correct fix belongs to whichever plan commits the `sleepwalker-daily-standup` bundle formally (update hardcoded 6 → 7, or remove the bundle directory)
+
+Plan 06-03 itself does not gate on this — AUTHORING.md passes every acceptance criterion (600-1100 lines, 7 locked-order §N. sections, 13-row Troubleshooting table, Mac-sleep §4.2 triptych, SAFE-01 negative invariant clean, all 4 runtime templates cross-referenced).

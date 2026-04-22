@@ -111,7 +111,7 @@ cd dashboard && pnpm install && pnpm dev             # dashboard on localhost:30
 For the **local fleet**: open the dashboard → Routines → toggle to enable.
 For the **cloud fleet**: open the **Cloud Routines** page → click "Set up" on each → it generates the `/schedule create` command + opens claude.ai/code/routines pre-filled.
 
-[Full quickstart guide →](docs/QUICKSTART.md) · [Routine catalog →](docs/ROUTINES.md) · [Architecture →](docs/ARCHITECTURE.md)
+[Full quickstart guide →](docs/QUICKSTART.md) · [Authoring guide (v0.2, 4 runtimes) →](docs/AUTHORING.md) · [Routine catalog →](docs/ROUTINES.md) · [Architecture →](docs/ARCHITECTURE.md)
 
 ## How to Use
 
