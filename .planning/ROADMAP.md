@@ -133,7 +133,15 @@ Plans:
   3. The `/diagnostics` page reports macOS version, Homebrew prefix (arm64/x86_64 detected at runtime), each CLI's absolute path, active shell, and `~/Library/LaunchAgents/` writability in a copy-to-GitHub-issue format; a fresh Intel Mac running fish shell with macOS 14 loads the page without crashing.
   4. An end-to-end integration test verifies that all 14 v0.1 routines (6 local + 8 cloud) deploy, run, and surface in the Morning Queue without code changes; `install.sh` is re-run idempotently on a v0.1 install and produces a no-op upgrade; no hook script name, path, or JSONL schema field has changed.
   5. The v0.1 frozen surface (hook paths, `~/.sleepwalker/*.jsonl` schemas, `~/.claude/settings.json` wiring, `QueueEntry` fields, `[sleepwalker:<fleet>]` marker format, reversibility colors, policy names) is verified unchanged by a backward-compatibility test run in CI.
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 06-01-PLAN.md -- DOCS-02: 4 runtime templates + gray-matter/zod round-trip test (templates/routine-*.md + dashboard/tests/templates.test.ts)
+- [ ] 06-02-PLAN.md -- DOCS-03: /diagnostics Server Component + lib + 2 tests (dashboard/app/diagnostics/ + dashboard/lib/diagnostics.ts)
+- [ ] 06-03-PLAN.md -- DOCS-01: docs/AUTHORING.md 7-section walkthrough + README link
+- [ ] 06-04-PLAN.md -- COMP-01: tests/compat/v01-routines.sh + dashboard/tests/v01-queue-integration.test.ts
+- [ ] 06-05-PLAN.md -- COMP-02: tests/compat/frozen-surface.sh permanent gate vs 998455b baseline
+- [ ] 06-06-PLAN.md -- CI: .github/workflows/ci.yml macos-14 runner with 6-step verification
 
 ## Progress
 
@@ -144,7 +152,7 @@ Plans:
 | 3. Editor | 9/9 | Complete | 2026-04-19 |
 | 4. Deploy | 9/9 | Complete | 2026-04-20 |
 | 5. Queue | 8/8 | Complete | 2026-04-21 |
-| 6. Polish | 0/TBD | Not started | - |
+| 6. Polish | 0/6 | Not started | - |
 
 ---
 *Roadmap created: 2026-04-18*
