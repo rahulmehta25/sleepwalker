@@ -82,6 +82,34 @@ export CI=true
 # Supervisor chooses graceful fallthrough (|| true) on flock timeout/absence:
 # the audit line is the supervisor's only record of the run, so we prefer
 # reintroducing the narrow v0.1 race for that one entry over dropping the line.
+# Size-based rotation of $AUDIT_FILE. Caller MUST hold the flock on
+# $LOCK_FILE (via `flock -x 200` in a surrounding subshell) so concurrent
+# writers cannot both observe "over cap" and both rotate.
+#
+# Policy: keep 3 generations (.1 newest, .3 oldest). Cap is
+# SLEEPWALKER_AUDIT_MAX_BYTES if set (tests + tuning), else 10 MB —
+# which, at ~200 bytes/line average, caps each generation at ~50k events.
+#
+# Identical logic lives in hooks/sleepwalker-audit-log.sh; both writers
+# share the same rotation policy so audit.jsonl behavior is symmetric
+# regardless of which writer tripped the threshold. When updating one,
+# update the other.
+_audit_rotate_if_needed() {
+  local max_bytes size
+  max_bytes="${SLEEPWALKER_AUDIT_MAX_BYTES:-10485760}"
+  [ -f "$AUDIT_FILE" ] || return 0
+  size=$(wc -c < "$AUDIT_FILE" 2>/dev/null | tr -d ' ')
+  [ "${size:-0}" -gt "$max_bytes" ] || return 0
+  # Shift oldest-to-youngest so .1 is always the most recent rotation.
+  # `rm -f` + `mv -f` tolerate missing intermediates (common on the first
+  # few rotations when .2/.3 don't exist yet).
+  [ -f "${AUDIT_FILE}.3" ] && rm -f "${AUDIT_FILE}.3"
+  [ -f "${AUDIT_FILE}.2" ] && mv -f "${AUDIT_FILE}.2" "${AUDIT_FILE}.3"
+  [ -f "${AUDIT_FILE}.1" ] && mv -f "${AUDIT_FILE}.1" "${AUDIT_FILE}.2"
+  mv -f "$AUDIT_FILE" "${AUDIT_FILE}.1"
+  touch "$AUDIT_FILE"
+}
+
 # $1 = event name; $2 = extra JSON fragment (already-formed key:value pairs, no leading/trailing comma)
 audit_emit() {
   local ts event extra
@@ -91,12 +119,14 @@ audit_emit() {
   if [ -n "$extra" ]; then
     (
       flock -w 5 -x 200 || true
+      _audit_rotate_if_needed
       printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s",%s}\n' \
         "$ts" "$FLEET" "$RUNTIME" "$event" "$extra" >> "$AUDIT_FILE"
     ) 200>"$LOCK_FILE"
   else
     (
       flock -w 5 -x 200 || true
+      _audit_rotate_if_needed
       printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s"}\n' \
         "$ts" "$FLEET" "$RUNTIME" "$event" >> "$AUDIT_FILE"
     ) 200>"$LOCK_FILE"

@@ -307,6 +307,77 @@ assert_eq "concurrent audit: zero malformed lines" "0" "$PARSE_FAIL"
 FLEET_COUNT=$(grep -c '"fleet":"inbox-triage"' "$TEST_HOME/.sleepwalker/audit.jsonl" || true)
 assert_eq "concurrent audit: 4 entries tagged with inbox-triage fleet" "4" "$FLEET_COUNT"
 
+# =============================================================================
+# Scenario: sleepwalker-audit-log.sh rotates audit.jsonl at
+# SLEEPWALKER_AUDIT_MAX_BYTES cap with 3-generation retention.
+# Mirrors supervisor-tests.sh scenario 13 because the two writers share
+# the same rotation policy (intentionally duplicated function); this
+# scenario exists to catch drift if one copy is edited without the other.
+# =============================================================================
+echo
+echo "==> scenario: sleepwalker-audit-log.sh rotation"
+reset_state
+TR=$(make_transcript "inbox-triage")
+
+# Seed the audit file with ~3KB of a token-tagged content so we can
+# identify which rotated file came from which rotation pass.
+seed_hook_audit() {
+  local target="$1"
+  local token="$2"
+  : > "$target"
+  local i=0
+  while [ "$(wc -c < "$target" | tr -d ' ')" -lt 2500 ]; do
+    printf '{"ts":"2026-04-22T00:00:%02dZ","fleet":"inbox-triage","session":"seed","tool":"Read","input":{},"output_preview":"tok-%s-%d","output_length":1}\n' \
+      "$((i % 60))" "$token" "$i" >> "$target"
+    i=$((i+1))
+  done
+}
+
+# 1st rotation — hook receives a single tool call, trips the 2KB cap.
+seed_hook_audit "$TEST_HOME/.sleepwalker/audit.jsonl" "H1"
+in=$(hook_input "PostToolUse" "Read" '{"file_path":"/tmp/x"}' "sess-rot" "$TR" "rot-call-1")
+echo "$in" | SLEEPWALKER_AUDIT_MAX_BYTES=2048 "$HOOKS_DIR/sleepwalker-audit-log.sh" >/dev/null
+if [ ! -f "$TEST_HOME/.sleepwalker/audit.jsonl.1" ]; then
+  FAIL=$((FAIL+1)); FAILURES+=("hook-rot 1: .1 should exist")
+  echo "  FAIL  hook-rot 1: audit.jsonl.1 missing after 1st rotation"
+else
+  PASS=$((PASS+1)); echo "  PASS  hook-rot 1: .1 exists after 1st rotation"
+fi
+assert_contains "hook-rot 1: .1 holds token H1 (just rotated)" \
+  '"output_preview":"tok-H1-0"' \
+  "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl.1" 2>/dev/null || echo '')"
+# Fresh audit should have just the single appended event
+assert_file_lines "hook-rot 1: fresh audit has 1 line (the appended event)" "1" "$TEST_HOME/.sleepwalker/audit.jsonl"
+
+# 4 total rotations — by the end, token H1 must be dropped (3-gen cap).
+for token in H2 H3 H4; do
+  seed_hook_audit "$TEST_HOME/.sleepwalker/audit.jsonl" "$token"
+  in=$(hook_input "PostToolUse" "Read" '{"file_path":"/tmp/x"}' "sess-rot" "$TR" "rot-${token}")
+  echo "$in" | SLEEPWALKER_AUDIT_MAX_BYTES=2048 "$HOOKS_DIR/sleepwalker-audit-log.sh" >/dev/null
+done
+# After 4th rotation: .1=H4, .2=H3, .3=H2 — H1 GONE.
+assert_contains "hook-rot 4: .1 holds H4" '"output_preview":"tok-H4-0"' \
+  "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl.1" 2>/dev/null || echo '')"
+assert_contains "hook-rot 4: .2 holds H3" '"output_preview":"tok-H3-0"' \
+  "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl.2" 2>/dev/null || echo '')"
+assert_contains "hook-rot 4: .3 holds H2" '"output_preview":"tok-H2-0"' \
+  "$(cat "$TEST_HOME/.sleepwalker/audit.jsonl.3" 2>/dev/null || echo '')"
+if grep -q '"output_preview":"tok-H1-' "$TEST_HOME/.sleepwalker/audit.jsonl" \
+                                        "$TEST_HOME/.sleepwalker/audit.jsonl.1" \
+                                        "$TEST_HOME/.sleepwalker/audit.jsonl.2" \
+                                        "$TEST_HOME/.sleepwalker/audit.jsonl.3" 2>/dev/null; then
+  FAIL=$((FAIL+1)); FAILURES+=("hook-rot 4: H1 must be dropped")
+  echo "  FAIL  hook-rot 4: oldest generation (H1) not dropped"
+else
+  PASS=$((PASS+1)); echo "  PASS  hook-rot 4: oldest generation (H1) dropped"
+fi
+if [ -f "$TEST_HOME/.sleepwalker/audit.jsonl.4" ]; then
+  FAIL=$((FAIL+1)); FAILURES+=("hook-rot 4: .4 must not exist")
+  echo "  FAIL  hook-rot 4: audit.jsonl.4 created (policy violation)"
+else
+  PASS=$((PASS+1)); echo "  PASS  hook-rot 4: no .4 (3-generation cap honored)"
+fi
+
 # Summary
 echo
 echo "──────────────────────────────────────"

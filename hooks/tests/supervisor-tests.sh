@@ -589,6 +589,153 @@ EOF
     "$(cat "$HOME/.sleepwalker/audit.jsonl")"
 fi
 
+# =============================================================================
+# Scenario 13: audit rotation — size-based rotation with 3 generations kept.
+# Uses SLEEPWALKER_AUDIT_MAX_BYTES=2048 to force rotation on the first write
+# (pre-existing 3000-byte file exceeds the 2KB cap). Matrix:
+#   13a: first rotation — audit -> audit.1, fresh audit has just the new event
+#   13b: second rotation — audit.1 -> audit.2, new audit.1, fresh audit
+#   13c: third rotation — shifts through all three generations
+#   13d: fourth rotation — oldest (.3) is dropped; .1 .2 .3 kept
+#   13e: override env var lowers the cap; default (unset) keeps file intact
+# =============================================================================
+echo ""
+echo "==> scenario 13: audit rotation at SLEEPWALKER_AUDIT_MAX_BYTES"
+reset_state
+
+# seed_audit_with_token TOKEN writes ~3KB of audit lines each tagged with
+# the given TOKEN so we can trace which generation each rotated file came
+# from. TOKEN=A, B, C, D through the four rotations — by the 4th rotation
+# the A content must have been dropped (.3 keeps 3 generations only).
+# Writes OVERWRITE the audit file — this simulates the "audit filled up
+# again since last rotation" condition, because each supervisor run
+# writes only ~200 bytes of its own events, not enough to fire rotation
+# on its own under a 2KB cap.
+seed_audit_with_token() {
+  local target="$1"
+  local token="$2"
+  : > "$target"
+  local i=0
+  while [ "$(wc -c < "$target" | tr -d ' ')" -lt 2500 ]; do
+    printf '{"ts":"2026-04-22T00:00:%02dZ","fleet":"codex/seed","runtime":"codex","event":"completed","chars_consumed":%d,"preview":"tok-%s-%d"}\n' \
+      "$((i % 60))" "$((i * 10))" "$token" "$i" >> "$target"
+    i=$((i+1))
+  done
+}
+
+# 13a: first rotation — audit (token A) -> .1
+seed_audit_with_token "$HOME/.sleepwalker/audit.jsonl" "A"
+make_bundle "codex" "rot-a" "yellow" 40000
+set +e
+SLEEPWALKER_MODE=overnight \
+  SLEEPWALKER_AUDIT_MAX_BYTES=2048 \
+  "$SUPERVISOR" codex rot-a >/dev/null 2>&1
+S13A_EXIT=$?
+set -e
+assert_eq "s13a: supervisor exits 0 across rotation" "0" "$S13A_EXIT"
+if [ ! -f "$HOME/.sleepwalker/audit.jsonl.1" ]; then
+  FAIL=$((FAIL+1)); FAILURES+=("s13a: audit.jsonl.1 should exist after rotation")
+  echo "  FAIL  s13a: audit.jsonl.1 should exist"
+else
+  PASS=$((PASS+1)); echo "  PASS  s13a: audit.jsonl.1 exists"
+fi
+assert_contains "s13a: .1 holds token A content (just-rotated generation)" \
+  '"preview":"tok-A-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.1" 2>/dev/null || echo '')"
+assert_contains "s13a: fresh audit has this run's events" \
+  '"fleet":"codex/rot-a"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl" 2>/dev/null || echo '')"
+assert_file_lines "s13a: fresh audit has 2 lines (started + completed)" "2" "$HOME/.sleepwalker/audit.jsonl"
+# Negative: no .2 or .3 yet — only one rotation has happened
+if [ -f "$HOME/.sleepwalker/audit.jsonl.2" ]; then
+  FAIL=$((FAIL+1)); FAILURES+=("s13a: .2 must not exist after only 1 rotation")
+  echo "  FAIL  s13a: .2 must not exist yet"
+else
+  PASS=$((PASS+1)); echo "  PASS  s13a: no .2 yet (only 1 rotation)"
+fi
+
+# 13b: second rotation — token B -> .1, token A shifts .1 -> .2
+seed_audit_with_token "$HOME/.sleepwalker/audit.jsonl" "B"
+make_bundle "codex" "rot-b" "yellow" 40000
+set +e
+SLEEPWALKER_MODE=overnight \
+  SLEEPWALKER_AUDIT_MAX_BYTES=2048 \
+  "$SUPERVISOR" codex rot-b >/dev/null 2>&1
+set -e
+assert_contains "s13b: .1 holds token B (just rotated)" \
+  '"preview":"tok-B-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.1" 2>/dev/null || echo '')"
+assert_contains "s13b: .2 holds token A (shifted from .1)" \
+  '"preview":"tok-A-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.2" 2>/dev/null || echo '')"
+
+# 13c: third rotation — C -> .1, B shifts .1 -> .2, A shifts .2 -> .3
+seed_audit_with_token "$HOME/.sleepwalker/audit.jsonl" "C"
+make_bundle "codex" "rot-c" "yellow" 40000
+set +e
+SLEEPWALKER_MODE=overnight \
+  SLEEPWALKER_AUDIT_MAX_BYTES=2048 \
+  "$SUPERVISOR" codex rot-c >/dev/null 2>&1
+set -e
+assert_contains "s13c: .1 holds C" '"preview":"tok-C-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.1" 2>/dev/null || echo '')"
+assert_contains "s13c: .2 holds B" '"preview":"tok-B-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.2" 2>/dev/null || echo '')"
+assert_contains "s13c: .3 holds A" '"preview":"tok-A-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.3" 2>/dev/null || echo '')"
+
+# 13d: fourth rotation — D -> .1, C -> .2, B -> .3, A is DROPPED.
+seed_audit_with_token "$HOME/.sleepwalker/audit.jsonl" "D"
+make_bundle "codex" "rot-d" "yellow" 40000
+set +e
+SLEEPWALKER_MODE=overnight \
+  SLEEPWALKER_AUDIT_MAX_BYTES=2048 \
+  "$SUPERVISOR" codex rot-d >/dev/null 2>&1
+set -e
+assert_contains "s13d: .1 holds D"                                   '"preview":"tok-D-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.1" 2>/dev/null || echo '')"
+assert_contains "s13d: .2 holds C (shifted from .1)"                 '"preview":"tok-C-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.2" 2>/dev/null || echo '')"
+assert_contains "s13d: .3 holds B (shifted from .2)"                 '"preview":"tok-B-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl.3" 2>/dev/null || echo '')"
+# Token A must be GONE from every generation — dropping the oldest is
+# what makes rotation bounded in disk use.
+if grep -q '"preview":"tok-A-' "$HOME/.sleepwalker/audit.jsonl" \
+                               "$HOME/.sleepwalker/audit.jsonl.1" \
+                               "$HOME/.sleepwalker/audit.jsonl.2" \
+                               "$HOME/.sleepwalker/audit.jsonl.3" 2>/dev/null; then
+  FAIL=$((FAIL+1)); FAILURES+=("s13d: token A must be dropped after 4th rotation")
+  echo "  FAIL  s13d: oldest generation (token A) was not dropped"
+else
+  PASS=$((PASS+1)); echo "  PASS  s13d: oldest generation (token A) dropped"
+fi
+if [ -f "$HOME/.sleepwalker/audit.jsonl.4" ]; then
+  FAIL=$((FAIL+1)); FAILURES+=("s13d: no 4th generation should ever exist")
+  echo "  FAIL  s13d: audit.jsonl.4 must not exist"
+else
+  PASS=$((PASS+1)); echo "  PASS  s13d: exactly 3 generations kept (no .4)"
+fi
+
+# 13e: rotation does NOT fire under default cap (10MB) for a small file
+reset_state
+seed_audit_with_token "$HOME/.sleepwalker/audit.jsonl" "E"
+make_bundle "codex" "rot-e" "yellow" 40000
+set +e
+# No SLEEPWALKER_AUDIT_MAX_BYTES -> default 10MB cap. ~2.5KB is well under.
+SLEEPWALKER_MODE=overnight "$SUPERVISOR" codex rot-e >/dev/null 2>&1
+set -e
+if [ -f "$HOME/.sleepwalker/audit.jsonl.1" ]; then
+  FAIL=$((FAIL+1)); FAILURES+=("s13e: no rotation should occur under default 10MB cap")
+  echo "  FAIL  s13e: audit.jsonl.1 should NOT exist under default cap"
+else
+  PASS=$((PASS+1)); echo "  PASS  s13e: default cap (10MB) does not rotate 3KB file"
+fi
+assert_contains "s13e: audit still has seed (not rotated)" \
+  '"preview":"tok-E-0"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl" 2>/dev/null || echo '')"
+assert_contains "s13e: audit has new run events appended" \
+  '"fleet":"codex/rot-e"' \
+  "$(cat "$HOME/.sleepwalker/audit.jsonl" 2>/dev/null || echo '')"
 
 # =============================================================================
 # Summary

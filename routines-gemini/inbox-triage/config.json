@@ -1,0 +1,6 @@
+{
+  "name": "Inbox Triage",
+  "schedule": "0 7 * * *",
+  "reversibility": "green",
+  "budget": 30000
+}

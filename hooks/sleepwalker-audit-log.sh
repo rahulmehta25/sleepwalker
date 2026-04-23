@@ -44,6 +44,25 @@ ENTRY=$(jq -nc \
   --argjson out_len "$OUTPUT_LEN" \
   '{ts:$ts,fleet:$fleet,session:$session,tool:$tool,input:$input,output_preview:$out_preview,output_length:$out_len}')
 
+# Size-based rotation: identical policy to bin/sleepwalker-run-cli's
+# _audit_rotate_if_needed. Runs inside the flock (below) so concurrent
+# writers cannot both observe "over cap" and both rotate. Keeping two
+# copies of this function is the cost we pay to avoid a third shell
+# script the supervisor-staging.ts path would have to ship — when
+# updating one copy, update the other.
+_audit_rotate_if_needed() {
+  local max_bytes size
+  max_bytes="${SLEEPWALKER_AUDIT_MAX_BYTES:-10485760}"  # 10 MB default
+  [ -f "$AUDIT_FILE" ] || return 0
+  size=$(wc -c < "$AUDIT_FILE" 2>/dev/null | tr -d ' ')
+  [ "${size:-0}" -gt "$max_bytes" ] || return 0
+  [ -f "${AUDIT_FILE}.3" ] && rm -f "${AUDIT_FILE}.3"
+  [ -f "${AUDIT_FILE}.2" ] && mv -f "${AUDIT_FILE}.2" "${AUDIT_FILE}.3"
+  [ -f "${AUDIT_FILE}.1" ] && mv -f "${AUDIT_FILE}.1" "${AUDIT_FILE}.2"
+  mv -f "$AUDIT_FILE" "${AUDIT_FILE}.1"
+  touch "$AUDIT_FILE"
+}
+
 # QUEU-04: flock-wrap the append — serializes against bin/sleepwalker-run-cli's
 # audit_emit writing to the same ~/.sleepwalker/audit.jsonl. Shared sidecar
 # at $LOCK_FILE makes this ONE mutex across both writers. See
@@ -58,6 +77,7 @@ ENTRY=$(jq -nc \
 # side of the shared mutex; accepting it here keeps the two writers symmetric.
 (
   flock -w 5 -x 200 || true
+  _audit_rotate_if_needed
   echo "$ENTRY" >> "$AUDIT_FILE"
 ) 200>"$LOCK_FILE"
 

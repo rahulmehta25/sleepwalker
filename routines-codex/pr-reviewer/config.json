@@ -1,0 +1,6 @@
+{
+  "name": "PR Reviewer",
+  "schedule": "0 9 * * 1-5",
+  "reversibility": "yellow",
+  "budget": 60000
+}

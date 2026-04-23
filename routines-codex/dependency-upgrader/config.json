@@ -1,0 +1,6 @@
+{
+  "name": "Dependency Upgrader",
+  "schedule": "0 8 * * 1",
+  "reversibility": "green",
+  "budget": 40000
+}
