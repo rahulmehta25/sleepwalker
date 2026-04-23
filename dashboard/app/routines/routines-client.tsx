@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import type { ListedRoutine } from "@/lib/routines";
 import { RoutineActionBar } from "./_components/routine-action-bar";
+import { RunHistoryPanel } from "./_components/run-history-panel";
 import { StatusPill } from "./_components/status-pill";
 
 const POLICY_DESC: Record<ListedRoutine["defaultPolicy"], string> = {
@@ -69,6 +70,9 @@ export function RoutinesClient({ initial }: { initial: ListedRoutine[] }) {
                 Run <code className="font-mono">./install.sh</code> from the repo root to install this routine.
               </div>
             )}
+
+            {/* Recent runs disclosure — lazy-loads from audit.jsonl on open. */}
+            <RunHistoryPanel runtime={r.runtime} slug={r.slug} />
           </div>
         );
       })}

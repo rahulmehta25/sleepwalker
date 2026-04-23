@@ -406,6 +406,191 @@ fi
 fi  # end: flock-available gate for scenarios 8 + 9
 
 # =============================================================================
+# Scenario 10: sleep-window gate — narrow window that excludes NOW,
+#              no overnight bypass → deferred with "outside sleep window".
+# Closes coverage gap: every other scenario sets sleep_window {0..24} and
+# SLEEPWALKER_MODE=overnight, so the actual gate never fired in CI until now.
+# Window construction: start=(now+1)%24, end=(now+2)%24 — a 1-hour slot that
+# begins one hour from now and deliberately excludes the current hour in both
+# the START<END (daytime) and START>END (overnight) branches of the gate.
+# =============================================================================
+echo ""
+echo "==> scenario 10: sleep-window gate defers when hour is outside window (no overnight mode)"
+reset_state
+# Overwrite settings.json with a narrow window that excludes NOW, clearing the
+# SLEEPWALKER_MODE bypass so the gate actually runs.
+NOW_H=$(date +%H | sed 's/^0//'); NOW_H=${NOW_H:-0}
+SLP_START=$(( (NOW_H + 1) % 24 ))
+SLP_END=$(( (NOW_H + 2) % 24 ))
+cat > "$HOME/.sleepwalker/settings.json" <<EOF
+{
+  "sleep_window": { "start_hour": ${SLP_START}, "end_hour": ${SLP_END} },
+  "policies": { "codex/test-sleep-defer": "balanced" }
+}
+EOF
+make_bundle "codex" "test-sleep-defer" "yellow" 40000
+set +e
+# No SLEEPWALKER_MODE=overnight — gate must trigger
+"$SUPERVISOR" codex test-sleep-defer >/dev/null 2>&1
+SCEN10_EXIT=$?
+set -e
+assert_eq       "s10: supervisor exits 0 on sleep-window defer" "0" "$SCEN10_EXIT"
+assert_file_lines "s10: audit has exactly 1 line (single deferred event)" "1" "$HOME/.sleepwalker/audit.jsonl"
+assert_contains "s10: deferred event"                    '"event":"deferred"'            "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+assert_contains "s10: defer reason mentions sleep window" '"reason":"outside sleep window"' "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+assert_contains "s10: defer payload includes hour"       "\"hour\":${NOW_H}"              "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+# Negative: no started event (deferred is terminal before the run)
+if grep -q '"event":"started"' "$HOME/.sleepwalker/audit.jsonl"; then
+  FAIL=$((FAIL+1)); FAILURES+=("s10: sleep-deferred run should not emit started")
+  echo "  FAIL  s10: sleep-deferred run should not emit started"
+else
+  PASS=$((PASS+1)); echo "  PASS  s10: sleep-deferred run does not emit started"
+fi
+
+# =============================================================================
+# Scenario 11: sleep-window gate — window includes NOW, no overnight bypass,
+#              supervisor proceeds normally (positive control for scenario 10).
+# Window construction: start=now, end=(now+1)%24 — a 1-hour slot that includes
+# the current hour. Covers both branches:
+#   - START < END (daytime): e.g. now=14 → [14, 15)  → in-window
+#   - START > END (overnight wrap): e.g. now=23 → [23, 0) → in-window via OR
+# =============================================================================
+echo ""
+echo "==> scenario 11: sleep-window gate allows when hour is inside window (no overnight mode)"
+reset_state
+NOW_H2=$(date +%H | sed 's/^0//'); NOW_H2=${NOW_H2:-0}
+IN_START=${NOW_H2}
+IN_END=$(( (NOW_H2 + 1) % 24 ))
+cat > "$HOME/.sleepwalker/settings.json" <<EOF
+{
+  "sleep_window": { "start_hour": ${IN_START}, "end_hour": ${IN_END} },
+  "policies": { "codex/test-sleep-allow": "balanced" }
+}
+EOF
+make_bundle "codex" "test-sleep-allow" "yellow" 40000
+set +e
+"$SUPERVISOR" codex test-sleep-allow >/dev/null 2>&1
+SCEN11_EXIT=$?
+set -e
+assert_eq         "s11: supervisor exits 0"                        "0" "$SCEN11_EXIT"
+assert_file_lines "s11: audit has 2 lines (started + completed)"   "2" "$HOME/.sleepwalker/audit.jsonl"
+assert_contains   "s11: started event present"                     '"event":"started"'   "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+assert_contains   "s11: completed event present"                   '"event":"completed"' "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+# Negative: no deferred event — gate allowed the run through
+if grep -q '"event":"deferred"' "$HOME/.sleepwalker/audit.jsonl"; then
+  FAIL=$((FAIL+1)); FAILURES+=("s11: in-window run should not emit deferred")
+  echo "  FAIL  s11: in-window run should not emit deferred"
+else
+  PASS=$((PASS+1)); echo "  PASS  s11: in-window run does not emit deferred"
+fi
+
+# =============================================================================
+# Scenario 12: PATH login-shell fallback (Pitfall #1).
+# When `command -v codex` fails on the invoking-shell PATH, the supervisor
+# must fall back to `/bin/zsh -l -c "command -v codex"` which runs a login
+# shell that sources ~/.zprofile. Test fixture:
+#   - remove codex from $TEST_BIN (the path the invoking shell can see)
+#   - stage a codex stub in $TEST_BIN_FALLBACK (NOT on invoking PATH)
+#   - write $HOME/.zprofile that prepends $TEST_BIN_FALLBACK to PATH
+#   - assert the supervisor resolves codex via the zsh-login fallback
+# This scenario is skipped if /bin/zsh is absent (vanishingly unlikely on
+# macOS — zsh is the default shell since 10.15) or if the test host's
+# /etc/zprofile does something hostile to user-level PATH prepends.
+# =============================================================================
+echo ""
+echo "==> scenario 12: PATH resolution falls back to /bin/zsh -l when invoking PATH misses"
+# This scenario is the ONLY test of tier-2 resolution in the supervisor. Every
+# other scenario runs with $TEST_BIN on PATH so tier-1 `command -v codex`
+# always hits. Here we strip every directory that contains a real `codex`
+# from the invoking PATH, then expose a stub ONLY via $HOME/.zprofile — so
+# the sole way the supervisor can resolve `codex` is by firing tier-2
+# (/bin/zsh -l -c "command -v codex"), which sources our custom .zprofile.
+#
+# Pre-req: jq must still be reachable by the supervisor itself (used for
+# settings + config parsing). We symlink jq into a test-only dir and use
+# that dir plus /usr/bin:/bin as the minimal invoking PATH. /opt/homebrew/bin
+# stays out entirely so no real codex leaks into tier-1.
+if [ ! -x /bin/zsh ]; then
+  echo "    SKIPPED (/bin/zsh not found — macOS default since 10.15)"
+  SKIP=$((SKIP+1))
+  SKIPS+=("s12: PATH login-shell fallback (needs /bin/zsh)")
+elif ! command -v jq >/dev/null 2>&1; then
+  echo "    SKIPPED (jq not found — supervisor depends on it)"
+  SKIP=$((SKIP+1))
+  SKIPS+=("s12: PATH login-shell fallback (needs jq)")
+else
+  reset_state
+  # Fallback bin dir reachable ONLY via zsh-login. Must NOT appear on the
+  # invoking PATH — that would make tier-1 succeed and tier-2 never fire.
+  TEST_BIN_FALLBACK="$TEST_HOME/fallback-bin"
+  mkdir -p "$TEST_BIN_FALLBACK"
+  cat > "$TEST_BIN_FALLBACK/codex" <<'FAKE'
+#!/bin/bash
+cat > /dev/null
+echo -n "fallback-path codex output"
+FAKE
+  chmod +x "$TEST_BIN_FALLBACK/codex"
+
+  # Symlink the supervisor's hard deps (jq) into a test-only sysbin so we
+  # can construct a minimal invoking PATH that excludes /opt/homebrew/bin
+  # (which is where every dev host keeps the real codex).
+  TEST_SYSBIN="$TEST_HOME/sysbin"
+  mkdir -p "$TEST_SYSBIN"
+  ln -sf "$(command -v jq)" "$TEST_SYSBIN/jq"
+  # flock is optional (supervisor degrades with || true); link if present so
+  # audit writes stay serialized for this scenario.
+  if command -v flock >/dev/null 2>&1; then
+    ln -sf "$(command -v flock)" "$TEST_SYSBIN/flock"
+  fi
+
+  # Write $HOME/.zprofile so zsh -l prepends the fallback dir during tier-2.
+  # macOS /etc/zprofile runs path_helper which resets PATH; user .zprofile
+  # runs AFTER that, so our prepend survives into `command -v codex`.
+  cat > "$HOME/.zprofile" <<EOF
+export PATH="${TEST_BIN_FALLBACK}:\$PATH"
+EOF
+
+  make_bundle "codex" "test-path-fallback" "yellow" 40000
+  cat > "$HOME/.sleepwalker/settings.json" <<EOF
+{
+  "sleep_window": { "start_hour": 0, "end_hour": 24 },
+  "policies": { "codex/test-path-fallback": "balanced" }
+}
+EOF
+
+  # Minimal invoking PATH: no Homebrew, no $TEST_BIN (which has a codex
+  # stub for other scenarios), no user paths at all. Only the symlinked
+  # deps + POSIX /usr/bin and /bin. This guarantees tier-1 miss.
+  SAVED_PATH="$PATH"
+  set +e
+  env -i \
+    HOME="$HOME" \
+    PATH="$TEST_SYSBIN:/usr/bin:/bin" \
+    SLEEPWALKER_MODE=overnight \
+    /bin/bash "$SUPERVISOR" codex test-path-fallback >/dev/null 2>&1
+  SCEN12_EXIT=$?
+  set -e
+
+  # Restore harness state
+  export PATH="$SAVED_PATH"
+  rm -f "$HOME/.zprofile"
+
+  assert_eq         "s12: supervisor exits 0 via zsh-login fallback"   "0" "$SCEN12_EXIT"
+  assert_file_lines "s12: audit has 2 lines (started + completed)"    "2" "$HOME/.sleepwalker/audit.jsonl"
+  # Definitive proof tier-2 ran: the resolved CLI_ABS is the fallback-path
+  # stub, which exists ONLY in a dir reachable via $HOME/.zprofile.
+  assert_contains "s12: started event cli is fallback-path codex" \
+    "\"cli\":\"${TEST_BIN_FALLBACK}/codex\"" \
+    "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+  # And the completed output should contain the fallback stub's signature
+  # string, confirming the stub (not some real codex) actually executed.
+  assert_contains "s12: completed preview contains fallback stub output" \
+    "fallback-path codex output" \
+    "$(cat "$HOME/.sleepwalker/audit.jsonl")"
+fi
+
+
+# =============================================================================
 # Summary
 # =============================================================================
 echo ""

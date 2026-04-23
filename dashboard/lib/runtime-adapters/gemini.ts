@@ -50,6 +50,7 @@ import {
 import { parseCron } from "./cron";
 import { ensureStagedSupervisor } from "./supervisor-staging";
 import { ensureStagedBundle, removeStagedBundle } from "./bundle-staging";
+import { listRunsFromAudit } from "./run-history";
 
 const execFileP = promisify(execFile);
 
@@ -274,9 +275,11 @@ export const geminiAdapter: RuntimeAdapter = {
     }
   },
 
-  async listRuns(_bundle: RoutineBundle, _limit?: number): Promise<RunRecord[]> {
-    // Phase 5 wires audit.jsonl filtering by fleet=gemini/<slug>.
-    return [];
+  async listRuns(bundle: RoutineBundle, limit?: number): Promise<RunRecord[]> {
+    // Filters ~/.sleepwalker/audit.jsonl by fleet=gemini/<slug>. Shared
+    // terminal-event -> RunRecord mapping lives in run-history.ts so the
+    // codex + gemini adapters cannot silently drift.
+    return listRunsFromAudit("gemini", bundle.slug, limit);
   },
 
   async healthCheck(): Promise<HealthStatus> {

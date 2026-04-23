@@ -44,6 +44,7 @@ import {
 import { parseCron } from "./cron";
 import { ensureStagedSupervisor } from "./supervisor-staging";
 import { ensureStagedBundle, removeStagedBundle } from "./bundle-staging";
+import { listRunsFromAudit } from "./run-history";
 
 const execFileP = promisify(execFile);
 
@@ -223,9 +224,12 @@ export const codexAdapter: RuntimeAdapter = {
     }
   },
 
-  async listRuns(_bundle: RoutineBundle, _limit?: number): Promise<RunRecord[]> {
-    // Phase 5 wires audit.jsonl filtering by fleet=codex/<slug>.
-    return [];
+  async listRuns(bundle: RoutineBundle, limit?: number): Promise<RunRecord[]> {
+    // Filters ~/.sleepwalker/audit.jsonl by fleet=codex/<slug>. Shared
+    // terminal-event -> RunRecord mapping lives in run-history.ts so the
+    // codex + gemini adapters cannot silently drift. Default limit is 50
+    // per adapter contract; caller override passes through.
+    return listRunsFromAudit("codex", bundle.slug, limit);
   },
 
   async healthCheck(): Promise<HealthStatus> {

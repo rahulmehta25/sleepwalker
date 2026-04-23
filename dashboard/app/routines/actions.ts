@@ -56,6 +56,7 @@ import { getAdapter } from "@/lib/runtime-adapters";
 import type {
   Reversibility,
   RoutineBundle,
+  RunRecord,
   Runtime,
 } from "@/lib/runtime-adapters/types";
 import {
@@ -926,4 +927,65 @@ export async function releaseSaveLockAction(args: {
   lockToken: string;
 }): Promise<{ ok: true }> {
   return releaseSaveLock(args);
+}
+
+// ---------------------------------------------------------------------------
+// Run history Server Action (Ship #1)
+// ---------------------------------------------------------------------------
+//
+// Thin wrapper around RuntimeAdapter.listRuns() for client-side panels that
+// want to show per-routine history on demand. Supervisor-backed runtimes
+// (codex, gemini) read ~/.sleepwalker/audit.jsonl via run-history.ts;
+// claude-routines + claude-desktop currently return [] at the adapter layer
+// (those runtimes don't route through the supervisor and have no local
+// audit trail the dashboard can read), which surfaces here as
+// { ok: true, runs: [], reason: "no supervisor audit …" } so the client
+// can render a clear empty-state instead of a spinner-forever.
+
+export interface RunHistoryResult {
+  ok: boolean;
+  runs: RunRecord[];
+  /** Populated when the runtime has no dashboard-readable audit source. */
+  reason?: string;
+  /** Error message on unexpected failure (bundle read error, adapter throw). */
+  error?: string;
+}
+
+export async function getRunHistory(args: {
+  runtime: Runtime;
+  slug: string;
+  limit?: number;
+}): Promise<RunHistoryResult> {
+  const { runtime, slug, limit = 10 } = args;
+
+  const read = readBundle(runtime, slug);
+  if (!read) {
+    return { ok: false, runs: [], error: `Bundle not found: ${runtime}/${slug}` };
+  }
+  const bundle = toRoutineBundle(read);
+
+  // Gate the remote-first runtimes explicitly rather than silently returning
+  // []. If the adapter contract grows to populate these from api.anthropic.com
+  // session-list endpoints later, delete this branch.
+  if (runtime === "claude-routines" || runtime === "claude-desktop") {
+    return {
+      ok: true,
+      runs: [],
+      reason:
+        runtime === "claude-routines"
+          ? "Claude Routines runs live on api.anthropic.com; open the session to inspect."
+          : "Claude Desktop runs are visible in Desktop's Schedule tab, not in Sleepwalker's audit.",
+    };
+  }
+
+  try {
+    const runs = await getAdapter(runtime).listRuns(bundle, limit);
+    return { ok: true, runs };
+  } catch (e) {
+    return {
+      ok: false,
+      runs: [],
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
 }
