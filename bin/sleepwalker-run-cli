@@ -149,17 +149,27 @@ fi
 if command -v "$RUNTIME" >/dev/null 2>&1; then
   CLI_ABS="$(command -v "$RUNTIME")"
 else
-  # Fallback: login-shell PATH via zsh (RUNTIME is allowlisted above, safe to interpolate).
-  # perl alarm(10) guards against CI runners where /etc/zshenv or /etc/zprofile
-  # blocks on network/auth; alarm survives exec() per POSIX and sends SIGALRM
-  # after 10s. perl is already a hard dep (strip_ansi above uses it).
-  CLI_ABS="$(perl -e 'alarm(10); exec "/bin/zsh", "-l", "-c", "command -v " . $ARGV[0]' \
-             "$RUNTIME" 2>/dev/null || true)"
-  if [ -z "$CLI_ABS" ]; then
-    # Final fallback: bash login shell (catches users still on bash)
-    CLI_ABS="$(perl -e 'alarm(10); exec "/bin/bash", "-l", "-c", "command -v " . $ARGV[0]' \
-               "$RUNTIME" 2>/dev/null || true)"
-  fi
+  # Fallback: login-shell PATH via zsh then bash. A background-subshell watchdog
+  # (SIGKILL after 10 s) is used rather than alarm()+exec because macOS ARM64
+  # login-shell init can reset SIGALRM disposition, making the POSIX exec()
+  # timer guarantee unreliable. The watchdog sends SIGKILL from the parent
+  # process, bypassing any signal handler the child may have installed.
+  for _lsh in /bin/zsh /bin/bash; do
+    if [ -z "$CLI_ABS" ] && [ -x "$_lsh" ]; then
+      _pt="$(mktemp -t sw-pathresolve.XXXXXX 2>/dev/null)" || true
+      if [ -n "$_pt" ]; then
+        "$_lsh" -l -c "command -v '$RUNTIME'" > "$_pt" 2>/dev/null &
+        _pid=$!
+        ( sleep 10 && kill "$_pid" 2>/dev/null ) &
+        _wd=$!
+        wait "$_pid" 2>/dev/null || true
+        kill "$_wd" 2>/dev/null; wait "$_wd" 2>/dev/null || true
+        CLI_ABS="$(head -1 "$_pt" 2>/dev/null || true)"
+        rm -f "$_pt"
+      fi
+    fi
+  done
+  unset _lsh _pt _pid _wd
   if [ -z "$CLI_ABS" ]; then
     audit_emit "failed" "\"reason\":\"$RUNTIME not found on PATH\""
     exit 127
