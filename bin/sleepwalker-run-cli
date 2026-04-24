@@ -160,7 +160,7 @@ else
       if [ -n "$_pt" ]; then
         "$_lsh" -l -c "command -v '$RUNTIME'" > "$_pt" 2>/dev/null &
         _pid=$!
-        ( sleep 10 && kill "$_pid" 2>/dev/null ) &
+        ( sleep 10 && kill -9 "$_pid" 2>/dev/null ) &
         _wd=$!
         wait "$_pid" 2>/dev/null || true
         kill "$_wd" 2>/dev/null; wait "$_wd" 2>/dev/null || true
