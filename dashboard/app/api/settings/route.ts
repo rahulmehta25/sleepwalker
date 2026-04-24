@@ -4,6 +4,7 @@ import {
   writeSettings,
   writeGithubToken,
   clearGithubToken,
+  SettingsSchema,
   type Settings,
 } from "@/lib/settings";
 import { pingGitHub } from "@/lib/github";
@@ -30,7 +31,11 @@ export async function POST(req: Request) {
   if (!body) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
   if (body.settings) {
-    writeSettings(body.settings);
+    const parsed = SettingsSchema.safeParse(body.settings);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid settings", details: parsed.error.flatten() }, { status: 400 });
+    }
+    writeSettings(parsed.data);
   }
   if (body.token === null) {
     clearGithubToken();

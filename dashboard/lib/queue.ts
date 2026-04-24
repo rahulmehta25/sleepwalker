@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import lockfile from "proper-lockfile";
 
 function queueFile(): string {
   return path.join(process.env.HOME || os.homedir(), ".sleepwalker", "queue.jsonl");
@@ -66,12 +67,21 @@ export function appendQueueEntry(entry: QueueEntry): void {
 
 export function updateLocalStatus(id: string, status: QueueStatus): boolean {
   const f = ensureFile();
-  const entries = parseLines(fs.readFileSync(f, "utf8"));
-  const idx = entries.findIndex((e) => e.id === id);
-  if (idx === -1) return false;
-  entries[idx].status = status;
-  fs.writeFileSync(f, entries.map((e) => JSON.stringify(e)).join("\n") + "\n");
-  return true;
+  const lockPath = f + ".lock";
+  // Ensure lock sidecar exists (hook may not have created it yet)
+  if (!fs.existsSync(lockPath)) fs.writeFileSync(lockPath, "");
+  let release: (() => void) | null = null;
+  try {
+    release = lockfile.lockSync(lockPath, { retries: { retries: 5, minTimeout: 50 } });
+    const entries = parseLines(fs.readFileSync(f, "utf8"));
+    const idx = entries.findIndex((e) => e.id === id);
+    if (idx === -1) return false;
+    entries[idx].status = status;
+    fs.writeFileSync(f, entries.map((e) => JSON.stringify(e)).join("\n") + "\n");
+    return true;
+  } finally {
+    release?.();
+  }
 }
 
 export function pendingCount(entries: QueueEntry[]): number {

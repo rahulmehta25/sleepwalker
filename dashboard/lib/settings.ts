@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { z } from "zod";
 
 function home(): string {
   return process.env.HOME || os.homedir();
@@ -49,6 +50,19 @@ const DEFAULT_SETTINGS: Settings = {
   enabled_routines: [],
   tracked_repos: [],
 };
+
+const PolicySchema = z.enum(["strict", "balanced", "yolo"]);
+
+export const SettingsSchema = z.object({
+  sleep_window: z.object({
+    start_hour: z.number().int().min(0).max(23),
+    end_hour: z.number().int().min(0).max(23),
+  }).optional(),
+  policies: z.record(z.string(), PolicySchema).optional(),
+  budgets: z.record(z.string(), z.number().positive()).optional(),
+  enabled_routines: z.array(z.string()).optional(),
+  tracked_repos: z.array(z.string()).optional(),
+});
 
 export function readSettings(): Settings {
   const f = settingsFile();
