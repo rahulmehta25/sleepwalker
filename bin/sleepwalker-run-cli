@@ -118,14 +118,14 @@ audit_emit() {
   extra="${2:-}"
   if [ -n "$extra" ]; then
     (
-      flock -w 5 -x 200 || true
+      flock -w 5 -e 200 || true
       _audit_rotate_if_needed
       printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s",%s}\n' \
         "$ts" "$FLEET" "$RUNTIME" "$event" "$extra" >> "$AUDIT_FILE"
     ) 200>"$LOCK_FILE"
   else
     (
-      flock -w 5 -x 200 || true
+      flock -w 5 -e 200 || true
       _audit_rotate_if_needed
       printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s"}\n' \
         "$ts" "$FLEET" "$RUNTIME" "$event" >> "$AUDIT_FILE"
@@ -149,12 +149,27 @@ fi
 if command -v "$RUNTIME" >/dev/null 2>&1; then
   CLI_ABS="$(command -v "$RUNTIME")"
 else
-  # Fallback: login-shell PATH via zsh (RUNTIME is allowlisted above, safe to interpolate)
-  CLI_ABS="$(/bin/zsh -l -c "command -v '$RUNTIME'" 2>/dev/null || true)"
-  if [ -z "$CLI_ABS" ]; then
-    # Final fallback: bash login shell (catches users still on bash)
-    CLI_ABS="$(/bin/bash -l -c "command -v '$RUNTIME'" 2>/dev/null || true)"
-  fi
+  # Fallback: login-shell PATH via zsh then bash. A background-subshell watchdog
+  # (SIGKILL after 10 s) is used rather than alarm()+exec because macOS ARM64
+  # login-shell init can reset SIGALRM disposition, making the POSIX exec()
+  # timer guarantee unreliable. The watchdog sends SIGKILL from the parent
+  # process, bypassing any signal handler the child may have installed.
+  for _lsh in /bin/zsh /bin/bash; do
+    if [ -z "$CLI_ABS" ] && [ -x "$_lsh" ]; then
+      _pt="$(mktemp -t sw-pathresolve.XXXXXX 2>/dev/null)" || true
+      if [ -n "$_pt" ]; then
+        "$_lsh" -l -c "command -v '$RUNTIME'" > "$_pt" 2>/dev/null &
+        _pid=$!
+        ( sleep 10 && kill -9 "$_pid" 2>/dev/null ) &
+        _wd=$!
+        wait "$_pid" 2>/dev/null || true
+        kill "$_wd" 2>/dev/null; wait "$_wd" 2>/dev/null || true
+        CLI_ABS="$(head -1 "$_pt" 2>/dev/null || true)"
+        rm -f "$_pt"
+      fi
+    fi
+  done
+  unset _lsh _pt _pid _wd
   if [ -z "$CLI_ABS" ]; then
     audit_emit "failed" "\"reason\":\"$RUNTIME not found on PATH\""
     exit 127

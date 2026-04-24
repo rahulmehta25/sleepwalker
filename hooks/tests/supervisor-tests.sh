@@ -371,10 +371,12 @@ S9_LOCK_FILE="$TEST_HOME/.sleepwalker/audit.jsonl.lock"
 mkdir -p "$(dirname "$S9_LOCK_FILE")"
 touch "$S9_LOCK_FILE"
 
-# Hold the lock for 6 seconds in a background subshell. The supervisor's
-# flock -w 5 should give up after 5s and fall through to unlocked append
-# per RESEARCH §1.6 "option 2" for supervisor failure mode.
-( flock -x "$S9_LOCK_FILE" -c 'sleep 6' ) &
+# Hold the lock for 6 seconds in a background subshell. Use the FD form
+# (exec 9>lockfile && flock -e 9) instead of the file+command form
+# (flock -x lockfile -c 'sleep 6') because the latter may not release
+# reliably on macOS ARM64 (discoteq flock quirk with -c). The FD form
+# keeps the advisory lock alive via an open FD until the subshell exits.
+( exec 9>"$S9_LOCK_FILE" && flock -e 9 && sleep 6 ) &
 HOLDER=$!
 sleep 0.3  # Let the holder actually grab the lock before the contender starts
 
@@ -385,8 +387,11 @@ SLEEPWALKER_MODE=overnight "$SUPERVISOR" codex s9-blocked >/dev/null 2>&1
 S9_EXIT=$?
 set -e
 
-# Clean up the holder (may have already exited)
+# Clean up the holder. Bound the wait with a watchdog in case the lock
+# was never acquired (flock failure) and the subshell runs indefinitely.
+( sleep 15 && kill "$HOLDER" 2>/dev/null ) & _S9WD=$!
 wait "$HOLDER" 2>/dev/null || true
+kill "$_S9WD" 2>/dev/null; wait "$_S9WD" 2>/dev/null || true; unset _S9WD
 
 # Supervisor must not crash on flock timeout. Via the || true fallthrough
 # in audit_emit, the unlocked append still runs and exit stays 0.
