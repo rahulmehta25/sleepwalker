@@ -118,14 +118,14 @@ audit_emit() {
   extra="${2:-}"
   if [ -n "$extra" ]; then
     (
-      flock -w 5 -x 200 || true
+      flock -w 5 -e 200 || true
       _audit_rotate_if_needed
       printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s",%s}\n' \
         "$ts" "$FLEET" "$RUNTIME" "$event" "$extra" >> "$AUDIT_FILE"
     ) 200>"$LOCK_FILE"
   else
     (
-      flock -w 5 -x 200 || true
+      flock -w 5 -e 200 || true
       _audit_rotate_if_needed
       printf '{"ts":"%s","fleet":"%s","runtime":"%s","event":"%s"}\n' \
         "$ts" "$FLEET" "$RUNTIME" "$event" >> "$AUDIT_FILE"
@@ -149,11 +149,16 @@ fi
 if command -v "$RUNTIME" >/dev/null 2>&1; then
   CLI_ABS="$(command -v "$RUNTIME")"
 else
-  # Fallback: login-shell PATH via zsh (RUNTIME is allowlisted above, safe to interpolate)
-  CLI_ABS="$(/bin/zsh -l -c "command -v '$RUNTIME'" 2>/dev/null || true)"
+  # Fallback: login-shell PATH via zsh (RUNTIME is allowlisted above, safe to interpolate).
+  # perl alarm(10) guards against CI runners where /etc/zshenv or /etc/zprofile
+  # blocks on network/auth; alarm survives exec() per POSIX and sends SIGALRM
+  # after 10s. perl is already a hard dep (strip_ansi above uses it).
+  CLI_ABS="$(perl -e 'alarm(10); exec "/bin/zsh", "-l", "-c", "command -v " . $ARGV[0]' \
+             "$RUNTIME" 2>/dev/null || true)"
   if [ -z "$CLI_ABS" ]; then
     # Final fallback: bash login shell (catches users still on bash)
-    CLI_ABS="$(/bin/bash -l -c "command -v '$RUNTIME'" 2>/dev/null || true)"
+    CLI_ABS="$(perl -e 'alarm(10); exec "/bin/bash", "-l", "-c", "command -v " . $ARGV[0]' \
+               "$RUNTIME" 2>/dev/null || true)"
   fi
   if [ -z "$CLI_ABS" ]; then
     audit_emit "failed" "\"reason\":\"$RUNTIME not found on PATH\""
