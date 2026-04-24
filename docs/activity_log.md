@@ -1053,3 +1053,40 @@
 - Suite went from 50 failed / 313 passed → 363 / 363 green. Full-suite duration ~10.6s (vs ~3.6s on threads — acceptable tradeoff for correctness and future-proofing).
 - Zero production code changes required; the uncommitted bundles.ts / routines-client.tsx / routine-action-bar.tsx fixes landed in commit `6b27b83` earlier and are correct. The only remaining diff was a single `pool: "forks"` config addition.
 - Files modified: `dashboard/vitest.config.ts`
+
+## 2026-04-24 01:10 EST
+
+### User Prompt
+"first do the straightforward fixes. Then we will address finding 2"
+
+### Actions Taken
+- Fixed Finding 1: wrapped `updateLocalStatus` in `proper-lockfile` `lockSync` to prevent TOCTOU race with hook's `flock` append (`dashboard/lib/queue.ts`)
+- Fixed Finding 3: added optional `runtime?: Runtime` parameter to `listBundles()` to resolve TS2554 error (`dashboard/lib/bundles.ts`)
+- Fixed Finding 4: added `SettingsSchema` (Zod) to settings.ts and wired `safeParse` validation into the POST route, returning 400 on invalid fields (`dashboard/lib/settings.ts`, `dashboard/app/api/settings/route.ts`)
+- Fixed Finding 5: moved `dashboard/lib/audit.ts` from Group A to Group B in compat gate with `assert_exception_audit_ts()` predicate verifying v0.1 invariants + v0.2 additions (`tests/compat/frozen-surface.sh`)
+- Fixed Finding 6: added `dashboard/eslint.config.mjs` with `next/core-web-vitals` flat config; added `eslint`, `eslint-config-next`, `@eslint/eslintrc` to devDependencies (`dashboard/package.json`, `dashboard/pnpm-lock.yaml`)
+- Fixed lockSync retries deviation: removed invalid `retries` option (sync API doesn't support it) (`dashboard/lib/queue.ts`)
+- All 413 tests pass, typecheck clean, compat gate green, lint exits 0
+
+## 2026-04-24 00:58 EDT
+
+### User Prompt
+"Rahul selected **Option A**. Proceed with the inline reconciliation and complete Plan 06-07."
+
+### Actions Taken
+- Verified annotated tag `v0.1.0` exists on commit `998455b` (idempotent — tag already present, pointed-to SHA matches; `git cat-file -t v0.1.0` = `tag`). Did NOT push (user action).
+- Executed Plan 06-07 Phase 6 exit gate with two Rule 3 inline reconciliations of parallel-session drift (precedent: Plan 05-08 plan-check note #2 stale-filename inline correction).
+- **Commit 1 of 3** (`7cff6fa` `fix(06-07): align prebuilt-routines.test.ts with current listBundles() signature`) — reconciled parallel-session commit `e46bb1b feat(v0.2): audit log rotation + prebuilt codex/gemini routines` which introduced `dashboard/tests/prebuilt-routines.test.ts` calling outdated `listBundles(runtime)` signature. Switched to `listBundles().filter(b => b.runtime === runtime).map(b => b.slug)` — behavior-preserving.
+- **Commit 2 of 3** (`3cbbc72` `fix(06-07): add Group B exception predicate for audit.ts RunAuditEntry (c398a3e reconciliation)`) — reconciled parallel-session commit `c398a3e feat(v0.2): run history — listRuns() + dashboard panel + supervisor test gaps` which added additive `export interface RunAuditEntry` to `dashboard/lib/audit.ts`. Removed audit.ts from Group A byte-identical list; added `assert_exception_audit_ts` predicate to Group B asserting v0.1 invariants (`auditFile`, `AuditEntry`, `readAudit`) AND amendment (`RunAuditEntry`) both present. Self-test verified teeth: temporarily removed RunAuditEntry → gate exit 1 with specific diagnostic → restored → gate PASS.
+- Ran 6-step automated exit gate — all 6 green: (1) `cd dashboard && pnpm run typecheck` exit 0; (2) `cd dashboard && pnpm test --run` **413/413 across 48 files in 10.62s**; (3) `bash hooks/tests/run-tests.sh` **37/37**; (4) `bash hooks/tests/supervisor-tests.sh` **70/70** `all supervisor tests passed`; (5) `bash tests/compat/v01-routines.sh` PASS `Summary: 32 passed, 0 failed` + 14 v0.1 routines + install.sh idempotent; (6) `bash tests/compat/frozen-surface.sh` PASS `==> COMP-02 PASS: frozen surface intact vs 998455b`.
+- Flipped `.planning/phases/06-polish/06-VALIDATION.md` frontmatter to `status: approved 2026-04-24` + `nyquist_compliant: true` + `wave_0_complete: true`; all 51 `⬜ pending` rows flipped to `✅ green 2026-04-24`.
+- Authored `.planning/phases/06-polish/06-SUMMARY.md` phase rollup (7-plan table + 6-step exit-gate verbatim evidence + tag proof + parallel-session reconciliation section + two Rule 3 inline auto-fixes + precedent citation + key decisions recap + zero-new-deps note + milestone seal statement).
+- Authored `.planning/phases/06-polish/06-07-SUMMARY.md` plan-level rollup (frontmatter + v0.1.0 tag proof + 6-step gate outputs + requirements flipped table + 2-deviation documentation + milestone coverage + next-actions-for-user + Self-Check: PASSED footer).
+- Flipped `.planning/REQUIREMENTS.md` coverage footer with v0.2 milestone seal note (32/32 v1 requirements Complete 100%; Phase 6 sealed 2026-04-24).
+- Flipped `.planning/ROADMAP.md` Phase 6 checkbox `[ ]` → `[x]`; Progress table Phase 6 row `6/7 | In progress | -` → `7/7 | Complete | 2026-04-24`; added Plan 06-07 row with commit shas; footer "Last updated" with Phase 6 seal + v0.2 milestone summary.
+- Bumped `.planning/STATE.md` milestone bar `[#####-] 5/6` → `[######] 6/6 phases complete — v0.2 MILESTONE SEALED`; Performance Metrics phases 5/6 → 6/6, plans 45 → 47; Current Position flipped to v0.2 MILESTONE SEALED 2026-04-24 with next-action pointing to user push of v0.1.0 + create v0.2.0 tag + announce release OR `/gsd-plan-milestone v0.3`.
+- **Commit 3 of 3** (`docs(06)`): single atomic seal commit capturing 06-VALIDATION.md + 06-SUMMARY.md + 06-07-SUMMARY.md + REQUIREMENTS.md + ROADMAP.md + STATE.md + this activity log entry.
+- **Scope discipline:** pre-existing untracked files (`CLAUDE.md` + 2 screenshot PNGs) AND pre-existing parallel-session modified files (`dashboard/app/routines/_components/deploy-progress-drawer.tsx` + `dashboard/app/routines/actions.ts`) preserved untouched via explicit per-file `git add` staging across all three commits. Zero scope bleed. Zero new deps. Zero file deletions.
+- **v0.2 "Multi-Runtime Agent Deployment" milestone COMPLETE — 6/6 phases sealed, 32/32 v1 requirements Complete (100%), 4 runtimes live (Claude Routines + Claude Desktop + Codex Pro + Gemini CLI Pro) deployable via single `/editor` click.**
+- Files modified: `dashboard/tests/prebuilt-routines.test.ts`, `tests/compat/frozen-surface.sh`, `.planning/phases/06-polish/06-VALIDATION.md`, `.planning/phases/06-polish/06-SUMMARY.md` (new), `.planning/phases/06-polish/06-07-SUMMARY.md` (new), `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/STATE.md`, `docs/activity_log.md`
+- Next action for user: `git push origin v0.1.0` + `git tag -a v0.2.0 HEAD -m "Sleepwalker v0.2 — multi-runtime agent fleet manager" && git push origin v0.2.0` + announce release. Optionally `/gsd-plan-milestone v0.3`.
