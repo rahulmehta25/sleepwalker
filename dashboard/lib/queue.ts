@@ -72,7 +72,8 @@ export function updateLocalStatus(id: string, status: QueueStatus): boolean {
   if (!fs.existsSync(lockPath)) fs.writeFileSync(lockPath, "");
   let release: (() => void) | null = null;
   try {
-    release = lockfile.lockSync(lockPath, { retries: { retries: 5, minTimeout: 50 } });
+    // lockSync doesn't support retries (async-only); stale: true handles crashed processes
+    release = lockfile.lockSync(lockPath, { stale: 5000 });
     const entries = parseLines(fs.readFileSync(f, "utf8"));
     const idx = entries.findIndex((e) => e.id === id);
     if (idx === -1) return false;
