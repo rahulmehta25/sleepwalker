@@ -1090,3 +1090,26 @@
 - **v0.2 "Multi-Runtime Agent Deployment" milestone COMPLETE — 6/6 phases sealed, 32/32 v1 requirements Complete (100%), 4 runtimes live (Claude Routines + Claude Desktop + Codex Pro + Gemini CLI Pro) deployable via single `/editor` click.**
 - Files modified: `dashboard/tests/prebuilt-routines.test.ts`, `tests/compat/frozen-surface.sh`, `.planning/phases/06-polish/06-VALIDATION.md`, `.planning/phases/06-polish/06-SUMMARY.md` (new), `.planning/phases/06-polish/06-07-SUMMARY.md` (new), `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/STATE.md`, `docs/activity_log.md`
 - Next action for user: `git push origin v0.1.0` + `git tag -a v0.2.0 HEAD -m "Sleepwalker v0.2 — multi-runtime agent fleet manager" && git push origin v0.2.0` + announce release. Optionally `/gsd-plan-milestone v0.3`.
+
+## 2026-04-24 21:32 EDT
+
+### User Prompt
+"yeah let's do it. those changes are valuable, so let's integrate them"
+
+### Actions Taken
+Post-v0.2-seal integration of three uncommitted parallel-session bug fixes. All pre-existing on the working tree — none introduced in this session. Full gate green before and after each commit.
+
+- **Commit 1 of 3** (`fbd83cb` `fix(defer-hook): scope re-execution bypass to exact approved tool+args`): tightens a security gap where `SLEEPWALKER_REEXECUTING=1` let every hook call through for the entire re-run session. `sleepwalker-execute` now passes `SLEEPWALKER_APPROVED_TOOL` + `SLEEPWALKER_APPROVED_ARGS`; the defer hook canonicalizes both sides via `jq -S` and only allows the exact match, so any other red action during re-execution still flows through the normal classifier. Adds two hook test scenarios (exact-match allows, mismatch still defers). Files: `bin/sleepwalker-execute`, `hooks/sleepwalker-defer-irreversible.sh`, `hooks/tests/run-tests.sh` (3 files / +34 / -12).
+- **Commit 2 of 3** (`2c81039` `fix(queue): share flock sidecar with bash hooks to prevent write corruption`): closes the dashboard↔hook half of the JSONL concurrency story (Phase 5 only closed hook↔hook). `appendQueueEntry` and `updateLocalStatus` now spawn a short Node worker under `flock -x <sidecar>` on the same `queue.jsonl.lock` path the bash hooks use, sharing one kernel mutex. Drops `proper-lockfile` from this module. Adds a test that holds an external flock and asserts the Node side blocks ≥200ms. Files: `dashboard/lib/queue.ts`, `dashboard/tests/queue.test.ts` (2 files / +91 / -20).
+- **Commit 3 of 3** (`8d500a2` `fix(deploy): serialize per-routine deploys and fix bundlePath resolution`): wraps `deployRoutine` in a per-`(runtime, slug)` `proper-lockfile` on `~/.sleepwalker/deploys/.<runtime>-<slug>.deploy-action` with `retries: 0` so React Strict Mode's dev-only double-fire races past the 60s guard as "deploy already in progress" instead of interleaving. Drawer resets `invokedRef` on cleanup so the legitimate remount still triggers the deploy. Exports `getRepoRoot()` from `dashboard/lib/bundles.ts` and switches `toRoutineBundle`'s `bundlePath` from `process.cwd()` to `getRepoRoot()` so paths resolve correctly independent of Next.js server CWD. Files: `dashboard/app/routines/actions.ts`, `dashboard/app/routines/_components/deploy-progress-drawer.tsx`, `dashboard/lib/bundles.ts` (3 files / +51 / -6).
+
+### Verification
+- `cd dashboard && pnpm run typecheck` exit 0
+- `cd dashboard && pnpm test --run` 414/414 across 48 files (+1 vs Phase 6 seal from the new queue flock test)
+- `bash hooks/tests/run-tests.sh` 41 pass / 0 fail (+4 vs Phase 6 seal from the new defer-hook re-exec scenarios)
+- `bash hooks/tests/supervisor-tests.sh` 70 pass / 0 fail
+- `bash tests/compat/frozen-surface.sh` PASS — existing Group B predicates (`assert_exception_defer_hook`, `assert_exception_queue_ts`, `assert_exception_sleepwalker_execute`) all still satisfied by the tightened invariants; no predicate updates needed
+
+### Notes
+- Pre-existing untracked files (`CLAUDE.md`, 2 screenshot PNGs) preserved. One further parallel-session edit (`dashboard/app/cloud/cloud-client.tsx`) landed on the working tree mid-session and was left untouched — not this session's scope.
+- Commits appropriate for inclusion in a `v0.2.1` point release alongside v0.2.0.
