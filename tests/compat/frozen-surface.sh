@@ -328,6 +328,31 @@ assert_exception_settings_ts() {
 }
 
 # -----------------------------------------------------------------------------
+# dashboard/lib/audit.ts — post-seal parallel-session additive amendment
+# (commit c398a3e "run history — listRuns() + dashboard panel + supervisor
+# test gaps") added the RunAuditEntry interface for supervisor-emitted run
+# lifecycle events. Same JSONL file, different writer (bin/sleepwalker-run-cli
+# vs hooks/sleepwalker-audit-log.sh). Amendment is strictly additive — no v0.1
+# fields removed, no v0.1 export signatures changed.
+#
+# v0.1 invariants: auditFile() helper, AuditEntry interface, readAudit() export
+# all still present with unchanged signatures.
+# -----------------------------------------------------------------------------
+assert_exception_audit_ts() {
+  local p="dashboard/lib/audit.ts"
+  [[ -f "$p" ]] || { record_fail "$p: missing at HEAD"; return; }
+  grep -q 'function auditFile' "$p" \
+    || { record_fail "$p: v0.1 auditFile helper missing"; return; }
+  grep -q 'export interface AuditEntry' "$p" \
+    || { record_fail "$p: v0.1 AuditEntry interface missing"; return; }
+  grep -qE 'export function readAudit\b' "$p" \
+    || { record_fail "$p: v0.1 readAudit export missing"; return; }
+  # Parallel-session (c398a3e) additive amendment:
+  grep -q 'export interface RunAuditEntry' "$p" \
+    || { record_fail "$p: parallel-session RunAuditEntry amendment missing"; return; }
+}
+
+# -----------------------------------------------------------------------------
 # dashboard/package.json — Phase 3+4 dep additions allowed; v0.1 deps must not
 # be removed. Invariants checked: next, react, react-dom top-level deps.
 # -----------------------------------------------------------------------------
@@ -378,7 +403,6 @@ assert_exception_sleepwalker_execute() {
 # =============================================================================
 GROUP_A=(
   "dashboard/lib/cloud.ts"
-  "dashboard/lib/audit.ts"
   "dashboard/lib/github.ts"
   "routines-cloud/alert-triage/prompt.md"
   "routines-cloud/alert-triage/config.json"
@@ -448,6 +472,7 @@ assert_exception_queue_ts
 assert_exception_queue_aggregator_ts
 assert_exception_cloud_cache_ts
 assert_exception_routines_ts
+assert_exception_audit_ts
 assert_exception_package_json
 assert_exception_sleepwalker_execute
 for slug in "${LOCAL_SLUGS[@]}"; do
