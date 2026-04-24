@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify on macOS
+    runs-on: macos-14
+    steps:
+      - name: Checkout (full history for COMP-02 baseline)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install flock (required by supervisor + hooks)
+        run: brew install discoteq/discoteq/flock
+
+      - name: Install jq (v0.1 prereq)
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            brew install jq
+          else
+            echo "jq already installed: $(jq --version)"
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: dashboard/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: dashboard
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (dashboard)
+        working-directory: dashboard
+        run: pnpm run typecheck
+
+      - name: Dashboard tests (Vitest)
+        working-directory: dashboard
+        run: pnpm test --run
+
+      - name: Hook tests (PreToolUse / PostToolUse)
+        run: bash hooks/tests/run-tests.sh
+
+      - name: Supervisor tests
+        run: bash hooks/tests/supervisor-tests.sh
+
+      - name: COMP-01 v0.1 backward-compat integration
+        run: bash tests/compat/v01-routines.sh
+
+      - name: COMP-02 frozen-surface gate
+        run: bash tests/compat/frozen-surface.sh
