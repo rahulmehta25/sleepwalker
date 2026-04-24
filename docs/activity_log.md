@@ -1,5 +1,21 @@
 # Activity Log
 
+## 2026-04-24 EDT
+
+### User Prompt
+"Execute plan 06 of phase 06-polish. Commit each task atomically. Create SUMMARY.md." (Plan 06-06 — ship `.github/workflows/ci.yml` canonical CI workflow on macos-14 runner with 6-step sequential verification for Phase 6 COMP-01 + COMP-02 gate enforcement on every PR.)
+
+### Actions Taken
+- Created `.github/workflows/ci.yml` (new file / 71 lines) — canonical GitHub Actions CI workflow. Triggers `push: branches: [main]` + `pull_request: branches: [main]`. `permissions: contents: read` (least privilege). `concurrency.cancel-in-progress: true` keyed on `${{ github.workflow }}-${{ github.ref }}`. Single job `verify` on `runs-on: macos-14` (Apple Silicon pinned, per 06-CONTEXT locked single-job macOS runner decision). Steps in fixed order: checkout@v4 with `fetch-depth: 0` (COMP-02 needs full history to resolve `git show 998455b:<path>`), `brew install discoteq/discoteq/flock`, conditional jq install, `pnpm/action-setup@v4` version 10, `actions/setup-node@v4` node-version 22 with pnpm cache keyed on `dashboard/pnpm-lock.yaml`, `pnpm install --frozen-lockfile` in `dashboard/`, then six sequential verification steps: (1) `pnpm run typecheck`, (2) `pnpm test --run` (non-watch to avoid CI hang), (3) `bash hooks/tests/run-tests.sh`, (4) `bash hooks/tests/supervisor-tests.sh`, (5) `bash tests/compat/v01-routines.sh` (COMP-01), (6) `bash tests/compat/frozen-surface.sh` (COMP-02).
+- Validated YAML parses cleanly via `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"` exit 0 — top-level keys `[name, on, permissions, concurrency, jobs]`, single job `verify`, 12 steps enumerated.
+- All 16 plan acceptance-criteria grep invariants pass: `runs-on: macos-14` count=1, `fetch-depth: 0`=1, `contents: read`=1, `cancel-in-progress: true`=1, `frozen-lockfile`=1, `node-version: 22`=1, `version: 10`=1, `brew install discoteq/discoteq/flock`=1, `actions/checkout@v4`=1, `actions/setup-node@v4`=1, `pnpm/action-setup@v4`=1, `pnpm run typecheck`=1, `pnpm test --run`=1, `bash hooks/tests/run-tests.sh`=1, `bash hooks/tests/supervisor-tests.sh`=1, `bash tests/compat/v01-routines.sh`=1, `bash tests/compat/frozen-surface.sh`=1. Negative invariants: `secrets\.`=0 (read-only workflow, no token refs), `matrix:`=0 (single-job per 06-CONTEXT decision), `branches: [main]`=2 (push + pull_request triggers).
+- Pre-existing `.github/workflows/test.yml` (added in parallel-session commit `50055f9`) left untouched — Plan 06-06 only adds a new sibling `ci.yml`, does not modify or replace `test.yml`; `git diff --stat .github/workflows/test.yml` = empty.
+- Single atomic commit on main: `42b31bc` `ci(06-06): add .github/workflows/ci.yml macos-14 6-step verify` (1 file / +71 / -0). Pre-existing untracked files (`CLAUDE.md` + 2 screenshot PNGs) preserved untouched via explicit `git add .github/workflows/ci.yml` single-file stage — zero scope bleed; `git diff --diff-filter=D --name-only HEAD~1 HEAD` returns empty (no deletions).
+- First CI run status deferred — workflow will execute on the next push of commit `42b31bc` to GitHub (or on any PR against main). Expected first-run result: GREEN across all six verification steps since all prior Phase 6 plans (06-01 through 06-05) have landed and their contracts are satisfied by the current HEAD. Observed runtime measurement also deferred to post-push.
+- Recommendation captured in SUMMARY.md: tag `v0.1.0` on `998455b` before merging to a public remote — Plan 06-05 COMP-02 gate verifies the short SHA directly and exits 2 with clear remediation if the ref ever becomes unreachable. That tagging is Plan 06-07's (or user-initiated) concern, not Plan 06-06's.
+- Files created: `.github/workflows/ci.yml`, `.planning/phases/06-polish/06-06-SUMMARY.md` (with Self-Check: PASSED footer).
+- Files modified: `docs/activity_log.md` (this entry), `.planning/STATE.md` (Phase 6 progress 5/7 → 6/7 + Current Plan row for 06-06 + Performance Metrics table row + frontmatter last_updated + completed_plans/percent bumps), `.planning/ROADMAP.md` (06-06 checkbox flipped + Phase 6 progress row 5/7 → 6/7 + Last updated entry for Plan 06-06 CI workflow).
+
 ## 2026-04-22 05:36 EDT
 
 ### User Prompt
