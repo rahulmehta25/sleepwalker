@@ -150,6 +150,20 @@ in=$(hook_input "PreToolUse" "WebFetch" '{"url":"x","prompt":"y"}' "session-6" "
 out=$(echo "$in" | SLEEPWALKER_FLEET=test-fleet SLEEPWALKER_MODE=overnight "$HOOKS_DIR/sleepwalker-defer-irreversible.sh")
 assert_eq "env override defers" "defer" "$(echo "$out" | jq -r '.hookSpecificOutput.permissionDecision')"
 
+reset_state
+TR=$(make_transcript "inbox-triage")
+echo "  test: re-execution bypass allows only exact approved tool+args"
+approved_args='{"prompt":"y","url":"https://x.com"}'
+in=$(hook_input "PreToolUse" "WebFetch" '{"url":"https://x.com","prompt":"y"}' "session-r1" "$TR")
+out=$(echo "$in" | SLEEPWALKER_REEXECUTING=1 SLEEPWALKER_APPROVED_TOOL=WebFetch SLEEPWALKER_APPROVED_ARGS="$approved_args" SLEEPWALKER_MODE=overnight "$HOOKS_DIR/sleepwalker-defer-irreversible.sh")
+assert_eq "exact approved WebFetch re-exec allows" "allow" "$(echo "$out" | jq -r '.hookSpecificOutput.permissionDecision')"
+assert_file_lines "queue empty after exact re-exec allow" "0" "$TEST_HOME/.sleepwalker/queue.jsonl"
+
+in=$(hook_input "PreToolUse" "WebFetch" '{"url":"https://evil.example","prompt":"y"}' "session-r2" "$TR")
+out=$(echo "$in" | SLEEPWALKER_REEXECUTING=1 SLEEPWALKER_APPROVED_TOOL=WebFetch SLEEPWALKER_APPROVED_ARGS="$approved_args" SLEEPWALKER_MODE=overnight "$HOOKS_DIR/sleepwalker-defer-irreversible.sh")
+assert_eq "different red call during re-exec still defers" "defer" "$(echo "$out" | jq -r '.hookSpecificOutput.permissionDecision')"
+assert_file_lines "queue has mismatched re-exec red call" "1" "$TEST_HOME/.sleepwalker/queue.jsonl"
+
 # ========================================================================
 # budget-cap.sh tests
 # ========================================================================

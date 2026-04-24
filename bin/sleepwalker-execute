@@ -66,10 +66,10 @@ $ARGS
   TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   RESULT_FILE="$DONE_DIR/${ID}.result"
 
-  # Run claude -p with SLEEPWALKER_REEXECUTING=1 in env. The defer hook
-  # respects this and allows the re-run to proceed without re-deferring.
-  # Uses acceptEdits (not bypassPermissions) so hooks still enforce safety.
-  if SLEEPWALKER_REEXECUTING=1 claude -p --permission-mode acceptEdits "$RERUN_PROMPT" < /dev/null > "$RESULT_FILE" 2>&1; then
+  # Run claude -p with an exact approved tool+args allow token in env. The
+  # defer hook allows only this one call; any other red action in the same
+  # session still gets deferred. Uses acceptEdits so hooks remain active.
+  if SLEEPWALKER_REEXECUTING=1 SLEEPWALKER_APPROVED_TOOL="$TOOL" SLEEPWALKER_APPROVED_ARGS="$ARGS" claude -p --permission-mode acceptEdits "$RERUN_PROMPT" < /dev/null > "$RESULT_FILE" 2>&1; then
     STATUS="executed"
     echo "  ✓ executed (result in $RESULT_FILE)"
   else

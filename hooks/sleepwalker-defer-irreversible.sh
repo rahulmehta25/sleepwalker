@@ -25,20 +25,28 @@ allow() {
   exit 0
 }
 
-# --- Re-execution bypass ---
-# The sleepwalker-execute script sets this env var when re-running an
-# already-approved deferred action. We bail out fast so we don't re-defer
-# the same action in an infinite loop.
-if [ "${SLEEPWALKER_REEXECUTING:-}" = "1" ]; then
-  allow
-fi
-
 # --- Read input ---
 INPUT="$(cat)"
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // ""')
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // ""')
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // ""')
 TOOL_INPUT=$(echo "$INPUT" | jq -c '.tool_input // {}')
+
+# --- Re-execution bypass ---
+# sleepwalker-execute sets these env vars when re-running an approved task.
+# Only the exact approved tool+args bypasses deferral; any other tool call in
+# that same Claude session still flows through the normal safety classifier.
+if [ "${SLEEPWALKER_REEXECUTING:-}" = "1" ]; then
+  APPROVED_TOOL="${SLEEPWALKER_APPROVED_TOOL:-}"
+  APPROVED_ARGS="${SLEEPWALKER_APPROVED_ARGS:-}"
+  if [ -n "$APPROVED_TOOL" ] && [ -n "$APPROVED_ARGS" ] && [ "$TOOL_NAME" = "$APPROVED_TOOL" ]; then
+    TOOL_INPUT_CANON=$(echo "$TOOL_INPUT" | jq -S -c . 2>/dev/null || echo "")
+    APPROVED_ARGS_CANON=$(echo "$APPROVED_ARGS" | jq -S -c . 2>/dev/null || echo "")
+    if [ -n "$TOOL_INPUT_CANON" ] && [ "$TOOL_INPUT_CANON" = "$APPROVED_ARGS_CANON" ]; then
+      allow
+    fi
+  fi
+fi
 
 # --- Detect fleet context ---
 # SLEEPWALKER_FLEET env override (used by tests + manual invocation)
