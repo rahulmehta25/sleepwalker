@@ -306,6 +306,25 @@ assert_exception_routines_ts() {
 }
 
 # -----------------------------------------------------------------------------
+# dashboard/lib/audit.ts — v0.2 additive extension (RunAuditEntry + readRunsByFleet).
+# v0.1 invariants: readAudit export, AuditEntry interface.
+# v0.2 additions: RunAuditEntry interface + readRunsByFleet function.
+# -----------------------------------------------------------------------------
+assert_exception_audit_ts() {
+  local p="dashboard/lib/audit.ts"
+  [[ -f "$p" ]] || { record_fail "$p: missing at HEAD"; return; }
+  grep -q 'export function readAudit' "$p" \
+    || { record_fail "$p: v0.1 readAudit export missing"; return; }
+  grep -q 'export interface AuditEntry' "$p" \
+    || { record_fail "$p: v0.1 AuditEntry interface missing"; return; }
+  # v0.2 additive additions:
+  grep -q 'export interface RunAuditEntry' "$p" \
+    || { record_fail "$p: v0.2 RunAuditEntry interface missing"; return; }
+  grep -q 'export function readRunsByFleet' "$p" \
+    || { record_fail "$p: v0.2 readRunsByFleet function missing"; return; }
+}
+
+# -----------------------------------------------------------------------------
 # dashboard/lib/settings.ts — same-day v0.1 shipped amendment (commit 61e1200)
 # added cloudCredsFile + CloudCredential API-trigger secret storage.
 # v0.1 invariants: Policy type + trackedFile + tokenFile + clearGithubToken
@@ -378,7 +397,6 @@ assert_exception_sleepwalker_execute() {
 # =============================================================================
 GROUP_A=(
   "dashboard/lib/cloud.ts"
-  "dashboard/lib/audit.ts"
   "dashboard/lib/github.ts"
   "routines-cloud/alert-triage/prompt.md"
   "routines-cloud/alert-triage/config.json"
@@ -448,6 +466,7 @@ assert_exception_queue_ts
 assert_exception_queue_aggregator_ts
 assert_exception_cloud_cache_ts
 assert_exception_routines_ts
+assert_exception_audit_ts
 assert_exception_package_json
 assert_exception_sleepwalker_execute
 for slug in "${LOCAL_SLUGS[@]}"; do
