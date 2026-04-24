@@ -43,8 +43,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
+import * as lockfile from "proper-lockfile";
 
-import { readBundle, RUNTIME_ROOT } from "@/lib/bundles";
+import { getRepoRoot, readBundle, RUNTIME_ROOT } from "@/lib/bundles";
 import {
   deleteDeployState,
   readDeployState,
@@ -67,6 +68,41 @@ import {
 import { setEnabled as setClaudeDesktopEnabled } from "@/lib/routines";
 
 const execFileP = promisify(execFile);
+
+/**
+ * Serialize concurrent deployRoutine server actions for the same (runtime,
+ * slug). React Strict Mode in dev can fire the action twice in quick succession;
+ * without this, two deploys can race before the first state file lands.
+ */
+async function withPerRoutineDeployLock(
+  runtime: Runtime,
+  slug: string,
+  fn: () => Promise<DeployActionResult>,
+): Promise<DeployActionResult> {
+  const dir = path.join(process.env.HOME || os.homedir(), ".sleepwalker", "deploys");
+  const sentinel = path.join(dir, `.${runtime}-${slug}.deploy-action`);
+  await fs.promises.mkdir(dir, { recursive: true });
+  await fs.promises.writeFile(sentinel, "", { flag: "a" });
+  let release: (() => Promise<void>) | undefined;
+  try {
+    release = await lockfile.lock(sentinel, {
+      retries: 0,
+      stale: 120_000,
+    });
+  } catch {
+    return {
+      ok: false,
+      error: "deploy already in progress",
+      failedStep: "planning",
+      rollbackActions: [],
+    };
+  }
+  try {
+    return await fn();
+  } finally {
+    await release?.().catch(() => undefined);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Public result types
@@ -252,7 +288,7 @@ function toRoutineBundle(read: {
     schedule: read.schedule ?? null,
     reversibility: read.reversibility ?? "yellow",
     budget: typeof read.budget === "number" ? read.budget : 50_000,
-    bundlePath: path.resolve(process.cwd(), read.bundleDir),
+    bundlePath: path.join(getRepoRoot(), read.bundleDir),
   };
 }
 
@@ -390,6 +426,7 @@ export async function deployRoutine(args: {
   }
   const bundle = toRoutineBundle(read);
 
+  return withPerRoutineDeployLock(runtime, slug, async () => {
   // Step 0.5 — Double-deploy guard (04-RESEARCH.md Open Q#1). A prior state
   // in `running` phase started less than 60s ago means some other caller
   // (fast double-click, second tab) is mid-deploy; we refuse rather than
@@ -598,6 +635,7 @@ export async function deployRoutine(args: {
     );
   }
   return { ok: true, state: terminal };
+  });
 }
 
 /**

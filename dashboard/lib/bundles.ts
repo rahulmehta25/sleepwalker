@@ -31,7 +31,7 @@ const RUNTIME_DIR: Record<Runtime, string> = {
 // In production Next.js runs with CWD = dashboard/; routine dirs live one level
 // up. Tests override via SLEEPWALKER_REPO_ROOT (matches save-to-repo.ts pattern).
 // Otherwise: if CWD is the dashboard/ subdir, go up one level to the repo root.
-function getRepoRoot(): string {
+export function getRepoRoot(): string {
   if (process.env.SLEEPWALKER_REPO_ROOT) return process.env.SLEEPWALKER_REPO_ROOT;
   const cwd = process.cwd();
   return path.basename(cwd) === "dashboard" ? path.resolve(cwd, "..") : cwd;
@@ -52,7 +52,7 @@ export const RUNTIME_ROOT: Record<Runtime, string> = new Proxy(
 export interface BundleDescriptor {
   runtime: Runtime;
   slug: string;
-  /** Relative path from cwd, e.g. "routines-codex/morning-brief". */
+  /** Relative path from repo root, e.g. "routines-codex/morning-brief". */
   bundleDir: string;
 }
 

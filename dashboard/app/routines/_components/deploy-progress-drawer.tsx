@@ -129,8 +129,14 @@ export function DeployProgressDrawer({
 
   // Drive the deploy/poll lifecycle off `open`. A single source of truth: the
   // effect starts a deploy on transition-to-open, and tears it down on any
-  // transition-to-closed. invokedRef guards against double-invocation when
-  // React 19 Strict Mode mounts/unmounts in dev.
+  // transition-to-closed.
+  //
+  // invokedRef prevents startDeploy() from firing twice in one effect run.
+  // React Strict Mode (next.config reactStrictMode) runs mount → cleanup →
+  // mount again in dev: we must reset invokedRef in cleanup so the second mount
+  // calls startDeploy(); otherwise deployRoutine never runs while the drawer
+  // shows PLANNING at 0s forever. Duplicate server calls are serialized by
+  // proper-lockfile in deployRoutine.
   useEffect(() => {
     if (open && !invokedRef.current) {
       void startDeploy();
@@ -142,6 +148,7 @@ export function DeployProgressDrawer({
     }
     return () => {
       clearPoll();
+      invokedRef.current = false;
     };
   }, [open, startDeploy, clearPoll]);
 
