@@ -4,7 +4,7 @@ import { readBundle, listBundles } from "@/lib/bundles";
 describe("prebuilt routines sanity", () => {
   it("codex + gemini prebuilt bundles all load", () => {
     for (const runtime of ["codex","gemini"] as const) {
-      const slugs = listBundles(runtime).map(b => b.slug);
+      const slugs = listBundles().filter(b => b.runtime === runtime).map(b => b.slug);
       expect(slugs).toEqual(expect.arrayContaining(["inbox-triage","pr-reviewer","dependency-upgrader"]));
       for (const slug of ["inbox-triage","pr-reviewer","dependency-upgrader"]) {
         const b = readBundle(runtime, slug);
