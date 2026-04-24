@@ -75,14 +75,16 @@ export interface RoutineBundleRead {
 }
 
 /**
- * Enumerate every bundle on disk across all 4 runtime roots.
+ * Enumerate bundles on disk. When `runtime` is provided, only that runtime
+ * root is scanned; otherwise all 4 runtime roots are scanned.
  * Roots that don't exist are silently skipped. Non-directory entries
  * (e.g. .DS_Store) are filtered out.
  */
-export function listBundles(): BundleDescriptor[] {
+export function listBundles(runtime?: Runtime): BundleDescriptor[] {
+  const runtimes = runtime ? [runtime] : RUNTIMES;
   const out: BundleDescriptor[] = [];
-  for (const runtime of RUNTIMES) {
-    const root = RUNTIME_ROOT[runtime];
+  for (const rt of runtimes) {
+    const root = RUNTIME_ROOT[rt];
     if (!fs.existsSync(root)) continue;
     for (const entry of fs.readdirSync(root)) {
       const abs = path.join(root, entry);
@@ -93,7 +95,7 @@ export function listBundles(): BundleDescriptor[] {
         continue;
       }
       if (!isDir) continue;
-      out.push({ runtime, slug: entry, bundleDir: `${RUNTIME_DIR[runtime]}/${entry}` });
+      out.push({ runtime: rt, slug: entry, bundleDir: `${RUNTIME_DIR[rt]}/${entry}` });
     }
   }
   return out;
