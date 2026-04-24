@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import lockfile from "proper-lockfile";
+import { execFileSync } from "node:child_process";
 
 function queueFile(): string {
   return path.join(process.env.HOME || os.homedir(), ".sleepwalker", "queue.jsonl");
@@ -37,6 +37,66 @@ function ensureFile(): string {
   return f;
 }
 
+function queueLockFile(f: string): string {
+  const lockPath = `${f}.lock`;
+  if (!fs.existsSync(lockPath)) fs.writeFileSync(lockPath, "");
+  return lockPath;
+}
+
+function runQueueWorker(env: Record<string, string>): string {
+  const script = String.raw`
+const fs = require("fs");
+const f = process.env.SLEEPWALKER_QUEUE_FILE;
+const op = process.env.SLEEPWALKER_QUEUE_OP;
+if (!f || !op) process.exit(2);
+function parseLines(raw) {
+  return raw
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) => {
+      try { return JSON.parse(line); }
+      catch { return null; }
+    })
+    .filter(Boolean);
+}
+if (op === "append") {
+  const entry = process.env.SLEEPWALKER_QUEUE_ENTRY;
+  if (!entry) process.exit(2);
+  fs.appendFileSync(f, entry + "\n");
+  process.stdout.write("true");
+} else if (op === "update") {
+  const id = process.env.SLEEPWALKER_QUEUE_ID;
+  const status = process.env.SLEEPWALKER_QUEUE_STATUS;
+  if (!id || !status) process.exit(2);
+  const entries = parseLines(fs.readFileSync(f, "utf8"));
+  const idx = entries.findIndex((e) => e.id === id);
+  if (idx === -1) {
+    process.stdout.write("false");
+  } else {
+    entries[idx].status = status;
+    fs.writeFileSync(f, entries.map((e) => JSON.stringify(e)).join("\n") + "\n");
+    process.stdout.write("true");
+  }
+} else {
+  process.exit(2);
+}
+`;
+  const f = ensureFile();
+  return execFileSync(
+    "flock",
+    ["-x", queueLockFile(f), process.execPath, "-e", script],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        SLEEPWALKER_QUEUE_FILE: f,
+        ...env,
+      },
+    },
+  ).trim();
+}
+
 function parseLines(raw: string): QueueEntry[] {
   return raw
     .split("\n")
@@ -61,28 +121,20 @@ export function readLocalQueue(): QueueEntry[] {
 }
 
 export function appendQueueEntry(entry: QueueEntry): void {
-  const f = ensureFile();
-  fs.appendFileSync(f, JSON.stringify(entry) + "\n");
+  ensureFile();
+  runQueueWorker({
+    SLEEPWALKER_QUEUE_OP: "append",
+    SLEEPWALKER_QUEUE_ENTRY: JSON.stringify(entry),
+  });
 }
 
 export function updateLocalStatus(id: string, status: QueueStatus): boolean {
-  const f = ensureFile();
-  const lockPath = f + ".lock";
-  // Ensure lock sidecar exists (hook may not have created it yet)
-  if (!fs.existsSync(lockPath)) fs.writeFileSync(lockPath, "");
-  let release: (() => void) | null = null;
-  try {
-    // lockSync doesn't support retries (async-only); stale: true handles crashed processes
-    release = lockfile.lockSync(lockPath, { stale: 5000 });
-    const entries = parseLines(fs.readFileSync(f, "utf8"));
-    const idx = entries.findIndex((e) => e.id === id);
-    if (idx === -1) return false;
-    entries[idx].status = status;
-    fs.writeFileSync(f, entries.map((e) => JSON.stringify(e)).join("\n") + "\n");
-    return true;
-  } finally {
-    release?.();
-  }
+  ensureFile();
+  return runQueueWorker({
+    SLEEPWALKER_QUEUE_OP: "update",
+    SLEEPWALKER_QUEUE_ID: id,
+    SLEEPWALKER_QUEUE_STATUS: status,
+  }) === "true";
 }
 
 export function pendingCount(entries: QueueEntry[]): number {

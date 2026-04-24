@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { makeTempHome, ensureSleepwalkerDir } from "./helpers";
 
 describe("queue lib", () => {
@@ -64,6 +65,24 @@ describe("queue lib", () => {
     appendQueueEntry({ id: "q_x", ts: "2026-04-18T00:00:00Z", fleet: "f", status: "pending" });
     expect(updateLocalStatus("q_x", "approved")).toBe(true);
     expect(readLocalQueue()[0].status).toBe("approved");
+  });
+
+  it("updateLocalStatus waits on the same flock sidecar used by shell hooks", async () => {
+    if (!fs.existsSync("/usr/bin/flock") && !process.env.PATH?.split(":").some((p) => fs.existsSync(path.join(p, "flock")))) {
+      return;
+    }
+    const { appendQueueEntry, updateLocalStatus, readLocalQueue } = await import("@/lib/queue");
+    appendQueueEntry({ id: "q_lock", ts: "2026-04-18T00:00:00Z", fleet: "f", status: "pending" });
+
+    const lockPath = path.join(dir, "queue.jsonl.lock");
+    const holder = spawn("flock", ["-x", lockPath, "sleep", "0.4"], { stdio: "ignore" });
+    await new Promise((r) => setTimeout(r, 100));
+
+    const started = Date.now();
+    expect(updateLocalStatus("q_lock", "approved")).toBe(true);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(200);
+    expect(readLocalQueue()[0].status).toBe("approved");
+    await new Promise((resolve) => holder.on("exit", resolve));
   });
 
   it("updateLocalStatus returns false for unknown id", async () => {
